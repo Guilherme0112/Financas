@@ -6,17 +6,33 @@ import PrimaryButton from '@/Components/PrimaryButton.vue'
 import InputDinheiro from '@/Components/InputDinheiro.vue'
 import Flatpickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
+import { watch } from 'vue'
 
-defineProps<{
+const props = defineProps<{
     show: boolean
     form: any
     editando: boolean
+    categorias: Array<{ id: number; nome: string; tipo: string }>
 }>()
+
 
 const emit = defineEmits(['close', 'submit']);
 
-</script>
+watch(
+  () => props.show,
+  (abriu) => {
+    if (abriu && props.editando && props.form.mes_referencia) {
+      const [ano, mes, dia] = props.form.mes_referencia.split('-')
+      props.form.mes_referencia = new Date(
+        Number(ano),
+        Number(mes) - 1,
+        Number(dia)
+      )
+    }
+  }
+)
 
+</script>
 <template>
     <Modal :show="show" @close="emit('close')">
         <div class="p-6 space-y-6">
@@ -56,18 +72,27 @@ const emit = defineEmits(['close', 'submit']);
                     <InputLabel value="Data de Vencimento" />
                     <Flatpickr v-model="form.mes_referencia" :config="{
                         dateFormat: 'd/m/Y',
+                        altInput: true,
+                        altFormat: 'd/m/Y',
                         enableTime: false,
                         static: true,
+                        allowInput: false
                     }" class="rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500" />
+
 
                 </div>
                 <div>
-                    <InputLabel value="Categorias" />
+                    <InputLabel value="Categoria" />
                     <select v-model="form.categoria_id"
                         class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                        <option value="1">Moradia (Aluguel)</option>
-                        <option value="2">Transporte (Uber, Gasolina e etc)</option>
+                        <option disabled value="">Selecione</option>
+
+                        <option v-for="cat in categorias.filter(c => c.tipo === form.tipo)" :key="cat.id"
+                            :value="cat.id">
+                            {{ cat.nome }}
+                        </option>
                     </select>
+
                 </div>
             </div>
 

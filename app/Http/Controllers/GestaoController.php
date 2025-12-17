@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLancamentosRequest;
 use App\Http\Requests\UpdateLancamentosRequest;
+use App\Models\Categoria;
 use App\Services\GestaoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,7 @@ class GestaoController extends Controller
     {
         return Inertia::render('Gestao/Index', [
             'lancamentos' => $this->gestaoService->listar(10),
+            'categorias' => Categoria::orderBy('nome')->get(),
         ]);
     }
 

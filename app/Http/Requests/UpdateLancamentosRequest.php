@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateLancamentosRequest extends FormRequest
@@ -19,23 +20,27 @@ class UpdateLancamentosRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-     public function rules(): array
+    public function rules()
     {
         return [
-            'nome' => 'sometimes|required|string|max:255',
-            'descricao' => 'sometimes|nullable|string',
-            'valor' => 'sometimes|required|numeric|min:0',
-            'tipo' => 'sometimes|required|in:ENTRADA,SAIDA',
-            'recorrente' => 'sometimes|required|boolean',
-            'mes_referencia' => 'sometimes|nullable|date_format:d/m/Y',
+            'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
+            'valor' => 'required|numeric|min:0',
+            'tipo' => 'required|in:ENTRADA,SAIDA',
+            'recorrente' => 'required|boolean',
+            'categoria_id' => 'required|exists:categorias,id',
+            'mes_referencia' => 'nullable|date_format:d/m/Y',
         ];
     }
 
-    public function prepareForValidation()
+    protected function passedValidation()
     {
-        if ($this->has('valor')) {
+        if ($this->mes_referencia) {
             $this->merge([
-                'valor' => floatval($this->valor),
+                'mes_referencia' => Carbon::createFromFormat(
+                    'd/m/Y',
+                    $this->mes_referencia
+                )->format('Y-m-d'),
             ]);
         }
     }

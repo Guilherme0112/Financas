@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lancamento extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
     protected $fillable = [
         'nome',
@@ -15,11 +15,17 @@ class Lancamento extends Model
         'valor',
         'tipo',
         'recorrente',
-        'mes_referencia'
+        'mes_referencia',
+        'categoria_id',
     ];
 
     protected $casts = [
         'valor' => 'float',
         'recorrente' => 'boolean',
     ];
+
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class);
+    }
 }

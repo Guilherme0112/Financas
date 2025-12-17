@@ -5,19 +5,24 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import FinanceCard from '@/Components/FinanceCard.vue'
 import Table from '@/Components/Table.vue'
-import LancamentoForm from './LancamentoForm.vue'
+import LancamentoForm from './Partials/LancamentoForm.vue'
 import { Lancamento } from '@/types/Lancamentos'
 import { Page } from '@/types/Page'
-import { formatarDinheiro } from '@/utils/helpers'
+import { formatarData, formatarDinheiro } from '@/utils/helpers'
 import { toast } from 'vue3-toastify'
+import CategoriaForm from './Partials/CategoriaForm.vue'
+import NavLink from '@/Components/NavLink.vue'
+
+const mostrarModalCategoria = ref(false);
 
 const props = defineProps<{
   lancamentos: Page<Lancamento>
-}>()
+  categorias: Array<{ id: number; nome: string; tipo: string }>
+}>();
 
-const showModal = ref(false)
-const editando = ref<Lancamento | null>(null)
-const filtro = ref<'TODOS' | 'ENTRADA' | 'SAIDA'>('TODOS')
+const showModal = ref(false);
+const editando = ref<Lancamento | null>(null);
+const filtro = ref<'TODOS' | 'ENTRADA' | 'SAIDA'>('TODOS');
 
 const form = useForm({
   nome: '',
@@ -27,46 +32,40 @@ const form = useForm({
   recorrente: false,
   mes_referencia: '',
   categoria_id: null
-})
+});
 
-/* ==========================
-   DADOS FILTRADOS
-========================== */
 const lancamentosFiltrados = computed(() => {
   if (filtro.value === 'TODOS') return props.lancamentos.data
   return props.lancamentos.data.filter(l => l.tipo === filtro.value)
-})
+});
 
 const totalEntradas = computed(() =>
   props.lancamentos.data
     .filter(l => l.tipo === 'ENTRADA')
     .reduce((t, l) => t + Number(l.valor), 0)
-)
+);
 
 const totalSaidas = computed(() =>
   props.lancamentos.data
     .filter(l => l.tipo === 'SAIDA')
     .reduce((t, l) => t + Number(l.valor), 0)
-)
+);
 
-/* ==========================
-   MODAL
-========================== */
 const abrirNovo = () => {
   editando.value = null;
-  form.reset()
+  form.reset();
   showModal.value = true;
 }
 
-const abrirEdicao = (l: Lancamento) => {
-  editando.value = l
-  form.nome = l.nome
-  form.descricao = l.descricao
-  form.valor = String(l.valor)
-  form.tipo = l.tipo
-  form.recorrente = l.recorrente
-  form.mes_referencia = l.mes_referencia || ''
-  showModal.value = true
+const abrirEdicao = (l: any) => {
+  editando.value = l;
+  form.nome = l.nome;
+  form.descricao = l.descricao;
+  form.valor = String(l.valor);
+  form.tipo = l.tipo;
+  form.recorrente = l.recorrente;
+  form.mes_referencia = l.mes_referencia || '';
+  showModal.value = true;
 }
 
 /* ==========================
@@ -76,14 +75,14 @@ const salvar = () => {
   if (editando.value) {
     form.put(route('gestao.update', editando.value.id), {
       onSuccess: () => {
-        toast.success('Lançamento atualizado com sucesso!')
+        toast.success('Lançamento atualizado com sucesso!');
         showModal.value = false;
       }
     })
   } else {
     form.post(route('gestao.store'), {
       onSuccess: () => {
-        toast.success('Lançamento criado com sucesso!')
+        toast.success('Lançamento criado com sucesso!');
         showModal.value = false;
       }
     })
@@ -94,21 +93,18 @@ const excluir = (id: number) => {
   if (confirm('Excluir este lançamento?')) {
     form.delete(route('gestao.destroy', id), {
       onSuccess: () => {
-        toast.success('Lançamento excluído com sucesso!')
+        toast.success('Lançamento excluído com sucesso!');
       }
     })
   }
 }
 
-/* ==========================
-   PAGINAÇÃO REAL (URL)
-========================== */
 const mudarPagina = (num: number) => {
   if (num >= 1 && num <= props.lancamentos.last_page) {
     router.get(route('gestao.index'), { page: num }, {
       preserveScroll: true,
       preserveState: true
-    })
+    });
   }
 }
 </script>
@@ -119,8 +115,13 @@ const mudarPagina = (num: number) => {
 
   <AuthenticatedLayout>
     <template #header>
-      <div class="flex justify-between items-center">
+      <div class="flex justify-start items-center">
         <h2 class="text-xl font-semibold text-emerald-800">Gestão Financeira</h2>
+        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex h-16">
+          <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
+            Configurações
+          </NavLink>
+        </div>
       </div>
     </template>
 
@@ -163,21 +164,22 @@ const mudarPagina = (num: number) => {
             Saídas
           </button>
         </div>
-
-
         <PrimaryButton @click="abrirNovo">Novo lançamento</PrimaryButton>
       </div>
 
       <!-- TABELA -->
       <Table :headers="[
+        {
+          label: 'Tipo',
+          key: 'tipo',
+          align: 'center'
+        },
         { label: 'Nome', key: 'nome' },
         {
           label: 'Valor',
           key: 'valor',
-          align: 'right',
-          format: (v) => formatarDinheiro(v)
+          align: 'right'
         },
-        { label: 'Tipo', key: 'tipo', align: 'center' },
         {
           label: 'Fixo',
           key: 'recorrente',
@@ -188,17 +190,38 @@ const mudarPagina = (num: number) => {
           label: 'Mês',
           key: 'mes_referencia',
           align: 'center',
-          format: (v) => v || '-'
+          format: (v) => formatarData(v) || '-'
         }
-      ]" :rows="lancamentosFiltrados">
-        <template #actions="{ row }">
-          <button class="w-full text-left px-4 py-2 text-sm hover:bg-green-50 text-green-700" @click="abrirEdicao(row)">
-            Editar
-          </button>
+      ]" :rows="lancamentosFiltrados" :actions="[
+        {
+          label: 'Editar',
+          class: 'hover:bg-green-50 text-green-700',
+          onClick: (row) => abrirEdicao(row)
+        },
+        {
+          label: 'Excluir',
+          class: 'hover:bg-red-50 text-red-600',
+          onClick: (row) => excluir(row.id)
+        }
+      ]">
+        <template #cell-tipo="{ row }">
+          <span v-if="row.tipo === 'ENTRADA'" class="inline-flex items-center px-2 py-1 text-xs font-semibold
+             rounded-full bg-green-100 text-green-700">
+            + Entrada
+          </span>
 
-          <button class="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600" @click="excluir(row.id)">
-            Excluir
-          </button>
+          <span v-else class="inline-flex items-center px-2 py-1 text-xs font-semibold
+             rounded-full bg-red-100 text-red-700">
+            − Saída
+          </span>
+        </template>
+
+        <template #cell-valor="{ row }">
+          <span :class="row.tipo === 'ENTRADA'
+            ? 'text-green-600 font-semibold'
+            : 'text-red-600 font-semibold'">
+            {{ formatarDinheiro(row.valor) }}
+          </span>
         </template>
       </Table>
 
@@ -221,8 +244,15 @@ const mudarPagina = (num: number) => {
       </div>
 
       <!-- MODAL -->
-      <LancamentoForm :show="showModal" :form="form" :editando="!!editando" @close="showModal = false"
-        @submit="salvar" />
+      <LancamentoForm :show="showModal" :form="form" :editando="!!editando" :categorias="categorias"
+        @close="showModal = false" @submit="salvar" />
+
+      <button type="button" class="text-xs text-green-700 underline" @click="mostrarModalCategoria = true">
+        + Nova categoria
+      </button>
+
+      <CategoriaForm :show="mostrarModalCategoria" @close="mostrarModalCategoria = false" />
+
     </div>
   </AuthenticatedLayout>
 </template>

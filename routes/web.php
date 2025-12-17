@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GestaoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -15,9 +17,7 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -30,6 +30,11 @@ Route::prefix('gestao')->middleware('auth')->group(function () {
     Route::put('/{id}', [GestaoController::class, 'update'])->name('gestao.update');
     Route::post('/', [GestaoController::class, 'store'])->name('gestao.store');
     Route::delete('/{id}', [GestaoController::class, 'destroy'])->name('gestao.destroy');
+});
+
+Route::prefix('categorias')->middleware('auth')->group(function () {
+    Route::get('/', [CategoriaController::class, 'index'])->name('categorias.index');
+    Route::post('/', [CategoriaController::class, 'store'])->name('categorias.store');
 });
 
 require __DIR__.'/auth.php';
