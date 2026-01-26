@@ -6,6 +6,6 @@ export interface Lancamento {
     tipo: 'ENTRADA' | 'SAIDA'
     recorrente: boolean
     mes_referencia?: string
+    categoria_entrada: string,
+    categoria_saida: string,
 }
-
-// todo: criar relacionamento com categoria

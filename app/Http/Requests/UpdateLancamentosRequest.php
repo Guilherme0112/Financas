@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CategoriaEntrada;
+use App\Enums\CategoriaSaida;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateLancamentosRequest extends FormRequest
 {
@@ -22,26 +25,24 @@ class UpdateLancamentosRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+         return [
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
-            'valor' => 'required|numeric|min:0',
+            'valor' => 'required|numeric|min:1',
             'tipo' => 'required|in:ENTRADA,SAIDA',
             'recorrente' => 'required|boolean',
-            'categoria_id' => 'required|exists:categorias,id',
-            'mes_referencia' => 'nullable|date_format:d/m/Y',
-        ];
-    }
+            'categoria_entrada' => [
+                "nullable",
+                Rule::requiredIf($this->tipo === 'ENTRADA'),
+                Rule::enum(CategoriaEntrada::class),
+            ],
 
-    protected function passedValidation()
-    {
-        if ($this->mes_referencia) {
-            $this->merge([
-                'mes_referencia' => Carbon::createFromFormat(
-                    'd/m/Y',
-                    $this->mes_referencia
-                )->format('Y-m-d'),
-            ]);
-        }
+            'categoria_saida' => [
+                "nullable",
+                Rule::requiredIf($this->tipo === 'SAIDA'),
+                Rule::enum(CategoriaSaida::class),
+            ],
+            'mes_referencia' => 'required|date_format:Y/m/d',
+        ];
     }
 }

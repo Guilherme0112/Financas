@@ -9,30 +9,73 @@ import LancamentoForm from './Partials/LancamentoForm.vue'
 import { Lancamento } from '@/types/Lancamentos'
 import { Page } from '@/types/Page'
 import { formatarData, formatarDinheiro } from '@/utils/helpers'
-import { toast } from 'vue3-toastify'
-import CategoriaForm from './Partials/CategoriaForm.vue'
+import { toast } from 'vue3-toastify';
 import NavLink from '@/Components/NavLink.vue'
-
-const mostrarModalCategoria = ref(false);
+import FiltrosLancamentos from './Partials/FiltrosLancamentos.vue';
+import { Plus, SlidersHorizontal } from 'lucide-vue-next'
 
 const props = defineProps<{
   lancamentos: Page<Lancamento>
-  categorias: Array<{ id: number; nome: string; tipo: string }>
+  categoriasEntrada: any[],
+  categoriasSaida: any[]
 }>();
+
 
 const showModal = ref(false);
 const editando = ref<Lancamento | null>(null);
 const filtro = ref<'TODOS' | 'ENTRADA' | 'SAIDA'>('TODOS');
+const mostrarFiltro = ref(false);
 
 const form = useForm({
+  id: null,
   nome: '',
   descricao: '',
   valor: '',
   tipo: 'SAIDA',
   recorrente: false,
   mes_referencia: '',
-  categoria_id: null
+  categoria_entrada: null,
+  categoria_saida: null
 });
+
+const headers = [
+  {
+    label: 'Tipo',
+    key: 'tipo',
+    align: 'center'
+  },
+  { label: 'Nome', key: 'nome' },
+  {
+    label: 'Valor',
+    key: 'valor',
+    align: 'right'
+  },
+  {
+    label: 'Fixo',
+    key: 'recorrente',
+    align: 'center',
+    format: (v: any) => v ? 'Sim' : 'Não'
+  },
+  {
+    label: 'Mês',
+    key: 'mes_referencia',
+    align: 'center',
+    format: (v: any) => formatarData(v) || '-'
+  }
+];
+
+const actions = [
+  {
+    label: 'Editar',
+    class: 'hover:bg-green-50 text-green-700',
+    onClick: (row: any) => abrirEdicao(row)
+  },
+  {
+    label: 'Excluir',
+    class: 'hover:bg-red-50 text-red-600',
+    onClick: (row: any) => excluir(row.id)
+  }
+]
 
 const lancamentosFiltrados = computed(() => {
   if (filtro.value === 'TODOS') return props.lancamentos.data
@@ -59,39 +102,21 @@ const abrirNovo = () => {
 
 const abrirEdicao = (l: any) => {
   editando.value = l;
+  form.id = l.id;
   form.nome = l.nome;
   form.descricao = l.descricao;
   form.valor = String(l.valor);
   form.tipo = l.tipo;
   form.recorrente = l.recorrente;
+  form.categoria_saida = l.categoria_saida;
+  form.categoria_entrada = l.categoria_entrada;
   form.mes_referencia = l.mes_referencia || '';
   showModal.value = true;
 }
 
-/* ==========================
-   CRUD
-========================== */
-const salvar = () => {
-  if (editando.value) {
-    form.put(route('gestao.update', editando.value.id), {
-      onSuccess: () => {
-        toast.success('Lançamento atualizado com sucesso!');
-        showModal.value = false;
-      }
-    })
-  } else {
-    form.post(route('gestao.store'), {
-      onSuccess: () => {
-        toast.success('Lançamento criado com sucesso!');
-        showModal.value = false;
-      }
-    })
-  }
-}
-
 const excluir = (id: number) => {
   if (confirm('Excluir este lançamento?')) {
-    form.delete(route('gestao.destroy', id), {
+    form.delete(route('lancamentos.destroy', id), {
       onSuccess: () => {
         toast.success('Lançamento excluído com sucesso!');
       }
@@ -101,18 +126,17 @@ const excluir = (id: number) => {
 
 const mudarPagina = (num: number) => {
   if (num >= 1 && num <= props.lancamentos.last_page) {
-    router.get(route('gestao.index'), { page: num }, {
+    router.get(route('lancamentos.index'), { page: num }, {
       preserveScroll: true,
       preserveState: true
     });
   }
 }
-</script>
 
+</script>
 <template>
 
   <Head title="Gestão Financeira" />
-
   <AuthenticatedLayout>
     <template #header>
       <div class="flex justify-start items-center">
@@ -136,74 +160,19 @@ const mudarPagina = (num: number) => {
 
       <!-- FILTROS -->
       <div class="flex justify-between">
-        <div class="flex gap-3">
-          <button @click="filtro = 'TODOS'" :class="[
-            'px-4 py-2 rounded-lg border transition',
-            filtro === 'TODOS'
-              ? 'bg-emerald-600 text-white border-emerald-700'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-          ]">
-            Todos
-          </button>
-
-          <button @click="filtro = 'ENTRADA'" :class="[
-            'px-4 py-2 rounded-lg border transition',
-            filtro === 'ENTRADA'
-              ? 'bg-green-600 text-white border-green-700'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-          ]">
-            Entradas
-          </button>
-
-          <button @click="filtro = 'SAIDA'" :class="[
-            'px-4 py-2 rounded-lg border transition',
-            filtro === 'SAIDA'
-              ? 'bg-red-600 text-white border-red-700'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-          ]">
-            Saídas
-          </button>
+        <div>
+          <PrimaryButton @click="mostrarFiltro = true">
+            <SlidersHorizontal size='16' />
+          </PrimaryButton>
         </div>
-        <PrimaryButton @click="abrirNovo">Novo lançamento</PrimaryButton>
+
+        <PrimaryButton @click="abrirNovo">
+          <Plus size='16' />
+        </PrimaryButton>
       </div>
 
       <!-- TABELA -->
-      <Table :headers="[
-        {
-          label: 'Tipo',
-          key: 'tipo',
-          align: 'center'
-        },
-        { label: 'Nome', key: 'nome' },
-        {
-          label: 'Valor',
-          key: 'valor',
-          align: 'right'
-        },
-        {
-          label: 'Fixo',
-          key: 'recorrente',
-          align: 'center',
-          format: (v) => v ? 'Sim' : 'Não'
-        },
-        {
-          label: 'Mês',
-          key: 'mes_referencia',
-          align: 'center',
-          format: (v) => formatarData(v) || '-'
-        }
-      ]" :rows="lancamentosFiltrados" :actions="[
-        {
-          label: 'Editar',
-          class: 'hover:bg-green-50 text-green-700',
-          onClick: (row) => abrirEdicao(row)
-        },
-        {
-          label: 'Excluir',
-          class: 'hover:bg-red-50 text-red-600',
-          onClick: (row) => excluir(row.id)
-        }
-      ]">
+      <Table :headers="headers" :rows="lancamentosFiltrados" :actions="actions">
         <template #cell-tipo="{ row }">
           <span v-if="row.tipo === 'ENTRADA'" class="inline-flex items-center px-2 py-1 text-xs font-semibold
              rounded-full bg-green-100 text-green-700">
@@ -225,7 +194,6 @@ const mudarPagina = (num: number) => {
         </template>
       </Table>
 
-
       <!-- PAGINAÇÃO REAL -->
       <div class="flex justify-center items-center gap-2 mt-4">
         <button @click="mudarPagina(props.lancamentos.current_page - 1)" :disabled="!props.lancamentos.prev_page_url"
@@ -243,15 +211,13 @@ const mudarPagina = (num: number) => {
         </button>
       </div>
 
-      <!-- MODAL -->
-      <LancamentoForm :show="showModal" :form="form" :editando="!!editando" :categorias="categorias"
-        @close="showModal = false" @submit="salvar" />
+      <!-- FORMULÁRIO PARA CRIAR LANÇAMENTO -->
+      <LancamentoForm :show="showModal" :form="form" :editando="!!editando"
+        :categorias-entrada="props.categoriasEntrada" :categorias-saida="props.categoriasSaida"
+        @close="showModal = false" :id="editando?.id" />
 
-      <button type="button" class="text-xs text-green-700 underline" @click="mostrarModalCategoria = true">
-        + Nova categoria
-      </button>
-
-      <CategoriaForm :show="mostrarModalCategoria" @close="mostrarModalCategoria = false" />
+      <!-- FILTROS DOS LANÇAMENTOS -->
+      <FiltrosLancamentos :show="mostrarFiltro" @close="mostrarFiltro = false" />
 
     </div>
   </AuthenticatedLayout>

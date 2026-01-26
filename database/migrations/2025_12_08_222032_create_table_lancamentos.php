@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -16,12 +15,36 @@ return new class extends Migration
             $table->string('nome');
             $table->text('descricao')->nullable();
             $table->decimal('valor', 15, 2);
+
             $table->enum('tipo', ['ENTRADA', 'SAIDA']);
+
+            $table->enum('categoria_entrada', [
+                'SALARIO',
+                'FREELANCE',
+                'INVESTIMENTOS',
+                'BONUS',
+                'ALUGUEL',
+                'REEMBOLSO',
+                'VENDAS',
+                'OUTROS',
+            ])->nullable();
+
+            $table->enum('categoria_saida', [
+                'ALIMENTACAO',
+                'MORADIA',
+                'TRANSPORTE',
+                'SAUDE',
+                'EDUCACAO',
+                'LAZER',
+                'ASSINATURAS',
+                'IMPOSTOS',
+                'VESTUARIO',
+                'OUTROS',
+            ])->nullable();
+
             $table->boolean('recorrente')->default(false);
             $table->date('mes_referencia')->nullable();
-             $table->foreignId('categoria_id')
-                    ->constrained('categorias')
-                    ->cascadeOnDelete();
+
             $table->timestamps();
         });
     }

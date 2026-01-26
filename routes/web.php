@@ -1,8 +1,7 @@
 <?php
 
-use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\GestaoController;
+use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -25,16 +24,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::prefix('gestao')->middleware('auth')->group(function () {
-    Route::get('/', [GestaoController::class, 'index'])->name('gestao.index');
-    Route::put('/{id}', [GestaoController::class, 'update'])->name('gestao.update');
-    Route::post('/', [GestaoController::class, 'store'])->name('gestao.store');
-    Route::delete('/{id}', [GestaoController::class, 'destroy'])->name('gestao.destroy');
+Route::prefix('lancamentos')
+    ->middleware('auth')
+    ->name('lancamentos.')
+    ->group(function () {
+    Route::get('/', action: [LancamentoController::class, 'index'])->name('index');
+    Route::put('/{id}', [LancamentoController::class, 'update'])->name('update');
+    Route::post('/', [LancamentoController::class, 'store'])->name('store');
+    Route::delete('/{id}', [LancamentoController::class, 'destroy'])->name('destroy');
 });
 
-Route::prefix('categorias')->middleware('auth')->group(function () {
-    Route::get('/', [CategoriaController::class, 'index'])->name('categorias.index');
-    Route::post('/', [CategoriaController::class, 'store'])->name('categorias.store');
-});
 
 require __DIR__.'/auth.php';

@@ -36,7 +36,7 @@ const submit = () => {
 
         <!-- LOGO / TÍTULO -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-green-700">Organizei</h1>
+          <h1 class="text-3xl font-bold text-green-700">Faturaí</h1>
           <p class="text-gray-500 mt-2">Controle financeiro inteligente</p>
         </div>
 

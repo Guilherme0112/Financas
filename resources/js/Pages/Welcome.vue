@@ -9,13 +9,13 @@ defineProps<{
 
 <template>
 
-  <Head title="Organizei - Controle Financeiro Inteligente" />
+  <Head title="Faturaí - Controle Financeiro Inteligente" />
 
   <div class="min-h-screen bg-gradient-to-br from-green-50 to-green-100 text-gray-800">
 
     <!-- HEADER -->
     <header class="max-w-7xl mx-auto flex items-center justify-between px-6 py-6">
-      <h1 class="text-2xl font-bold text-green-700">Organizei</h1>
+      <h1 class="text-2xl font-bold text-green-700">Faturaí</h1>
 
       <nav class="space-x-4" v-if="canLogin">
         <Link v-if="$page.props.auth.user" :href="route('dashboard')"
@@ -62,7 +62,7 @@ defineProps<{
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-xl p-8">
+     <div class="bg-white rounded-2xl shadow-xl p-8 transition-transform duration-300 hover:rotate-1 hover:scale-[1.02]">
         <div class="grid grid-cols-2 gap-4">
           <div class="bg-green-50 p-4 rounded-xl">
             <p class="text-sm text-gray-500">Saldo atual</p>
@@ -197,7 +197,7 @@ defineProps<{
     <section class="py-20 bg-green-600 text-white text-center">
       <h3 class="text-3xl font-bold">Pare de perder dinheiro hoje mesmo</h3>
       <p class="mt-4 text-lg opacity-90">
-        Comece agora a usar o Organizei e tenha controle total sobre sua vida financeira.
+        Comece agora a usar o Faturaí e tenha controle total sobre sua vida financeira.
       </p>
 
       <Link v-if="canRegister" :href="route('register')"
@@ -208,7 +208,7 @@ defineProps<{
 
     <!-- FOOTER -->
     <footer class="py-10 text-center text-gray-500 text-sm">
-      © {{ new Date().getFullYear() }} Organizei — Todos os direitos reservados.
+      © {{ new Date().getFullYear() }} Faturaí — Todos os direitos reservados.
     </footer>
   </div>
 </template>

@@ -25,7 +25,7 @@ const submit = () => {
 <template>
     <GuestLayout>
 
-        <Head title="Criar conta - Organizei" />
+        <Head title="Criar conta" />
 
         <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-4">
             <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
