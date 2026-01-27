@@ -23,7 +23,7 @@ class LancamentoController extends Controller
         $this->lancamentoService = $lancamentoService;
     }
 
-    public function index(IndexLancamentosRequest $request)
+    public function index(IndexLancamentosRequest $request): Response
     {
         $lancamentos = $this->lancamentoService->listar(
             $request->validated()

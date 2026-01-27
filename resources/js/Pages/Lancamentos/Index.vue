@@ -13,6 +13,7 @@ import { toast } from 'vue3-toastify';
 import NavLink from '@/Components/NavLink.vue'
 import FiltrosLancamentos from './Partials/FiltrosLancamentos.vue';
 import { Plus, SlidersHorizontal } from 'lucide-vue-next'
+import Paginacao from '@/Components/Paginacao.vue'
 
 const props = defineProps<{
   lancamentos: Page<Lancamento>
@@ -124,13 +125,15 @@ const excluir = (id: number) => {
   }
 }
 
-const mudarPagina = (num: number) => {
-  if (num >= 1 && num <= props.lancamentos.last_page) {
-    router.get(route('lancamentos.index'), { page: num }, {
-      preserveScroll: true,
-      preserveState: true
-    });
-  }
+const mudarPagina = (page: number) => {
+  router.get(
+    route('lancamentos.index'),
+    { page },
+    {
+      preserveState: true,
+      replace: true,
+    }
+  )
 }
 
 </script>
@@ -194,27 +197,13 @@ const mudarPagina = (num: number) => {
         </template>
       </Table>
 
-      <!-- PAGINAÇÃO REAL -->
-      <div class="flex justify-center items-center gap-2 mt-4">
-        <button @click="mudarPagina(props.lancamentos.current_page - 1)" :disabled="!props.lancamentos.prev_page_url"
-          class="px-3 py-1 border rounded">
-          «
-        </button>
-
-        <span>
-          Página {{ props.lancamentos.current_page }} de {{ props.lancamentos.last_page }}
-        </span>
-
-        <button @click="mudarPagina(props.lancamentos.current_page + 1)" :disabled="!props.lancamentos.next_page_url"
-          class="px-3 py-1 border rounded">
-          »
-        </button>
-      </div>
+      <!-- PAGINAÇÃO  -->
+      <Paginacao :pagination="lancamentos" @change="mudarPagina" />
 
       <!-- FORMULÁRIO PARA CRIAR LANÇAMENTO -->
       <LancamentoForm :show="showModal" :form="form" :editando="!!editando"
         :categorias-entrada="props.categoriasEntrada" :categorias-saida="props.categoriasSaida"
-        @close="showModal = false" :id="editando?.id" />
+        @close="showModal = false; form.resetAndClearErrors()" :id="editando?.id" />
 
       <!-- FILTROS DOS LANÇAMENTOS -->
       <FiltrosLancamentos :show="mostrarFiltro" @close="mostrarFiltro = false" />

@@ -13,7 +13,6 @@ declare global {
 const page = usePage();
 const dashboard = page.props.dashboard as any;
 
-// Paletas de Cores Profissionais
 const redPalette = ['#dc2626', '#991b1b', '#ef4444', '#7f1d1d', '#b91c1c', '#f87171'];
 const greenPalette = ['#059669', '#064e3b', '#10b981', '#065f46', '#34d399', '#022c22'];
 
@@ -67,7 +66,7 @@ const drawPie = () => {
 };
 
 const drawLine = () => {
-  const rows = dashboard.graficos.linha.map((item: any) => [new Date(item.mes), Number(item.total)]);
+  const rows = dashboard.graficos.mensal.map((item: any) => [new Date(item[0]), Number(item[2])]);
   const data = window.google.visualization.arrayToDataTable([
     [{ label: 'Mês', type: 'date' }, 'Gastos'],
     ...rows,
@@ -92,7 +91,7 @@ const drawComparisonBar = () => {
     ...baseOptions,
     title: 'Comparativo: Entradas vs Saídas',
     titleTextStyle: { color: '#064e3b', fontSize: 16, bold: true },
-    colors: ['#059669', '#dc2626'], // Verde vs Vermelho
+    colors: ['#059669', '#dc2626'],
     bar: { groupWidth: '70%' },
   });
 };
@@ -103,7 +102,6 @@ const drawCurveChart = () => {
   const data = window.google.visualization.arrayToDataTable(dataArray);
   new window.google.visualization.LineChart(document.getElementById('curve_chart')).draw(data, {
     ...baseOptions,
-    title: 'Performance Histórica (Curvado)',
     titleTextStyle: { color: '#064e3b', fontSize: 16, bold: true },
     curveType: 'function',
     colors: ['#059669', '#dc2626'],
@@ -133,30 +131,30 @@ onMounted(() => {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FinanceCard title="Receitas do Mês" :value="dashboard.cards.entradas" type="positive" />
           <FinanceCard title="Gastos do Mês" :value="dashboard.cards.saidas" type="negative" />
-          <FinanceCard title="Economia" :value="dashboard.cards.total" type="positive" />
+          <FinanceCard title="Economia do Mês" :value="dashboard.cards.total" type="positive" />
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="bg-red-100 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div id="pieChart" class="w-full h-[350px]"></div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="bg-green-100 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div id="pieChart2" class="w-full h-[350px]"></div>
           </div>
         </div>
 
         <div class="grid grid-cols-1 gap-6">
 
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="bg-green-100 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div id="curve_chart" class="w-full h-[350px]"></div>
           </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="bg-green-100 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div id="comparisonBarChart" class="w-full h-[350px]"></div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 w-full">
+          <div class="bg-red-100 p-6 rounded-2xl shadow-sm border border-slate-100 w-full">
             <div id="lineChart" class="w-full h-[350px]"></div>
           </div>
         </div>

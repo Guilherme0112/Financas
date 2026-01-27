@@ -7,7 +7,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import InputDinheiro from '@/Components/InputDinheiro.vue'
 import Flatpickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import InputError from '@/Components/InputError.vue'
 
@@ -23,6 +23,18 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'saved'])
 
 const salvar = () => {
+    if (props.form.mes_referencia) {
+        if (props.form.mes_referencia.toString().includes("T")) {
+            props.form.mes_referencia = props.form.mes_referencia
+                .toString()
+                .split("T")[0]
+                .replaceAll("-", "/");
+        } else {
+            props.form.mes_referencia = props.form.mes_referencia
+                .toString()
+                .replaceAll("-", "/");
+        }
+    }
     if (props.editando && props.id) {
         props.form.put(route('lancamentos.update', props.id), {
             onSuccess: () => {
@@ -42,6 +54,41 @@ const salvar = () => {
         }
     })
 }
+
+const fpInstance = ref<any>(null)
+const aplicarClasse = () => {
+    if (!fpInstance.value) return
+    const input = fpInstance.value.altInput as HTMLInputElement
+    input.classList.remove(
+        'border-red-300',
+        'border-green-300',
+        'focus:border-red-500',
+        'focus:border-green-500',
+        'focus:ring-red-500',
+        'focus:ring-green-500'
+    )
+    input.classList.add(
+        'rounded-md',
+        'shadow-sm'
+    )
+    if (props.form.errors.mes_referencia) {
+        input.classList.add(
+            'border-red-300',
+            'focus:border-red-500',
+            'focus:ring-red-500'
+        )
+    } else {
+        input.classList.add(
+            'border-green-300',
+            'focus:border-green-500',
+            'focus:ring-green-500'
+        )
+    }
+}
+watch(
+    () => props.form.errors.mes_referencia,
+    () => aplicarClasse()
+)
 
 watch(
     () => props.form.tipo,
@@ -65,6 +112,7 @@ watch(
         }
     }
 )
+
 </script>
 <template>
     <Modal :show="show" @close="emit('close')">
@@ -110,17 +158,19 @@ watch(
                 <div>
                     <InputLabel value="Data de Vencimento" />
                     <Flatpickr v-model="form.mes_referencia" :config="{
-                        dateFormat: 'Y/m/d',
+                        dateFormat: 'Y-m-d',
                         altInput: true,
                         altFormat: 'd/m/Y',
-                        enableTime: false,
                         static: true,
+                        enableTime: false,
                         allowInput: false,
-                         onReady: (_, __, instance) => {
-                            (instance.altInput as HTMLInputElement).placeholder = 'dd/MM/YYYY'
+                        onReady: (_, __, instance) => {
+                            fpInstance = instance
+                            const input = instance.altInput as HTMLInputElement
+                            input.placeholder = 'dd/MM/yyyy'
+                            aplicarClasse()
                         }
-                    }" :class="form.errors.mes_referencia ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null"
-                        class="rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500" />
+                    }" />
                     <InputError :message="form.errors.mes_referencia" />
                 </div>
                 <div>
@@ -141,7 +191,7 @@ watch(
 
                     <!-- SAÍDA -->
                     <div v-if="form.tipo === 'SAIDA'">
-                        <select  v-model="form.categoria_saida"
+                        <select v-model="form.categoria_saida"
                             class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                             :class="form.errors.categoria_saida ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
                             <option disabled value="">Selecione</option>

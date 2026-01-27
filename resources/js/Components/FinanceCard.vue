@@ -16,8 +16,8 @@ const isNegative = computed(() => props.type === 'negative')
 
 const containerClass = computed(() =>
   isNegative.value
-    ? 'bg-red-100 border border-red-200'
-    : 'bg-emerald-100 border border-emerald-200'
+    ? 'bg-red-100'
+    : 'bg-emerald-100'
 )
 
 const titleClass = computed(() =>

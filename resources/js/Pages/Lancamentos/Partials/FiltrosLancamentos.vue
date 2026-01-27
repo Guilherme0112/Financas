@@ -5,6 +5,8 @@ import PrimaryButton from '@/Components/PrimaryButton.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
 import Flatpickr from 'vue-flatpickr-component'
 import { useForm, router } from '@inertiajs/vue3'
+import InputError from '@/Components/InputError.vue';
+import { ref, watch } from 'vue';
 
 defineProps<{
     show: boolean
@@ -37,9 +39,13 @@ const filtrar = () => {
     }, {
         preserveState: true,
         replace: true,
+        onSuccess: () => {
+            emit('close')
+        },
+        onError: (errors) => {
+            form.setError(errors)
+        }
     })
-
-    emit('close')
 }
 
 const limparFiltros = () => {
@@ -50,79 +56,150 @@ const limparFiltros = () => {
     emit('close')
 }
 
+const fpInstanceInicio = ref<any>(null)
+const fpInstanceFim = ref<any>(null)
 
+const aplicarClasse = (instance: any, errorKey: 'data_inicio' | 'data_fim') => {
+    if (!instance) return
+    
+    const input = instance.altInput as HTMLInputElement
+    
+    input.classList.remove(
+        'border-red-300',
+        'border-green-300',
+        'focus:border-red-500',
+        'focus:border-green-500',
+        'focus:ring-red-500',
+        'focus:ring-green-500'
+    )
+    
+    input.classList.add('rounded-md', 'shadow-sm')
+    
+    if (form.errors[errorKey]) {
+        input.classList.add(
+            'border-red-300',
+            'focus:border-red-500',
+            'focus:ring-red-500'
+        )
+    } else {
+        input.classList.add(
+            'border-green-300',
+            'focus:border-green-500',
+            'focus:ring-green-500'
+        )
+    }
+}
+
+// Criar as configurações uma única vez
+const configDataInicio = {
+    dateFormat: 'Y/m/d',
+    altInput: true,
+    altFormat: 'd/m/Y',
+    enableTime: false,
+    static: true,
+    allowInput: false,
+    onReady: (_: any, __: any, instance: any) => {
+        fpInstanceInicio.value = instance
+        const input = instance.altInput as HTMLInputElement
+        input.placeholder = 'Data inicial'
+        aplicarClasse(instance, 'data_inicio')
+    }
+}
+
+const configDataFim = {
+    dateFormat: 'Y/m/d',
+    altInput: true,
+    altFormat: 'd/m/Y',
+    enableTime: false,
+    static: true,
+    allowInput: false,
+    onReady: (_: any, __: any, instance: any) => {
+        fpInstanceFim.value = instance
+        const input = instance.altInput as HTMLInputElement
+        input.placeholder = 'Data final'
+        aplicarClasse(instance, 'data_fim')
+    }
+}
+
+watch(
+    () => form.errors.data_inicio,
+    () => aplicarClasse(fpInstanceInicio.value, 'data_inicio')
+)
+
+watch(
+    () => form.errors.data_fim,
+    () => aplicarClasse(fpInstanceFim.value, 'data_fim')
+)
 </script>
 
 <template>
     <Modal :show="show" @close="emit('close')">
         <div class="px-12 py-6 space-y-6">
-
             <h3 class="text-lg font-bold text-gray-800">
                 Filtrar lançamentos
             </h3>
 
             <!-- Período -->
-            <div class="grid grid-cols-3 items-end">
-                <div>
-                    <InputLabel value="Data inicial" />
-                    <Flatpickr v-model="form.data_inicio" :config="{
-                        dateFormat: 'Y/m/d',
-                        altInput: true,
-                        altFormat: 'd/m/Y',
-                        enableTime: false,
-                        static: true,
-                        allowInput: false,
-                        onReady: (_, __, instance) => {
-                            (instance.altInput as HTMLInputElement).placeholder = 'Data inicial'
-                        }
-                    }"
-                        class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500" />
+            <div class="grid grid-cols-[1fr_auto_1fr] gap-4 items-start">
+                <div class="flex flex-col">
+                    <InputLabel value="Data inicial" class="mb-1" />
+
+                    <Flatpickr 
+                        v-model="form.data_inicio" 
+                        :config="configDataInicio"
+                        class="w-full" />
+
+                    <div class="min-h-[24px] mt-1">
+                        <InputError :message="form.errors.data_inicio" />
+                    </div>
                 </div>
 
-                <div class="flex justify-center pb-2 text-sm text-gray-500">
+                <div class="flex items-center pt-8 px-3 text-sm text-gray-500">
                     até
                 </div>
 
-                <div>
-                    <InputLabel value="Data final" />
-                    <Flatpickr v-model="form.data_fim" :config="{
-                        dateFormat: 'Y/m/d',
-                        altInput: true,
-                        altFormat: 'd/m/Y',
-                        enableTime: false,
-                        static: true,
-                        allowInput: false,
-                        onReady: (_, __, instance) => {
-                            (instance.altInput as HTMLInputElement).placeholder = 'Data final'
-                        }
-                    }"
-                        class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500" />
+                <div class="flex flex-col">
+                    <InputLabel value="Data final" class="mb-1" />
+
+                    <Flatpickr 
+                        v-model="form.data_fim" 
+                        :config="configDataFim"
+                        class="w-full" />
+
+                    <div class="min-h-[24px] mt-1">
+                        <InputError :message="form.errors.data_fim" />
+                    </div>
                 </div>
             </div>
 
             <!-- Tipo -->
             <div>
-                <InputLabel value="Tipo" />
+                <InputLabel value="Tipo" class="mb-1" />
                 <select v-model="form.tipo"
                     class="w-full max-w-[192px] rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
                     <option value="TODOS">Todos</option>
                     <option value="ENTRADA">Entradas</option>
                     <option value="SAIDA">Saídas</option>
                 </select>
+
+                <div class="min-h-[24px] mt-1">
+                    <InputError :message="form.errors.tipo" />
+                </div>
             </div>
         </div>
+
         <!-- Ações -->
         <div class="flex justify-between gap-3 pt-4 p-6 px-12">
-            <div class="flex">
-                <SecondaryButton @click="limparFiltros" type="button">
-                    Limpar Filtros
-                </SecondaryButton>
-            </div>
+            <SecondaryButton @click="limparFiltros" type="button">
+                Limpar Filtros
+            </SecondaryButton>
+
             <div class="flex gap-3">
                 <SecondaryButton @click="emit('close')" type="button">
                     Cancelar
                 </SecondaryButton>
-                <PrimaryButton @click="filtrar" type="button">
+
+                <PrimaryButton :disabled="form.processing" @click="filtrar" type="button">
                     Aplicar filtro
                 </PrimaryButton>
             </div>

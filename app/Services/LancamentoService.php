@@ -17,57 +17,54 @@ class LancamentoService
         $data_inicial = Carbon::now()->startOfMonth()->toDateString();
         $data_final = Carbon::now()->endOfMonth()->toDateString();
 
-        $entradas = Lancamento::where('tipo', 'ENTRADA')
-            ->whereBetween('mes_referencia', [$data_inicial, $data_final])
-            ->sum('valor');
+        // Calcular totais de entradas e saídas do mês da var
+        $totais = Lancamento::whereBetween('mes_referencia', [$data_inicial, $data_final])
+            ->selectRaw("SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as entradas,
+                        SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas")
+            ->first();
 
-        $saidas = Lancamento::where('tipo', 'SAIDA')
-            ->whereBetween('mes_referencia', [$data_inicial, $data_final])
-            ->sum('valor');
 
-        $gastosPorCategoria = Lancamento::where('tipo', 'SAIDA')
-            ->whereBetween('mes_referencia', [$data_inicial, $data_final])
+        // Busca logo os dados de uma vez e agrupa depois
+        $baseMesAtual = Lancamento::whereBetween(
+            'mes_referencia',
+            [$data_inicial, $data_final]
+        );
+        $gastosPorCategoria = (clone $baseMesAtual)
+            ->where('tipo', 'SAIDA')
             ->selectRaw('categoria_saida, SUM(valor) as total')
             ->groupBy('categoria_saida')
             ->orderByDesc('total')
             ->get();
-
-        $receitasPorCategoria = Lancamento::where('tipo', 'ENTRADA')
-            ->whereBetween('mes_referencia', [$data_inicial, $data_final])
+        $receitasPorCategoria = (clone $baseMesAtual)
+            ->where('tipo', 'ENTRADA')
             ->selectRaw('categoria_entrada, SUM(valor) as total')
             ->groupBy('categoria_entrada')
             ->orderByDesc('total')
             ->get();
 
+
+        // Formatar os dados para o gráfico de pizza
         $gastosPorCategoria = $gastosPorCategoria->map(fn($item) => [
             'categoria' => ($item->categoria_saida instanceof CategoriaSaida)
                 ? $item->categoria_saida->label()
                 : CategoriaSaida::tryFrom($item->categoria_saida)?->label() ?? $item->categoria_saida,
             'total' => (float) $item->total,
         ]);
-
         $receitasPorCategoria = $receitasPorCategoria->map(fn($item) => [
             'categoria' => ($item->categoria_entrada instanceof CategoriaEntrada)
                 ? $item->categoria_entrada->label()
-                : CategoriaSaida::tryFrom($item->categoria_entrada)?->label() ?? $item->categoria_entrada,
+                : CategoriaEntrada::tryFrom($item->categoria_entrada)?->label() ?? $item->categoria_entrada,
             'total' => (float) $item->total,
         ]);
 
-        $gastosPorMes = Lancamento::where('tipo', 'SAIDA')
-            ->selectRaw("
-                    date_trunc('month', mes_referencia) as mes,
-                    SUM(valor) as total
-                ")
-            ->groupByRaw("date_trunc('month', mes_referencia)")
-            ->orderBy('mes')
-            ->get();
-
-
+        $inicio = now()->subMonths(5)->startOfMonth();
+        $fim = now()->endOfMonth();
         $lancamentosPorMes = Lancamento::selectRaw("
-            date_trunc('month', mes_referencia) as mes,
-            SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as entradas,
-            SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas
+        date_trunc('month', mes_referencia) as mes,
+        SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as entradas,
+        SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas
         ")
+            ->whereBetween('mes_referencia', [$inicio, $fim])
             ->groupByRaw("date_trunc('month', mes_referencia)")
             ->orderBy('mes')
             ->get();
@@ -81,23 +78,22 @@ class LancamentoService
 
         return [
             'cards' => [
-                'entradas' => (float) $entradas,
-                'saidas' => (float) $saidas,
-                'total' => (float) ($entradas - $saidas),
+                'entradas' => (float) $totais->entradas,
+                'saidas' => (float) $totais->saidas,
+                'total' => (float) ($totais->entradas - $totais->saidas),
             ],
             'graficos' => [
                 'pizza' => [
                     "gastos" => $gastosPorCategoria,
                     "receitas" => $receitasPorCategoria
                 ],
-                'linha' => $gastosPorMes,
                 'mensal' => $dadosMes,
             ],
         ];
     }
 
 
-    public function listar(array $filtros = [], int $perPage = 10): LengthAwarePaginator
+    public function listar(array $filtros = [], int $perPage = 15): LengthAwarePaginator
     {
         return Lancamento::query()
             ->when(
