@@ -149,9 +149,17 @@ watch(
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
-                <input type="checkbox" v-model="form.recorrente" />
-                <span class="text-sm text-gray-700">Lançamento fixo mensal</span>
+            <div class="grid" v-if="!form.id">
+                <div>
+                    <input type="checkbox" v-model="form.recorrente" />
+                    <span class="text-sm text-gray-700 ml-2">Lançamento fixo mensal</span>
+                </div>
+                <div v-if="form.recorrente" class="mt-4">
+                    <InputLabel value="Meses Recorrentes" />
+                    <TextInput v-model="form.meses_recorrentes" class="w-[150px]"
+                        :class="form.errors.meses_recorrentes ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
+                    <InputError :message="form.errors.meses_recorrentes" />
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">

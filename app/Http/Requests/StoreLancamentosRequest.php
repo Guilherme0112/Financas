@@ -31,6 +31,7 @@ class StoreLancamentosRequest extends FormRequest
             'valor' => 'required|numeric|min:1',
             'tipo' => 'required|in:ENTRADA,SAIDA',
             'recorrente' => 'required|boolean',
+            'meses_recorrentes' => "nullable|numeric|min:1|max:12",
             'categoria_entrada' => [
                 "nullable",
                 Rule::requiredIf($this->tipo === 'ENTRADA'),

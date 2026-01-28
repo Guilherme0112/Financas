@@ -34,6 +34,7 @@ const form = useForm({
   valor: '',
   tipo: 'SAIDA',
   recorrente: false,
+  meses_recorrentes: null,
   mes_referencia: '',
   categoria_entrada: null,
   categoria_saida: null

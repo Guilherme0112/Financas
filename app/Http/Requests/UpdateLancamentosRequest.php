@@ -30,7 +30,6 @@ class UpdateLancamentosRequest extends FormRequest
             'descricao' => 'nullable|string',
             'valor' => 'required|numeric|min:1',
             'tipo' => 'required|in:ENTRADA,SAIDA',
-            'recorrente' => 'required|boolean',
             'categoria_entrada' => [
                 "nullable",
                 Rule::requiredIf($this->tipo === 'ENTRADA'),

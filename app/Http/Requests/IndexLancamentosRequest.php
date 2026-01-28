@@ -28,4 +28,14 @@ class IndexLancamentosRequest extends FormRequest
             "data_fim" => ["sometimes", "date", "after_or_equal:data_inicio"],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if (!$this->has('data_inicio') && !$this->has('data_fim')) {
+            $this->merge([
+                'data_inicio' => now()->startOfMonth()->toDateString(),
+                'data_fim' => now()->endOfMonth()->toDateString(),
+            ]);
+        }
+    }
 }

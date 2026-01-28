@@ -6,7 +6,9 @@ use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
 use App\Models\Lancamento;
 use Carbon\Carbon;
+use DB;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class LancamentoService
@@ -136,14 +138,31 @@ class LancamentoService
                 ]);
                 ;
             }
-
         }
     }
 
-    public function criar(array $dados): Lancamento
+    public function criar(array $dados): Collection
     {
         $this->validarTipoCategoria($dados);
-        return Lancamento::create($dados);
+        $quantidadeMeses = (int) ($dados['meses_recorrentes'] ?? 1);
+        $dataBase = Carbon::parse($dados['mes_referencia']);
+        unset($dados['meses_recorrentes']);
+        $lancamentos = collect();
+
+        DB::transaction(function () use ($quantidadeMeses, $dataBase, $dados, &$lancamentos) {
+
+            for ($i = 0; $i < $quantidadeMeses; $i++) {
+                $dados['mes_referencia'] = $dataBase
+                    ->copy()
+                    ->addMonths($i);
+
+                $lancamentos->push(
+                    Lancamento::create($dados)
+                );
+            }
+        });
+
+        return $lancamentos;
     }
 
     public function atualizar(string $id, array $dados): Lancamento
