@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SimuladorController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -33,6 +34,5 @@ Route::prefix('lancamentos')
     Route::post('/', [LancamentoController::class, 'store'])->name('store');
     Route::delete('/{id}', [LancamentoController::class, 'destroy'])->name('destroy');
 });
-
 
 require __DIR__.'/auth.php';

@@ -35,7 +35,7 @@ const drawCharts = () => {
 
 const baseOptions = {
   backgroundColor: 'transparent',
-  fontName: 'Inter, sans-serif',
+  fontName: 'Figtree, sans-serif',
   chartArea: { width: '85%', height: '70%' },
   legend: { position: 'bottom', textStyle: { color: '#64748b', fontSize: 12 } },
   animation: { startup: true, duration: 800, easing: 'out' },
@@ -136,9 +136,33 @@ onMounted(() => {
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="bg-red-100 p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div class="flex justify-end mb-[-38px]">
+              <div class="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold" :class="dashboard.porcentual.saidas >= 0
+                ? 'bg-red-200 text-red-700'
+                : 'bg-green-200 text-green-700'">
+                <span v-if="dashboard.porcentual.saidas >= 0">▲</span>
+                <span v-else>▼</span>
+
+                {{ Math.abs(dashboard.porcentual.saidas).toFixed(2) }}%
+                <span class="opacity-70 ml-1">vs mês anterior</span>
+              </div>
+            </div>
+
             <div id="pieChart" class="w-full h-[350px]"></div>
           </div>
+
           <div class="bg-green-100 p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div class="flex justify-end mb-[-38px]">
+              <div class="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold" :class="dashboard.porcentual.saidas >= 0
+                ? 'bg-red-200 text-red-700'
+                : 'bg-green-200 text-green-700'">
+                <span v-if="dashboard.porcentual.entradas >= 0">▲</span>
+                <span v-else>▼</span>
+
+                {{ Math.abs(dashboard.porcentual.entradas).toFixed(2) }}%
+                <span class="opacity-70 ml-1">vs mês anterior</span>
+              </div>
+            </div>
             <div id="pieChart2" class="w-full h-[350px]"></div>
           </div>
         </div>
@@ -163,3 +187,20 @@ onMounted(() => {
     </div>
   </AuthenticatedLayout>
 </template>
+<style>
+@keyframes pop {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.badge-animate {
+  animation: pop 0.4s ease-out;
+}
+</style>

@@ -25,11 +25,66 @@ class LancamentoService
                         SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas")
             ->first();
 
+        $lancamentosPorCategoria = $this->totaisPorCategoria(now()->startOfMonth(), now()->endOfMonth());
 
-        // Busca logo os dados de uma vez e agrupa depois
+        $inicio = now()->subMonths(5)->startOfMonth();
+        $fim = now()->endOfMonth();
+        $lancamentosPorMes = Lancamento::selectRaw("
+        date_trunc('month', mes_referencia) as mes,
+        SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as entradas,
+        SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas
+        ")
+            ->whereBetween('mes_referencia', [$inicio, $fim])
+            ->groupByRaw("date_trunc('month', mes_referencia)")
+            ->orderBy('mes')
+            ->get();
+
+        $dadosMes = $lancamentosPorMes->map(fn($item) => [
+            Carbon::parse($item->mes)->format('Y-m'),
+            (float) $item->entradas,
+            (float) $item->saidas,
+        ]);
+
+        $ultimo = count($dadosMes) - 1;
+        $anterior = $ultimo - 1;
+
+        $entradaAtual = $dadosMes[$ultimo][1];
+        $entradaAnterior = $dadosMes[$anterior][1];
+
+        $saidaAtual = $dadosMes[$ultimo][2];
+        $saidaAnterior = $dadosMes[$anterior][2];
+
+        return [
+            'cards' => [
+                'entradas' => (float) $totais->entradas,
+                'saidas' => (float) $totais->saidas,
+                'total' => (float) ($totais->entradas - $totais->saidas),
+            ],
+            'graficos' => [
+                'pizza' => [
+                    "gastos" => $lancamentosPorCategoria['saidas'],
+                    "receitas" => $lancamentosPorCategoria['entradas'],
+                ],
+                'mensal' => $dadosMes,
+            ],
+            "porcentual" => [
+                'entradas' => $entradaAnterior > 0
+                    ? (($entradaAtual - $entradaAnterior) / $entradaAnterior) * 100
+                    : null,
+
+                'saidas' => $saidaAnterior > 0
+                    ? (($saidaAtual - $saidaAnterior) / $saidaAnterior) * 100
+                    : null,
+            ]
+        ];
+    }
+
+
+    public function totaisPorCategoria(Carbon $inicio, Carbon $fim): array
+    {
         $baseMesAtual = Lancamento::whereBetween(
             'mes_referencia',
-            [$data_inicial, $data_final]
+            [$inicio, $fim]
         );
         $gastosPorCategoria = (clone $baseMesAtual)
             ->where('tipo', 'SAIDA')
@@ -44,53 +99,23 @@ class LancamentoService
             ->orderByDesc('total')
             ->get();
 
-
         // Formatar os dados para o gráfico de pizza
-        $gastosPorCategoria = $gastosPorCategoria->map(fn($item) => [
+        $gastos = $gastosPorCategoria->map(fn($item) => [
             'categoria' => ($item->categoria_saida instanceof CategoriaSaida)
                 ? $item->categoria_saida->label()
                 : CategoriaSaida::tryFrom($item->categoria_saida)?->label() ?? $item->categoria_saida,
             'total' => (float) $item->total,
         ]);
-        $receitasPorCategoria = $receitasPorCategoria->map(fn($item) => [
+        $receitas = $receitasPorCategoria->map(fn($item) => [
             'categoria' => ($item->categoria_entrada instanceof CategoriaEntrada)
                 ? $item->categoria_entrada->label()
                 : CategoriaEntrada::tryFrom($item->categoria_entrada)?->label() ?? $item->categoria_entrada,
             'total' => (float) $item->total,
         ]);
 
-        $inicio = now()->subMonths(5)->startOfMonth();
-        $fim = now()->endOfMonth();
-        $lancamentosPorMes = Lancamento::selectRaw("
-        date_trunc('month', mes_referencia) as mes,
-        SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as entradas,
-        SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas
-        ")
-            ->whereBetween('mes_referencia', [$inicio, $fim])
-            ->groupByRaw("date_trunc('month', mes_referencia)")
-            ->orderBy('mes')
-            ->get();
-
-
-        $dadosMes = $lancamentosPorMes->map(fn($item) => [
-            Carbon::parse($item->mes)->format('Y-m'),
-            (float) $item->entradas,
-            (float) $item->saidas,
-        ]);
-
         return [
-            'cards' => [
-                'entradas' => (float) $totais->entradas,
-                'saidas' => (float) $totais->saidas,
-                'total' => (float) ($totais->entradas - $totais->saidas),
-            ],
-            'graficos' => [
-                'pizza' => [
-                    "gastos" => $gastosPorCategoria,
-                    "receitas" => $receitasPorCategoria
-                ],
-                'mensal' => $dadosMes,
-            ],
+            'entradas' => $receitas,
+            'saidas' => $gastos,
         ];
     }
 
