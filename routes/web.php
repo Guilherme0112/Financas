@@ -3,7 +3,6 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SimuladorController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;

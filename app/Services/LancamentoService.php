@@ -47,10 +47,8 @@ class LancamentoService
 
         $ultimo = count($dadosMes) - 1;
         $anterior = $ultimo - 1;
-
         $entradaAtual = $dadosMes[$ultimo][1];
         $entradaAnterior = $dadosMes[$anterior][1];
-
         $saidaAtual = $dadosMes[$ultimo][2];
         $saidaAnterior = $dadosMes[$anterior][2];
 
@@ -75,10 +73,22 @@ class LancamentoService
                 'saidas' => $saidaAnterior > 0
                     ? (($saidaAtual - $saidaAnterior) / $saidaAnterior) * 100
                     : null,
-            ]
+            ],
+            'lancamentos_perto_de_vencer' => $this->saidasQueVencemEm(7, 7),
         ];
     }
 
+    private function saidasQueVencemEm(int $dias, int $limit): Collection
+    {
+        $hoje = now()->startOfDay();
+        $em7Dias = now()->addDays($dias)->endOfDay();
+
+        return Lancamento::where('tipo', 'SAIDA')
+            ->whereBetween('mes_referencia', [$hoje, $em7Dias])
+            ->orderBy('mes_referencia')
+            ->limit($limit)
+            ->get();
+    }
 
     public function totaisPorCategoria(Carbon $inicio, Carbon $fim): array
     {
@@ -87,13 +97,13 @@ class LancamentoService
             [$inicio, $fim]
         );
         $gastosPorCategoria = (clone $baseMesAtual)
-            ->where('tipo', 'SAIDA')
+            ->whereTipo('SAIDA')
             ->selectRaw('categoria_saida, SUM(valor) as total')
             ->groupBy('categoria_saida')
             ->orderByDesc('total')
             ->get();
         $receitasPorCategoria = (clone $baseMesAtual)
-            ->where('tipo', 'ENTRADA')
+            ->whereTipo('ENTRADA')
             ->selectRaw('categoria_entrada, SUM(valor) as total')
             ->groupBy('categoria_entrada')
             ->orderByDesc('total')
@@ -126,7 +136,7 @@ class LancamentoService
             ->when(
                 isset($filtros['tipo']) && $filtros['tipo'] !== 'TODOS',
                 function ($q) use ($filtros) {
-                    $q->where('tipo', $filtros['tipo']);
+                    $q->whereTipo($filtros['tipo']);
                 }
             )
             ->when($filtros['data_inicio'] ?? null, function ($q, $dataInicio) {

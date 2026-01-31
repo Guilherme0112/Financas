@@ -174,8 +174,6 @@ watch(
                         allowInput: false,
                         onReady: (_, __, instance) => {
                             fpInstance = instance
-                            const input = instance.altInput as HTMLInputElement
-                            input.placeholder = 'dd/MM/yyyy'
                             aplicarClasse()
                         }
                     }" />

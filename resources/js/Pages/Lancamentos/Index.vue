@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Head, useForm, router } from '@inertiajs/vue3'
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import FinanceCard from '@/Components/FinanceCard.vue'
-import Table from '@/Components/Table.vue'
-import LancamentoForm from './Partials/LancamentoForm.vue'
-import { Lancamento } from '@/types/Lancamentos'
-import { Page } from '@/types/Page'
-import { formatarData, formatarDinheiro } from '@/utils/helpers'
-import { toast } from 'vue3-toastify';
-import NavLink from '@/Components/NavLink.vue'
+import { ref } from 'vue';
+import { Head, useForm } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import FinanceCard from '@/Components/FinanceCard.vue';
+import Table from '@/Components/Table.vue';
+import LancamentoForm from './Partials/LancamentoForm.vue';
+import { Lancamento } from '@/types/Lancamentos';
+import { Page } from '@/types/Page';
+import { formatarData, formatarDinheiro } from '@/utils/helpers';
+import NavLink from '@/Components/NavLink.vue';
 import FiltrosLancamentos from './Partials/FiltrosLancamentos.vue';
-import { Plus, SlidersHorizontal } from 'lucide-vue-next'
-import Paginacao from '@/Components/Paginacao.vue'
+import { Plus, SlidersHorizontal } from 'lucide-vue-next';
+import Paginacao from '@/Components/Paginacao.vue';
+import DeleteLancamento from './Partials/DeleteLancamento.vue';
+import { useLancamentos } from './Composables/useLancamentos';
 
 const props = defineProps<{
   lancamentos: Page<Lancamento>
@@ -21,10 +22,19 @@ const props = defineProps<{
   categoriasSaida: any[]
 }>();
 
+const {
+  lancamentosFiltrados,
+  totalEntradas,
+  totalSaidas,
+  showDeleteModal,
+  pedirExclusao,
+  confirmarExclusao,
+  mudarPagina,
+} = useLancamentos()
+
 
 const showModal = ref(false);
 const editando = ref<Lancamento | null>(null);
-const filtro = ref<'TODOS' | 'ENTRADA' | 'SAIDA'>('TODOS');
 const mostrarFiltro = ref(false);
 
 const form = useForm({
@@ -75,26 +85,9 @@ const actions = [
   {
     label: 'Excluir',
     class: 'hover:bg-red-50 text-red-600',
-    onClick: (row: any) => excluir(row.id)
+    onClick: (row: any) => pedirExclusao(row.id)
   }
-]
-
-const lancamentosFiltrados = computed(() => {
-  if (filtro.value === 'TODOS') return props.lancamentos.data
-  return props.lancamentos.data.filter(l => l.tipo === filtro.value)
-});
-
-const totalEntradas = computed(() =>
-  props.lancamentos.data
-    .filter(l => l.tipo === 'ENTRADA')
-    .reduce((t, l) => t + Number(l.valor), 0)
-);
-
-const totalSaidas = computed(() =>
-  props.lancamentos.data
-    .filter(l => l.tipo === 'SAIDA')
-    .reduce((t, l) => t + Number(l.valor), 0)
-);
+];
 
 const abrirNovo = () => {
   editando.value = null;
@@ -114,27 +107,6 @@ const abrirEdicao = (l: any) => {
   form.categoria_entrada = l.categoria_entrada;
   form.mes_referencia = l.mes_referencia || '';
   showModal.value = true;
-}
-
-const excluir = (id: number) => {
-  if (confirm('Excluir este lançamento?')) {
-    form.delete(route('lancamentos.destroy', id), {
-      onSuccess: () => {
-        toast.success('Lançamento excluído com sucesso!');
-      }
-    })
-  }
-}
-
-const mudarPagina = (page: number) => {
-  router.get(
-    route('lancamentos.index'),
-    { page },
-    {
-      preserveState: true,
-      replace: true,
-    }
-  )
 }
 
 </script>
@@ -166,12 +138,12 @@ const mudarPagina = (page: number) => {
       <div class="flex justify-between">
         <div>
           <PrimaryButton @click="mostrarFiltro = true">
-            <SlidersHorizontal size='16' />
+            <SlidersHorizontal :size="16" />
           </PrimaryButton>
         </div>
 
         <PrimaryButton @click="abrirNovo">
-          <Plus size='16' />
+          <Plus :size="16" />
         </PrimaryButton>
       </div>
 
@@ -209,28 +181,8 @@ const mudarPagina = (page: number) => {
       <!-- FILTROS DOS LANÇAMENTOS -->
       <FiltrosLancamentos :show="mostrarFiltro" @close="mostrarFiltro = false" />
 
+      <!-- DELETAR LANÇAMENTOS -->
+      <DeleteLancamento :show="showDeleteModal" @close="showDeleteModal = false" @confirm="confirmarExclusao(form)" />
     </div>
   </AuthenticatedLayout>
 </template>
-
-<style scoped>
-.btn {
-  padding: 6px 16px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-}
-
-.btn-green {
-  background: #dcfce7;
-  color: #166534;
-  padding: 6px 16px;
-  border-radius: 8px;
-}
-
-.btn-red {
-  background: #fee2e2;
-  color: #991b1b;
-  padding: 6px 16px;
-  border-radius: 8px;
-}
-</style>
