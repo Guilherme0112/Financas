@@ -124,7 +124,7 @@ watch(
 
             <div>
                 <InputLabel value="Nome" />
-                <TextInput v-model="form.nome" class="w-full"
+                <TextInput v-model="form.nome" class="w-full" required
                     :class="form.errors.nome ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
                 <InputError :message="form.errors.nome" />
             </div>
@@ -141,7 +141,9 @@ watch(
                     <InputLabel value="Tipo" />
                     <select v-model="form.tipo"
                         class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                        :class="form.errors.tipo ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
+                        :class="form.errors.tipo ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null"
+                        required
+                    >
                         <option value="SAIDA">Saída</option>
                         <option value="ENTRADA">Entrada</option>
                     </select>
@@ -149,16 +151,24 @@ watch(
                 </div>
             </div>
 
-            <div class="grid" v-if="!form.id">
-                <div>
-                    <input type="checkbox" v-model="form.recorrente" />
-                    <span class="text-sm text-gray-700 ml-2">Lançamento fixo mensal</span>
+            <div class="flex justify-between">
+                <div class="w-[50%] grid" v-if="!form.id">
+                    <div>
+                        <input type="checkbox" v-model="form.recorrente" />
+                        <span class="text-sm text-gray-700 ml-2">Lançamento recorrente</span>
+                    </div>
+                    <div v-if="form.recorrente" class="mt-4">
+                        <InputLabel value="Meses Recorrentes" />
+                        <TextInput v-model="form.meses_recorrentes" class="w-[150px]" type="number" min="1"
+                            :class="form.errors.meses_recorrentes ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
+                        <InputError :message="form.errors.meses_recorrentes" />
+                    </div>
                 </div>
-                <div v-if="form.recorrente" class="mt-4">
-                    <InputLabel value="Meses Recorrentes" />
-                    <TextInput v-model="form.meses_recorrentes" class="w-[150px]"
-                        :class="form.errors.meses_recorrentes ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
-                    <InputError :message="form.errors.meses_recorrentes" />
+                <div class="w-[50%] flex justify-start">
+                    <div v-if="form.tipo === 'SAIDA'" class="ml-2">
+                        <input type="checkbox" v-model="form.foi_pago" />
+                        <span class="text-sm text-gray-700 ml-2">Marcar como paga</span>
+                    </div>
                 </div>
             </div>
 

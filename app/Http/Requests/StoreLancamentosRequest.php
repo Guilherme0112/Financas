@@ -28,7 +28,7 @@ class StoreLancamentosRequest extends FormRequest
         return [
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
-            'valor' => 'required|numeric|min:1',
+            'valor' => 'required|decimal:2|min:1',
             'tipo' => 'required|in:ENTRADA,SAIDA',
             'recorrente' => 'required|boolean',
             'meses_recorrentes' => "nullable|numeric|min:1|max:12",
@@ -44,6 +44,14 @@ class StoreLancamentosRequest extends FormRequest
                 Rule::enum(CategoriaSaida::class),
             ],
             'mes_referencia' => 'required|date_format:Y/m/d',
+            'foi_pago' => 'nullable|boolean'
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'foi_pago' => $this->boolean('foi_pago'),
+        ]);
     }
 }

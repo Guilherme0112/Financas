@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
+use App\Enums\TipoValor;
 use App\Models\Lancamento;
 use Carbon\Carbon;
 use DB;
@@ -13,27 +14,35 @@ use Illuminate\Validation\ValidationException;
 
 class LancamentoService
 {
-
     public function dashboard(): array
     {
-        $data_inicial = Carbon::now()->startOfMonth()->toDateString();
-        $data_final = Carbon::now()->endOfMonth()->toDateString();
+        $data_inicial = Carbon::now()->startOfMonth();
+        $data_final = Carbon::now()->endOfMonth();
 
-        // Calcular totais de entradas e saídas do mês da var
-        $totais = Lancamento::whereBetween('mes_referencia', [$data_inicial, $data_final])
-            ->selectRaw("SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as entradas,
-                        SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas")
+        $entrada = TipoValor::ENTRADA->value;
+        $saida = TipoValor::SAIDA->value;
+
+        // Totais do mês
+        $totais = Lancamento::select([])
+            ->selectRaw(
+                "SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as entradas,
+         SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
+                [$entrada, $saida]
+            )
+            ->whereBetween('mes_referencia', [$data_inicial, $data_final])
             ->first();
 
         $lancamentosPorCategoria = $this->totaisPorCategoria(now()->startOfMonth(), now()->endOfMonth());
 
         $inicio = now()->subMonths(5)->startOfMonth();
         $fim = now()->endOfMonth();
-        $lancamentosPorMes = Lancamento::selectRaw("
-        date_trunc('month', mes_referencia) as mes,
-        SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as entradas,
-        SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as saidas
-        ")
+
+        $lancamentosPorMes = Lancamento::selectRaw(
+            "date_trunc('month', mes_referencia) as mes,
+        SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as entradas,
+        SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
+            [$entrada, $saida]
+        )
             ->whereBetween('mes_referencia', [$inicio, $fim])
             ->groupByRaw("date_trunc('month', mes_referencia)")
             ->orderBy('mes')
@@ -45,18 +54,26 @@ class LancamentoService
             (float) $item->saidas,
         ]);
 
+        $inicio = now()->startOfMonth();
+        $fim = now()->endOfMonth();
+
+        $lancamentosVencidos = Lancamento::whereBetween('mes_referencia', [$inicio, $fim])
+            ->whereFoiPago(false)
+            ->get();
+
+
         $ultimo = count($dadosMes) - 1;
         $anterior = $ultimo - 1;
-        $entradaAtual = $dadosMes[$ultimo][1];
-        $entradaAnterior = $dadosMes[$anterior][1];
-        $saidaAtual = $dadosMes[$ultimo][2];
-        $saidaAnterior = $dadosMes[$anterior][2];
+        $entradaAtual = $dadosMes[$ultimo][1] ?? 0;
+        $entradaAnterior = $dadosMes[$anterior][1] ?? 0;
+        $saidaAtual = $dadosMes[$ultimo][2] ?? 0;
+        $saidaAnterior = $dadosMes[$anterior][2] ?? 0;
 
         return [
             'cards' => [
                 'entradas' => (float) $totais->entradas,
                 'saidas' => (float) $totais->saidas,
-                'total' => (float) ($totais->entradas - $totais->saidas),
+                'total' => (float) $totais->entradas - (float) $totais->saidas,
             ],
             'graficos' => [
                 'pizza' => [
@@ -75,16 +92,17 @@ class LancamentoService
                     : null,
             ],
             'lancamentos_perto_de_vencer' => $this->saidasQueVencemEm(7, 7),
+            'lancamentos_vencidos' => $lancamentosVencidos,
         ];
     }
 
     private function saidasQueVencemEm(int $dias, int $limit): Collection
     {
         $hoje = now()->startOfDay();
-        $em7Dias = now()->addDays($dias)->endOfDay();
+        $emXdias = now()->addDays($dias)->endOfDay();
 
         return Lancamento::where('tipo', 'SAIDA')
-            ->whereBetween('mes_referencia', [$hoje, $em7Dias])
+            ->whereBetween('mes_referencia', [$hoje, $emXdias])
             ->orderBy('mes_referencia')
             ->limit($limit)
             ->get();
@@ -182,10 +200,9 @@ class LancamentoService
         $quantidadeMeses = (int) ($dados['meses_recorrentes'] ?? 1);
         $dataBase = Carbon::parse($dados['mes_referencia']);
         unset($dados['meses_recorrentes']);
+
         $lancamentos = collect();
-
         DB::transaction(function () use ($quantidadeMeses, $dataBase, $dados, &$lancamentos) {
-
             for ($i = 0; $i < $quantidadeMeses; $i++) {
                 $dados['mes_referencia'] = $dataBase
                     ->copy()

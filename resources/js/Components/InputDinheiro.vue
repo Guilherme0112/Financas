@@ -9,8 +9,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: number): void
-}>()
+  (e: 'update:modelValue', value: string): void
+}>();
 
 const displayValue = ref('')
 
@@ -41,17 +41,16 @@ function handleInput(v: string) {
     maximumFractionDigits: 2
   })
 
-  emit('update:modelValue', floatValue)
+  emit(
+    'update:modelValue',
+    floatValue.toFixed(2)
+  )
+
+
 }
 </script>
 
 <template>
-  <TextInput
-    v-model="displayValue"
-    @update:modelValue="handleInput"
-    :label="label"
-    :icon="icon"
-    placeholder="R$ 0,00"
-    inputmode="numeric"
-  />
+  <TextInput v-model="displayValue" @update:modelValue="handleInput" :label="label" :icon="icon" placeholder="R$ 0,00"
+    inputmode="numeric" />
 </template>

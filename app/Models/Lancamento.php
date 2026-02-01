@@ -21,11 +21,13 @@ class Lancamento extends Model
         'mes_referencia',
         'categoria_entrada',
         'categoria_saida',
+        'foi_pago'
     ];
 
     protected $casts = [
-        'valor' => 'float',
+        'valor' => 'decimal:2',
         'recorrente' => 'boolean',
+        'foi_pago' => 'boolean',
         'tipo' => TipoValor::class, 
         'categoria_entrada' => CategoriaEntrada::class,
         'categoria_saida' => CategoriaSaida::class,

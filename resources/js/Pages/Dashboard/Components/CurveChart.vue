@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useGoogleCharts } from '@/hooks/useGoogleCharts';
-import { onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
+import SemRegistro from '../Partials/SemRegistro.vue';
 
 declare global {
   interface Window {
@@ -13,7 +14,8 @@ const props = defineProps<{
 }>();
 
 const { load } = useGoogleCharts();
-
+const hasData = computed(() => props.rows && props.rows
+  .length > 0)
 const baseOptions = {
   backgroundColor: 'transparent',
   fontName: 'Figtree, sans-serif',
@@ -25,7 +27,8 @@ const baseOptions = {
   lineWidth: 4,
 }
 
-const drawChart = async() => {
+const drawChart = async () => {
+  if (!hasData.value) return;
   await load();
 
   const data = window.google.visualization.arrayToDataTable([
@@ -43,5 +46,10 @@ watch(() => props.rows, drawChart)
 </script>
 
 <template>
-  <div id="curveChart" class="w-full h-[350px]"></div>
+  <div v-if="hasData">
+    <div id="curveChart" class="w-full h-[350px]"></div>
+  </div>
+  <div v-else>
+    <SemRegistro color="green" />
+  </div>
 </template>

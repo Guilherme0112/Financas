@@ -25,10 +25,10 @@ class UpdateLancamentosRequest extends FormRequest
      */
     public function rules()
     {
-         return [
+        return [
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
-            'valor' => 'required|numeric|min:1',
+            'valor' => 'required|decimal:2|min:1',
             'tipo' => 'required|in:ENTRADA,SAIDA',
             'categoria_entrada' => [
                 "nullable",
@@ -42,6 +42,15 @@ class UpdateLancamentosRequest extends FormRequest
                 Rule::enum(CategoriaSaida::class),
             ],
             'mes_referencia' => 'required|date_format:Y/m/d',
+            'foi_pago' => 'nullable|boolean'
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'foi_pago' => $this->boolean('foi_pago'),
+        ]);
+    }
+
 }

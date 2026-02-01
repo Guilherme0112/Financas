@@ -25,7 +25,7 @@ const headers = [
 
 </script>
 <template>
-  <h3 class="font-bold pl-10 pb-3 text-red-800">Gastos perto do vencimento</h3>
+  <h3 class="font-bold pl-10 pb-3 text-red-800">Lançamentos Vencidos</h3>
   <Table :headers="headers" :rows="props.lancamentos" theme="red" />
   <div class="w-full flex justify-end mt-3">
     <div class="w-full flex justify-end mt-4">

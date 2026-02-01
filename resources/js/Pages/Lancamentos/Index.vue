@@ -32,6 +32,7 @@ const {
   mudarPagina,
 } = useLancamentos()
 
+console.log(props.lancamentos);
 
 const showModal = ref(false);
 const editando = ref<Lancamento | null>(null);
@@ -47,7 +48,8 @@ const form = useForm({
   meses_recorrentes: null,
   mes_referencia: '',
   categoria_entrada: null,
-  categoria_saida: null
+  categoria_saida: null,
+  foi_pago: null
 });
 
 const headers = [
@@ -106,6 +108,7 @@ const abrirEdicao = (l: any) => {
   form.categoria_saida = l.categoria_saida;
   form.categoria_entrada = l.categoria_entrada;
   form.mes_referencia = l.mes_referencia || '';
+  form.foi_pago = l.foi_pago;
   showModal.value = true;
 }
 
