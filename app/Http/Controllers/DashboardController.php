@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\LancamentoService;
+use App\Services\DashboardService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(LancamentoService $lancamentoService): Response
+    public function index(DashboardService $dashboardService): Response
     {
         return Inertia::render('Dashboard/Index', [
-            'dashboard' => $lancamentoService->dashboard(),
+            'dashboard' => $dashboardService->index(),
         ]);
     }
 }

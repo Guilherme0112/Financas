@@ -1,25 +1,26 @@
 import { ref, computed } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { router, useForm, usePage } from '@inertiajs/vue3'
 import { toast } from 'vue3-toastify'
 
 export function useLancamentos() {
   const page = usePage();
-  const lancamentos = page.props.lancamentos as any;
+  const lancamentos = computed(() => page.props.lancamentos as any);
+  const deleteForm = useForm({})
 
   const showModal = ref(false)
   const mostrarFiltro = ref(false)
   const showDeleteModal = ref(false)
   const lancamentoParaExcluir = ref<number | null>(null)
 
-  const lancamentosFiltrados = computed(() => lancamentos.data)
+  const lancamentosFiltrados = computed(() => lancamentos.value.data)
 
   const totalEntradas = computed(() =>
-    lancamentos.data.filter((l: any) => l.tipo === 'ENTRADA')
+    lancamentos.value.data.filter((l: any) => l.tipo === 'ENTRADA')
       .reduce((t: number, l: any) => t + Number(l.valor), 0)
   )
 
   const totalSaidas = computed(() =>
-    lancamentos.data.filter((l: any) => l.tipo === 'SAIDA')
+    lancamentos.value.data.filter((l: any) => l.tipo === 'SAIDA')
       .reduce((t: number, l: any) => t + Number(l.valor), 0)
   )
 
@@ -28,10 +29,10 @@ export function useLancamentos() {
     showDeleteModal.value = true
   }
 
-  const confirmarExclusao = (form: any) => {
+  const confirmarExclusao = () => {
     if (!lancamentoParaExcluir.value) return
 
-    form.delete(route('lancamentos.destroy', lancamentoParaExcluir.value), {
+    deleteForm.delete(route('lancamentos.destroy', lancamentoParaExcluir.value), {
       onSuccess: () => {
         toast.success('Lançamento excluído com sucesso!')
         showDeleteModal.value = false
@@ -39,6 +40,7 @@ export function useLancamentos() {
       }
     })
   }
+
 
   const mudarPagina = (page: number) => {
     router.get(route('lancamentos.index'), { page }, {
@@ -56,6 +58,7 @@ export function useLancamentos() {
     showDeleteModal,
     pedirExclusao,
     confirmarExclusao,
-    mudarPagina
+    mudarPagina,
+    deleteForm
   }
 }

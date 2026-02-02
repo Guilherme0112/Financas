@@ -21,13 +21,15 @@ const page = usePage();
 const dashboard = page.props.dashboard as any;
 const redPalette = ['#991b1b', '#dc2626', '#ef4444', '#7f1d1d', '#b91c1c', '#f87171'];
 const greenPalette = ['#064e3b', '#059669', '#10b981', '#065f46', '#34d399', '#022c22'];
+
 const gastosRows = dashboard.graficos.pizza.gastos.map(
-  (item: any) => [item.categoria, Number(item.total)]
+  (item: any) => [item.categoria_label, Number(item.total)]
 );
 
 const receitasRows = dashboard.graficos.pizza.receitas.map(
-  (item: any) => [item.categoria, Number(item.total)]
+  (item: any) => [item.categoria_label, Number(item.total)]
 );
+
 </script>
 <template>
   <Head title="Dashboard" />

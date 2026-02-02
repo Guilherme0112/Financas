@@ -25,13 +25,11 @@ class LancamentoController extends Controller
 
     public function index(IndexLancamentosRequest $request): Response
     {
-        $lancamentos = $this->lancamentoService->listar(
-            $request->validated()
-        );
+        $request->validated();
+        $lancamentos = $this->lancamentoService->listar($request);
 
         return Inertia::render('Lancamentos/Index', [
             'lancamentos' => $lancamentos,
-            'filtros' => $request->only(['tipo', 'data_inicio', 'data_fim']),
             'categoriasEntrada' => array_map(fn($c) => [
                 'value' => $c->value,
                 'label' => $c->label(),

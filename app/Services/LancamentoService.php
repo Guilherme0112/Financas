@@ -4,8 +4,9 @@ namespace App\Services;
 
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
-use App\Enums\TipoValor;
+use App\Http\Requests\IndexLancamentosRequest;
 use App\Models\Lancamento;
+use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -14,160 +15,16 @@ use Illuminate\Validation\ValidationException;
 
 class LancamentoService
 {
-    public function dashboard(): array
+    public function __construct(
+        public LancamentoRepository $lancamentoRepository
+    ) { }
+
+    public function listar(IndexLancamentosRequest $filtros, int $perPage = 15): LengthAwarePaginator
     {
-        $data_inicial = Carbon::now()->startOfMonth();
-        $data_final = Carbon::now()->endOfMonth();
-
-        $entrada = TipoValor::ENTRADA->value;
-        $saida = TipoValor::SAIDA->value;
-
-        // Totais do mês
-        $totais = Lancamento::select([])
-            ->selectRaw(
-                "SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as entradas,
-         SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
-                [$entrada, $saida]
-            )
-            ->whereBetween('mes_referencia', [$data_inicial, $data_final])
-            ->first();
-
-        $lancamentosPorCategoria = $this->totaisPorCategoria(now()->startOfMonth(), now()->endOfMonth());
-
-        $inicio = now()->subMonths(5)->startOfMonth();
-        $fim = now()->endOfMonth();
-
-        $lancamentosPorMes = Lancamento::selectRaw(
-            "date_trunc('month', mes_referencia) as mes,
-        SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as entradas,
-        SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
-            [$entrada, $saida]
-        )
-            ->whereBetween('mes_referencia', [$inicio, $fim])
-            ->groupByRaw("date_trunc('month', mes_referencia)")
-            ->orderBy('mes')
-            ->get();
-
-        $dadosMes = $lancamentosPorMes->map(fn($item) => [
-            Carbon::parse($item->mes)->format('Y-m'),
-            (float) $item->entradas,
-            (float) $item->saidas,
-        ]);
-
-        $inicio = now()->startOfMonth();
-        $fim = now()->endOfMonth();
-
-        $lancamentosVencidos = Lancamento::whereBetween('mes_referencia', [$inicio, $fim])
-            ->whereFoiPago(false)
-            ->get();
-
-
-        $ultimo = count($dadosMes) - 1;
-        $anterior = $ultimo - 1;
-        $entradaAtual = $dadosMes[$ultimo][1] ?? 0;
-        $entradaAnterior = $dadosMes[$anterior][1] ?? 0;
-        $saidaAtual = $dadosMes[$ultimo][2] ?? 0;
-        $saidaAnterior = $dadosMes[$anterior][2] ?? 0;
-
-        return [
-            'cards' => [
-                'entradas' => (float) $totais->entradas,
-                'saidas' => (float) $totais->saidas,
-                'total' => (float) $totais->entradas - (float) $totais->saidas,
-            ],
-            'graficos' => [
-                'pizza' => [
-                    "gastos" => $lancamentosPorCategoria['saidas'],
-                    "receitas" => $lancamentosPorCategoria['entradas'],
-                ],
-                'mensal' => $dadosMes,
-            ],
-            "porcentual" => [
-                'entradas' => $entradaAnterior > 0
-                    ? (($entradaAtual - $entradaAnterior) / $entradaAnterior) * 100
-                    : null,
-
-                'saidas' => $saidaAnterior > 0
-                    ? (($saidaAtual - $saidaAnterior) / $saidaAnterior) * 100
-                    : null,
-            ],
-            'lancamentos_perto_de_vencer' => $this->saidasQueVencemEm(7, 7),
-            'lancamentos_vencidos' => $lancamentosVencidos,
-        ];
+        return $this->lancamentoRepository->obterLancamentos($filtros->toArray(), $perPage);
     }
 
-    private function saidasQueVencemEm(int $dias, int $limit): Collection
-    {
-        $hoje = now()->startOfDay();
-        $emXdias = now()->addDays($dias)->endOfDay();
-
-        return Lancamento::where('tipo', 'SAIDA')
-            ->whereBetween('mes_referencia', [$hoje, $emXdias])
-            ->orderBy('mes_referencia')
-            ->limit($limit)
-            ->get();
-    }
-
-    public function totaisPorCategoria(Carbon $inicio, Carbon $fim): array
-    {
-        $baseMesAtual = Lancamento::whereBetween(
-            'mes_referencia',
-            [$inicio, $fim]
-        );
-        $gastosPorCategoria = (clone $baseMesAtual)
-            ->whereTipo('SAIDA')
-            ->selectRaw('categoria_saida, SUM(valor) as total')
-            ->groupBy('categoria_saida')
-            ->orderByDesc('total')
-            ->get();
-        $receitasPorCategoria = (clone $baseMesAtual)
-            ->whereTipo('ENTRADA')
-            ->selectRaw('categoria_entrada, SUM(valor) as total')
-            ->groupBy('categoria_entrada')
-            ->orderByDesc('total')
-            ->get();
-
-        // Formatar os dados para o gráfico de pizza
-        $gastos = $gastosPorCategoria->map(fn($item) => [
-            'categoria' => ($item->categoria_saida instanceof CategoriaSaida)
-                ? $item->categoria_saida->label()
-                : CategoriaSaida::tryFrom($item->categoria_saida)?->label() ?? $item->categoria_saida,
-            'total' => (float) $item->total,
-        ]);
-        $receitas = $receitasPorCategoria->map(fn($item) => [
-            'categoria' => ($item->categoria_entrada instanceof CategoriaEntrada)
-                ? $item->categoria_entrada->label()
-                : CategoriaEntrada::tryFrom($item->categoria_entrada)?->label() ?? $item->categoria_entrada,
-            'total' => (float) $item->total,
-        ]);
-
-        return [
-            'entradas' => $receitas,
-            'saidas' => $gastos,
-        ];
-    }
-
-
-    public function listar(array $filtros = [], int $perPage = 15): LengthAwarePaginator
-    {
-        return Lancamento::query()
-            ->when(
-                isset($filtros['tipo']) && $filtros['tipo'] !== 'TODOS',
-                function ($q) use ($filtros) {
-                    $q->whereTipo($filtros['tipo']);
-                }
-            )
-            ->when($filtros['data_inicio'] ?? null, function ($q, $dataInicio) {
-                $q->whereDate('mes_referencia', '>=', $dataInicio);
-            })
-            ->when($filtros['data_fim'] ?? null, function ($q, $dataFim) {
-                $q->whereDate('mes_referencia', '<=', $dataFim);
-            })
-            ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
-    }
-
+    // todo: a entidade deve se validar
     private function validarTipoCategoria(array $dados): void
     {
         if ($dados['tipo'] === "ENTRADA") {

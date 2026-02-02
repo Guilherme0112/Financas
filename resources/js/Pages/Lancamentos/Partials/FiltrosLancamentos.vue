@@ -7,13 +7,15 @@ import Flatpickr from 'vue-flatpickr-component'
 import { useForm, router } from '@inertiajs/vue3'
 import InputError from '@/Components/InputError.vue';
 import { ref, watch } from 'vue';
+import TextInput from '@/Components/TextInput.vue';
 
-defineProps<{
-    show: boolean
-}>()
+const props = defineProps<{
+    show: boolean,
+    categoriasEntrada: any[]
+    categoriasSaida: any[]
+}>();
 
 const emit = defineEmits(['close'])
-
 const hoje = new Date()
 const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
 const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
@@ -29,14 +31,14 @@ const form = useForm({
     data_inicio: formatar(primeiroDiaMes),
     data_fim: formatar(ultimoDiaMes),
     tipo: 'TODOS',
-})
+    foi_pago: null,
+    recorrentes: null,
+    categoria_entrada: null,
+    categoria_saida: null
+});
 
 const filtrar = () => {
-    router.get(route('lancamentos.index'), {
-        data_inicio: form.data_inicio,
-        data_fim: form.data_fim,
-        tipo: form.tipo,
-    }, {
+    form.get(route('lancamentos.index'), {
         preserveState: true,
         replace: true,
         onSuccess: () => {
@@ -49,9 +51,12 @@ const filtrar = () => {
 }
 
 const limparFiltros = () => {
-    form.data_inicio = ''
-    form.data_fim = ''
-    form.tipo = 'TODOS'
+    form.data_inicio = '';
+    form.data_fim = '';
+    form.tipo = 'TODOS';
+    form.foi_pago = null;
+    form.categoria_entrada = null;
+    form.categoria_saida = null;
     router.get(route('lancamentos.index'), {}, { replace: true, preserveState: false })
     emit('close')
 }
@@ -61,9 +66,9 @@ const fpInstanceFim = ref<any>(null)
 
 const aplicarClasse = (instance: any, errorKey: 'data_inicio' | 'data_fim') => {
     if (!instance) return
-    
+
     const input = instance.altInput as HTMLInputElement
-    
+
     input.classList.remove(
         'border-red-300',
         'border-green-300',
@@ -72,9 +77,9 @@ const aplicarClasse = (instance: any, errorKey: 'data_inicio' | 'data_fim') => {
         'focus:ring-red-500',
         'focus:ring-green-500'
     )
-    
+
     input.classList.add('rounded-md', 'shadow-sm')
-    
+
     if (form.errors[errorKey]) {
         input.classList.add(
             'border-red-300',
@@ -140,14 +145,10 @@ watch(
             </h3>
 
             <!-- Período -->
-            <div class="grid grid-cols-[1fr_auto_1fr] gap-4 items-start">
+            <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
                 <div class="flex flex-col">
                     <InputLabel value="Data inicial" class="mb-1" />
-
-                    <Flatpickr 
-                        v-model="form.data_inicio" 
-                        :config="configDataInicio"
-                        class="w-full" />
+                    <Flatpickr v-model="form.data_inicio" :config="configDataInicio" class="w-full" />
 
                     <div class="min-h-[24px] mt-1">
                         <InputError :message="form.errors.data_inicio" />
@@ -160,30 +161,72 @@ watch(
 
                 <div class="flex flex-col">
                     <InputLabel value="Data final" class="mb-1" />
-
-                    <Flatpickr 
-                        v-model="form.data_fim" 
-                        :config="configDataFim"
-                        class="w-full" />
-
+                    <Flatpickr v-model="form.data_fim" :config="configDataFim" class="w-full" />
                     <div class="min-h-[24px] mt-1">
                         <InputError :message="form.errors.data_fim" />
                     </div>
                 </div>
             </div>
 
-            <!-- Tipo -->
-            <div>
-                <InputLabel value="Tipo" class="mb-1" />
-                <select v-model="form.tipo"
-                    class="w-full max-w-[192px] rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                    <option value="TODOS">Todos</option>
-                    <option value="ENTRADA">Entradas</option>
-                    <option value="SAIDA">Saídas</option>
-                </select>
+            <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
+                <div class="flex flex-col">
+                    <InputLabel value="Tipo" class="mb-1" />
+                    <select v-model="form.tipo"
+                        class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                        <option value="TODOS">Todos</option>
+                        <option value="ENTRADA">Entradas</option>
+                        <option value="SAIDA">Saídas</option>
+                    </select>
 
-                <div class="min-h-[24px] mt-1">
-                    <InputError :message="form.errors.tipo" />
+                    <div class="min-h-[24px] mt-1">
+                        <InputError :message="form.errors.tipo" />
+                    </div>
+                </div>
+                <span class="w-[44px] flex items-center pt-8 px-3 text-sm text-gray-500"></span>
+                <div>
+                    <InputLabel value="Categoria" />
+                    <div>
+                        <select v-if="form.tipo === 'ENTRADA'" v-model="form.categoria_entrada"
+                            class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                            :class="form.errors.categoria_entrada ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
+                            <option disabled value="">Selecione</option>
+                            <option v-for="cat in categoriasEntrada" :key="cat.value" :value="cat.value">
+                                {{ cat.label }}
+                            </option>
+                        </select>
+                        <InputError :message="form.errors.categoria_entrada" />
+                    </div>
+                    <div v-if="form.tipo === 'SAIDA'">
+                        <select v-model="form.categoria_saida"
+                            class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                            :class="form.errors.categoria_saida ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
+                            <option disabled value="">Selecione</option>
+                            <option v-for="cat in categoriasSaida" :key="cat.value" :value="cat.value">
+                                {{ cat.label }}
+                            </option>
+                        </select>
+                        <InputError :message="form.errors.categoria_saida" />
+                    </div>
+                    <div v-if="form.tipo === 'TODOS'">
+                        <p class="text-xs text-gray-600 mt-2">Selecione um <b>Tipo</b> para conseguir escolher uma <b>Categoria.</b></p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex flex-col">
+                    <div>
+                        <div class="h-[24px]">
+                            <div v-if="form.tipo === 'SAIDA' || form.tipo === 'TODOS'">
+                                <TextInput type="checkbox" v-model="form.foi_pago" />
+                                <span class="text-sm text-gray-700 ml-2">Marcadas como Pagas</span>
+                            </div>
+                        </div>
+                        <div class="h-[24px]">
+                            <TextInput type="checkbox" v-model="form.recorrentes" />
+                            <span class="text-sm text-gray-700 ml-2">Marcadas como Recorrentes</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

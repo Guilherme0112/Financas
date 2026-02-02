@@ -2,7 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CategoriaEntrada;
+use App\Enums\CategoriaSaida;
+use App\Enums\TipoValor;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IndexLancamentosRequest extends FormRequest
 {
@@ -26,6 +30,16 @@ class IndexLancamentosRequest extends FormRequest
             "tipo" => ["sometimes", "in:TODOS,ENTRADA,SAIDA"],
             "data_inicio" => ["sometimes", "date"],
             "data_fim" => ["sometimes", "date", "after_or_equal:data_inicio"],
+            'foi_pago' => ['sometimes', 'boolean'],
+            "recorrentes" => ['sometimes', 'boolean'],
+            "categoria_entrada" => [
+                "nullable",
+                Rule::enum(CategoriaEntrada::class)
+            ],
+            "categoria_saida" => [
+                "nullable",
+                Rule::enum(CategoriaSaida::class)
+            ]
         ];
     }
 
@@ -37,5 +51,9 @@ class IndexLancamentosRequest extends FormRequest
                 'data_fim' => now()->endOfMonth()->toDateString(),
             ]);
         }
+        $this->merge([
+            'foi_pago' => $this->boolean('foi_pago'),
+            'recorrentes' => $this->boolean('recorrentes'),
+        ]);
     }
 }

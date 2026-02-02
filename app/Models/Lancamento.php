@@ -12,6 +12,8 @@ class Lancamento extends Model
 {
     use HasFactory;
 
+    protected $appends = ['categoria_label'];
+
     protected $fillable = [
         'nome',
         'descricao',
@@ -28,7 +30,7 @@ class Lancamento extends Model
         'valor' => 'decimal:2',
         'recorrente' => 'boolean',
         'foi_pago' => 'boolean',
-        'tipo' => TipoValor::class, 
+        'tipo' => TipoValor::class,
         'categoria_entrada' => CategoriaEntrada::class,
         'categoria_saida' => CategoriaSaida::class,
     ];
@@ -37,4 +39,12 @@ class Lancamento extends Model
     {
         return $this->belongsTo(Categoria::class);
     }
+
+    public function getCategoriaLabelAttribute(): ?string
+    {
+        return $this->tipo === TipoValor::SAIDA
+            ? $this->categoria_saida?->label()
+            : $this->categoria_entrada?->label();
+    }
+
 }

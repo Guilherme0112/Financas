@@ -2,6 +2,7 @@
 import NavLink from '@/Components/NavLink.vue';
 import Table from '@/Components/Table.vue';
 import { formatarData, formatarDinheiro } from '@/utils/helpers';
+import { ArrowRight } from 'lucide-vue-next';
 
 const props = defineProps<{
   lancamentos: any[]
@@ -16,6 +17,11 @@ const headers = [
     format: (v: any) => formatarDinheiro(v) || '-'
   },
   {
+    label: 'Categoria',
+    key: 'categoria_label',
+    align: 'right',
+  },
+  {
     label: 'Vencimento',
     key: 'mes_referencia',
     align: 'center',
@@ -27,9 +33,9 @@ const headers = [
 <template>
   <h3 class="font-bold pl-10 pb-3 text-red-800">Gastos perto do vencimento</h3>
   <Table :headers="headers" :rows="props.lancamentos" theme="red" />
-  <div class="w-full flex justify-end mt-3">
-    <div class="w-full flex justify-end mt-4">
-      <NavLink :href="route('lancamentos.index')" :active="route().current('lancamentos.index')" class="
+  <div class="w-full flex justify-end">
+    <div class="w-full flex justify-end">
+      <NavLink :href="route('lancamentos.index', { tipo: 'SAIDA', foi_pago: false })" :active="route().current('lancamentos.index')" class="
       text-red-700
       hover:text-red-900
       font-semibold
@@ -37,8 +43,10 @@ const headers = [
       underline
       underline-offset-4
       pr-1
+      mt-2
     ">
-        Ver mais →
+        Ver Mais
+        <ArrowRight :size="14" class="ml-1" />
       </NavLink>
     </div>
   </div>

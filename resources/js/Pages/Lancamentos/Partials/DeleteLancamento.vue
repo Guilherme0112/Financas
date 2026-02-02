@@ -3,14 +3,15 @@ import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
 
-defineProps<{
-  show: boolean
+const props = defineProps<{
+  show: boolean;
+  isDisabled: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'confirm'): void
   (e: 'close'): void
-}>()
+}>();
 </script>
 
 <template>
@@ -31,7 +32,7 @@ const emit = defineEmits<{
           Cancelar
         </SecondaryButton>
 
-        <DangerButton class="bg-red-600 hover:bg-red-700" @click="emit('confirm')">
+        <DangerButton :disabled="props.isDisabled" @click="emit('confirm')">
           Excluir
         </DangerButton>
       </div>

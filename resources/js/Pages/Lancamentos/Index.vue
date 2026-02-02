@@ -9,7 +9,6 @@ import LancamentoForm from './Partials/LancamentoForm.vue';
 import { Lancamento } from '@/types/Lancamentos';
 import { Page } from '@/types/Page';
 import { formatarData, formatarDinheiro } from '@/utils/helpers';
-import NavLink from '@/Components/NavLink.vue';
 import FiltrosLancamentos from './Partials/FiltrosLancamentos.vue';
 import { Plus, SlidersHorizontal } from 'lucide-vue-next';
 import Paginacao from '@/Components/Paginacao.vue';
@@ -30,9 +29,8 @@ const {
   pedirExclusao,
   confirmarExclusao,
   mudarPagina,
-} = useLancamentos()
-
-console.log(props.lancamentos);
+  deleteForm
+} = useLancamentos();
 
 const showModal = ref(false);
 const editando = ref<Lancamento | null>(null);
@@ -65,10 +63,9 @@ const headers = [
     align: 'right'
   },
   {
-    label: 'Fixo',
-    key: 'recorrente',
+    label: 'Categoria',
+    key: 'categoria_label',
     align: 'center',
-    format: (v: any) => v ? 'Sim' : 'Não'
   },
   {
     label: 'Mês',
@@ -115,19 +112,8 @@ const abrirEdicao = (l: any) => {
 </script>
 <template>
 
-  <Head title="Gestão Financeira" />
+  <Head title="Lançamentos" />
   <AuthenticatedLayout>
-    <template #header>
-      <div class="flex justify-start items-center">
-        <h2 class="text-xl font-semibold text-emerald-800">Gestão Financeira</h2>
-        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex h-16">
-          <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-            Configurações
-          </NavLink>
-        </div>
-      </div>
-    </template>
-
     <div class="py-10 max-w-7xl mx-auto space-y-8 px-2">
 
       <!-- RESUMO -->
@@ -182,10 +168,13 @@ const abrirEdicao = (l: any) => {
         @close="showModal = false; form.resetAndClearErrors()" :id="editando?.id" />
 
       <!-- FILTROS DOS LANÇAMENTOS -->
-      <FiltrosLancamentos :show="mostrarFiltro" @close="mostrarFiltro = false" />
+      <FiltrosLancamentos :show="mostrarFiltro" @close="mostrarFiltro = false"
+        :categorias-entrada="props.categoriasEntrada" :categorias-saida="props.categoriasSaida" />
 
       <!-- DELETAR LANÇAMENTOS -->
-      <DeleteLancamento :show="showDeleteModal" @close="showDeleteModal = false" @confirm="confirmarExclusao(form)" />
+      <DeleteLancamento :show="showDeleteModal" @close="showDeleteModal = false" @confirm="confirmarExclusao"
+        :isDisabled="deleteForm.processing" />
+
     </div>
   </AuthenticatedLayout>
 </template>

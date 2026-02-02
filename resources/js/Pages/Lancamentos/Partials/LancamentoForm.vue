@@ -23,18 +23,12 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'saved'])
 
 const salvar = () => {
-    if (props.form.mes_referencia) {
-        if (props.form.mes_referencia.toString().includes("T")) {
-            props.form.mes_referencia = props.form.mes_referencia
-                .toString()
-                .split("T")[0]
-                .replaceAll("-", "/");
-        } else {
-            props.form.mes_referencia = props.form.mes_referencia
-                .toString()
-                .replaceAll("-", "/");
-        }
+    if (props.form.mes_referencia instanceof Date) {
+        const d = props.form.mes_referencia
+        props.form.mes_referencia =
+            `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
     }
+
     if (props.editando && props.id) {
         props.form.put(route('lancamentos.update', props.id), {
             onSuccess: () => {
@@ -142,8 +136,7 @@ watch(
                     <select v-model="form.tipo"
                         class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                         :class="form.errors.tipo ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null"
-                        required
-                    >
+                        required>
                         <option value="SAIDA">Saída</option>
                         <option value="ENTRADA">Entrada</option>
                     </select>
@@ -152,21 +145,23 @@ watch(
             </div>
 
             <div class="flex justify-between">
-                <div class="w-[50%] grid" v-if="!form.id">
-                    <div>
-                        <input type="checkbox" v-model="form.recorrente" />
-                        <span class="text-sm text-gray-700 ml-2">Lançamento recorrente</span>
-                    </div>
-                    <div v-if="form.recorrente" class="mt-4">
-                        <InputLabel value="Meses Recorrentes" />
-                        <TextInput v-model="form.meses_recorrentes" class="w-[150px]" type="number" min="1"
-                            :class="form.errors.meses_recorrentes ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
-                        <InputError :message="form.errors.meses_recorrentes" />
+                <div class="w-[50%] grid">
+                    <div v-if="!form.id">
+                        <div>
+                            <TextInput type="checkbox" v-model="form.recorrente" />
+                            <span class="text-sm text-gray-700 ml-2">Lançamento recorrente</span>
+                        </div>
+                        <div v-if="form.recorrente" class="mt-4">
+                            <InputLabel value="Meses Recorrentes" />
+                            <TextInput v-model="form.meses_recorrentes" class="w-[150px]" type="number" min="1"
+                                :class="form.errors.meses_recorrentes ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
+                            <InputError :message="form.errors.meses_recorrentes" />
+                        </div>
                     </div>
                 </div>
                 <div class="w-[50%] flex justify-start">
                     <div v-if="form.tipo === 'SAIDA'" class="ml-2">
-                        <input type="checkbox" v-model="form.foi_pago" />
+                        <TextInput type="checkbox" v-model="form.foi_pago" />
                         <span class="text-sm text-gray-700 ml-2">Marcar como paga</span>
                     </div>
                 </div>
@@ -176,7 +171,7 @@ watch(
                 <div>
                     <InputLabel value="Data de Vencimento" />
                     <Flatpickr v-model="form.mes_referencia" :config="{
-                        dateFormat: 'Y-m-d',
+                        dateFormat: 'Y/m/d',
                         altInput: true,
                         altFormat: 'd/m/Y',
                         static: true,
@@ -191,8 +186,6 @@ watch(
                 </div>
                 <div>
                     <InputLabel value="Categoria" />
-
-                    <!-- ENTRADA -->
                     <div>
                         <select v-if="form.tipo === 'ENTRADA'" v-model="form.categoria_entrada"
                             class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -205,7 +198,6 @@ watch(
                         <InputError :message="form.errors.categoria_entrada" />
                     </div>
 
-                    <!-- SAÍDA -->
                     <div v-if="form.tipo === 'SAIDA'">
                         <select v-model="form.categoria_saida"
                             class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -217,9 +209,7 @@ watch(
                         </select>
                         <InputError :message="form.errors.categoria_saida" />
                     </div>
-
                 </div>
-
             </div>
 
             <div>
@@ -230,10 +220,9 @@ watch(
                 <InputError :message="form.errors.descricao" />
             </div>
 
-
             <div class="flex justify-end gap-3 pt-6">
                 <SecondaryButton @click="emit('close')">Cancelar</SecondaryButton>
-                <PrimaryButton @click="salvar">Salvar</PrimaryButton>
+                <PrimaryButton @click="salvar" :disabled="form.processing || form.isDirty">Salvar</PrimaryButton>
             </div>
 
         </div>
