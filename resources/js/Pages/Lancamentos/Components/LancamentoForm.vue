@@ -222,7 +222,7 @@ watch(
 
             <div class="flex justify-end gap-3 pt-6">
                 <SecondaryButton @click="emit('close')">Cancelar</SecondaryButton>
-                <PrimaryButton @click="salvar" :disabled="form.processing || form.isDirty">Salvar</PrimaryButton>
+                <PrimaryButton @click="salvar" :disabled="form.processing">Salvar</PrimaryButton>
             </div>
 
         </div>

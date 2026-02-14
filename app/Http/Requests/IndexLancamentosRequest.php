@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
-use App\Enums\TipoValor;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

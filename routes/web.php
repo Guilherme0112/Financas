@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TrocaDeDadosController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,6 +33,23 @@ Route::prefix('lancamentos')
     Route::put('/{id}', [LancamentoController::class, 'update'])->name('update');
     Route::post('/', [LancamentoController::class, 'store'])->name('store');
     Route::delete('/{id}', [LancamentoController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('importar')
+    ->middleware('auth')
+    ->name('importar.')
+    ->group(function () {
+    Route::post('/xlsx', [TrocaDeDadosController::class, 'importarXLSX'])->name('xlsx');
+    Route::post('/csv', [TrocaDeDadosController::class, 'importarCSV'])->name('csv');
+});
+
+Route::prefix(prefix: 'exportar')
+    ->middleware('auth')
+    ->name('exportar.')
+    ->group(function () {
+    Route::get("/download/{id}", [TrocaDeDadosController::class, 'download'])->name('download');
+    Route::post('/xlsx', [TrocaDeDadosController::class, 'exportarXLSX'])->name('xlsx');
+    Route::post('/pdf', [TrocaDeDadosController::class, 'exportarPDF'])->name('pdf');
 });
 
 require __DIR__.'/auth.php';

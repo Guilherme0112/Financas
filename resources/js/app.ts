@@ -6,10 +6,14 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, DefineComponent, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { VMoney } from 'v-money3';
+import { configureEcho } from '@laravel/echo-vue';
+
+configureEcho({
+    broadcaster: 'reverb',
+});
 import Vue3Toastify from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => `${title}`,
@@ -24,8 +28,9 @@ createInertiaApp({
             .use(ZiggyVue)
             .directive('money', VMoney)
             .use(Vue3Toastify, {
-                autoClose: 3000,
+                autoClose: 5000,
                 position: 'top-right',
+                limit: 1,
             })
             .mount(el);
     },

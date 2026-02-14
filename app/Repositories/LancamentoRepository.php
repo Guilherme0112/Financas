@@ -6,11 +6,12 @@ use App\Enums\TipoValor;
 use App\Models\Lancamento;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class LancamentoRepository
 {
 
-    public function obterLancamentos(array $filtros, int $perPage)
+    public function obterLancamentos(array $filtros, int $perPage): LengthAwarePaginator
     {
         return Lancamento::query()
             ->when(

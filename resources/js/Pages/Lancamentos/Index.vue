@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { onMounted, ref } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import FinanceCard from '@/Components/FinanceCard.vue';
-import Table from '@/Components/Table.vue';
-import LancamentoForm from './Partials/LancamentoForm.vue';
+import LancamentoForm from './Components/LancamentoForm.vue';
 import { Lancamento } from '@/types/Lancamentos';
 import { Page } from '@/types/Page';
-import { formatarData, formatarDinheiro } from '@/utils/helpers';
-import FiltrosLancamentos from './Partials/FiltrosLancamentos.vue';
-import { Plus, SlidersHorizontal } from 'lucide-vue-next';
+import FiltrosLancamentos from './Components/FiltrosLancamentos.vue';
 import Paginacao from '@/Components/Paginacao.vue';
-import DeleteLancamento from './Partials/DeleteLancamento.vue';
+import DeleteLancamento from './Components/DeleteLancamento.vue';
 import { useLancamentos } from './Composables/useLancamentos';
+import ImportarDados from './Components/ImportarDados.vue';
+import ExportarDados from './Components/ExportarDados.vue';
+import echo from '@/echo';
+import { toast } from 'vue3-toastify';
+import TableLancamentos from './Partials/TableLancamentos.vue';
+import Acoes from './Partials/Acoes.vue';
+import { h } from 'vue'
+import Resumo from './Partials/Resumo.vue';
+import Load from '@/Components/Load.vue';
 
 const props = defineProps<{
   lancamentos: Page<Lancamento>
@@ -29,12 +33,18 @@ const {
   pedirExclusao,
   confirmarExclusao,
   mudarPagina,
-  deleteForm
+  deleteForm,
+  headers
 } = useLancamentos();
 
+const page = usePage();
 const showModal = ref(false);
 const editando = ref<Lancamento | null>(null);
+const importarDados = ref(false);
+const showExport = ref(false);
 const mostrarFiltro = ref(false);
+const loadImportacao = ref(false);
+const loadExportacao = ref(false);
 
 const form = useForm({
   id: null,
@@ -49,31 +59,6 @@ const form = useForm({
   categoria_saida: null,
   foi_pago: null
 });
-
-const headers = [
-  {
-    label: 'Tipo',
-    key: 'tipo',
-    align: 'center'
-  },
-  { label: 'Nome', key: 'nome' },
-  {
-    label: 'Valor',
-    key: 'valor',
-    align: 'right'
-  },
-  {
-    label: 'Categoria',
-    key: 'categoria_label',
-    align: 'center',
-  },
-  {
-    label: 'Mês',
-    key: 'mes_referencia',
-    align: 'center',
-    format: (v: any) => formatarData(v) || '-'
-  }
-];
 
 const actions = [
   {
@@ -109,6 +94,50 @@ const abrirEdicao = (l: any) => {
   showModal.value = true;
 }
 
+onMounted(() => {
+  echo.private(`users.${page.props.auth.user.id}`)
+    .listen('.ImportacaoFinalizada', (e: any) => {
+      loadImportacao.value = false;
+      if(e.error){
+        toast.error(`Ocorreu um erro durante a importação: ${e.error}`);
+        return;
+      }
+      
+      mudarPagina(1);
+      toast.success('Sua importação foi finalizada com sucesso!');
+    });
+});
+
+onMounted(() => {
+  echo.private(`users.${page.props.auth.user.id}`)
+    .listen('.ExportacaoFinalizada', (e: any) => {
+      showExport.value = false;
+      loadExportacao.value = false;
+
+      if(e.error){
+        toast.error(`Ocorreu um erro durante a exportação: ${e.error}`);
+        return;
+      }
+
+      const url = route("exportar.download", { id: e.exportacaoId });
+      toast.success(
+        () =>
+          h('div', { class: 'flex flex-col gap-2' }, [
+            h('span', 'Sua exportação está pronta!'),
+            h(
+              'a',
+              {
+                href: url,
+                class: 'text-emerald-600 font-semibold underline'
+              },
+              'Clique aqui para baixar'
+            )
+          ]),
+        { autoClose: false }
+      )
+    });
+});
+
 </script>
 <template>
 
@@ -117,47 +146,14 @@ const abrirEdicao = (l: any) => {
     <div class="py-10 max-w-7xl mx-auto space-y-8 px-2">
 
       <!-- RESUMO -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <FinanceCard title="Entradas" :value="totalEntradas" type="positive" />
-        <FinanceCard title="Saídas" :value="totalSaidas" type="negative" />
-        <FinanceCard title="Saldo" :value="totalEntradas - totalSaidas" />
-      </div>
+      <Resumo :total-entradas="totalEntradas" :total-saidas="totalSaidas" />
 
-      <!-- FILTROS -->
-      <div class="flex justify-between">
-        <div>
-          <PrimaryButton @click="mostrarFiltro = true">
-            <SlidersHorizontal :size="16" />
-          </PrimaryButton>
-        </div>
-
-        <PrimaryButton @click="abrirNovo">
-          <Plus :size="16" />
-        </PrimaryButton>
-      </div>
+      <!-- AÇÕES -->
+      <Acoes @novo="abrirNovo" @filtro="mostrarFiltro = true" @importar="importarDados = true"
+        @exportar="showExport = true" />
 
       <!-- TABELA -->
-      <Table :headers="headers" :rows="lancamentosFiltrados" :actions="actions">
-        <template #cell-tipo="{ row }">
-          <span v-if="row.tipo === 'ENTRADA'" class="inline-flex items-center px-2 py-1 text-xs font-semibold
-             rounded-full bg-green-100 text-green-700">
-            + Entrada
-          </span>
-
-          <span v-else class="inline-flex items-center px-2 py-1 text-xs font-semibold
-             rounded-full bg-red-100 text-red-700">
-            − Saída
-          </span>
-        </template>
-
-        <template #cell-valor="{ row }">
-          <span :class="row.tipo === 'ENTRADA'
-            ? 'text-green-600 font-semibold'
-            : 'text-red-600 font-semibold'">
-            {{ formatarDinheiro(row.valor) }}
-          </span>
-        </template>
-      </Table>
+      <TableLancamentos :headers="headers" :rows="lancamentosFiltrados" :actions="actions" theme="green" />
 
       <!-- PAGINAÇÃO  -->
       <Paginacao :pagination="lancamentos" @change="mudarPagina" />
@@ -167,6 +163,12 @@ const abrirEdicao = (l: any) => {
         :categorias-entrada="props.categoriasEntrada" :categorias-saida="props.categoriasSaida"
         @close="showModal = false; form.resetAndClearErrors()" :id="editando?.id" />
 
+      <!-- IMPORTAR DADOS -->
+      <ImportarDados :show="importarDados" @close="importarDados = false" @start="loadImportacao = true" />
+
+      <!-- EXPORTAR DADOS -->
+      <ExportarDados :show="showExport" @close="showExport = false" @start="loadExportacao = true" />
+
       <!-- FILTROS DOS LANÇAMENTOS -->
       <FiltrosLancamentos :show="mostrarFiltro" @close="mostrarFiltro = false"
         :categorias-entrada="props.categoriasEntrada" :categorias-saida="props.categoriasSaida" />
@@ -174,7 +176,13 @@ const abrirEdicao = (l: any) => {
       <!-- DELETAR LANÇAMENTOS -->
       <DeleteLancamento :show="showDeleteModal" @close="showDeleteModal = false" @confirm="confirmarExclusao"
         :isDisabled="deleteForm.processing" />
-
     </div>
+
+    <!-- LOAD DE IMPORTAÇÃO -->
+    <Load :show="loadImportacao" :message="'Estamos importando suas finanças... Aguarde um instante'" />
+
+    <!-- LOAD DE EXPORTAÇÃO -->
+    <Load :show="loadExportacao" :message="'Estamos exportando suas finanças... Aguarde um instante'" />
+
   </AuthenticatedLayout>
 </template>

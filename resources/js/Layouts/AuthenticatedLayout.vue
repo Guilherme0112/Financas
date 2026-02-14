@@ -7,58 +7,58 @@ import DropdownLink from '@/Components/DropdownLink.vue'
 import NavLink from '@/Components/NavLink.vue'
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
 
-const showingNavigationDropdown = ref(false)
+const open = ref(false)
 </script>
 
 <template>
-    <div class="min-h-screen bg-emerald-50">
+    <div class="min-h-screen bg-gradient-to-br from-emerald-50 to-white">
         <!-- Header -->
-        <header class="bg-green-100 shadow-sm">
+        <header class="sticky top-0 z-50 border-b border-emerald-100 backdrop-blur-md">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex h-14 items-center justify-between">
+                <div class="flex h-16 items-center justify-between">
 
-                    <!-- Left -->
-                    <div class="flex items-center gap-8">
-                        <Link :href="route('dashboard')" class="flex items-center gap-2">
-                            <ApplicationLogo class="h-8 w-auto text-emerald-700" />
-                            <span class="font-semibold text-emerald-800 tracking-tight">
-                                Faturaí
-                            </span>
-                        </Link>
+                    <!-- Logo -->
+                    <Link :href="route('dashboard')" class="flex items-center gap-2">
+                        <ApplicationLogo class="h-8 text-emerald-600" />
+                        <span class="text-lg font-bold tracking-tight text-emerald-900">
+                            Faturaí
+                        </span>
+                    </Link>
 
-                        <nav class="hidden sm:flex gap-1">
-                            <NavLink :href="route('dashboard')" :active="route().current('dashboard')"
-                                class="px-3 py-1.5 rounded-md text-sm transition-colors" :class="route().current('dashboard')
-                                    ? 'bg-emerald-200/60 text-emerald-900'
-                                    : 'text-emerald-800'">
-                                Dashboard
-                            </NavLink>
+                    <!-- Desktop Nav -->
+                    <nav class="hidden sm:flex items-center gap-2">
+                        <NavLink :href="route('dashboard')" :active="route().current('dashboard')" class="relative px-4 py-2 text-sm font-medium text-emerald-800
+           after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0
+           after:bg-emerald-600 after:transition-all after:duration-300
+           hover:after:w-full" :class="route().current('dashboard') && 'after:w-full'">
+                            Dashboard
+                        </NavLink>
 
-                            <NavLink :href="route('lancamentos.index')" :active="route().current('lancamentos.index')"
-                                class="px-3 py-1.5 rounded-md text-sm transition-colors" :class="route().current('lancamentos.index')
-                                    ? 'bg-emerald-200/60 text-emerald-900'
-                                    : 'text-emerald-800'">
-                                Lançamentos
-                            </NavLink>
-                        </nav>
+                        <NavLink :href="route('lancamentos.index')" :active="route().current('lancamentos.index')"
+                            class="relative px-4 py-2 text-sm font-medium text-emerald-800
+           after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0
+           after:bg-emerald-600 after:transition-all after:duration-300
+           hover:after:w-full" :class="route().current('lancamentos.index') && 'after:w-full'">
+                            Lançamentos
+                        </NavLink>
+                    </nav>
 
-                    </div>
 
-                    <!-- Right -->
+                    <!-- User -->
                     <div class="hidden sm:flex items-center">
                         <Dropdown align="right" width="48">
                             <template #trigger>
                                 <button
-                                    class="flex items-center gap-2 rounded-full bg-emerald-200/60 px-4 py-1.5 text-sm text-emerald-900 transition">
-                                    <span class="font-medium">
+                                    class="flex items-center gap-3 rounded-full bg-emerald-50 px-3 py-1.5 hover:bg-emerald-100 transition">
+
+                                    <div
+                                        class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
+                                        {{ $page.props.auth.user.name.charAt(0) }}
+                                    </div>
+
+                                    <span class="text-sm font-medium text-emerald-900">
                                         {{ $page.props.auth.user.name }}
                                     </span>
-
-                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                            clip-rule="evenodd" />
-                                    </svg>
                                 </button>
                             </template>
 
@@ -73,23 +73,23 @@ const showingNavigationDropdown = ref(false)
                         </Dropdown>
                     </div>
 
-                    <!-- Mobile button -->
-                    <button @click="showingNavigationDropdown = !showingNavigationDropdown"
-                        class="sm:hidden rounded-md p-2 text-emerald-700 hover:bg-emerald-200">
+                    <!-- Mobile Button -->
+                    <button @click="open = !open"
+                        class="sm:hidden rounded-lg p-2 text-emerald-700 hover:bg-emerald-100">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" v-if="!showingNavigationDropdown" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" v-else />
+                            <path v-if="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                            <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
 
                 </div>
             </div>
 
-            <!-- Mobile menu -->
-            <div v-if="showingNavigationDropdown" class="sm:hidden bg-emerald-100 border-t">
-                <div class="px-4 py-3 space-y-1">
+            <!-- Mobile Menu -->
+            <div v-if="open" class="sm:hidden border-t bg-white">
+                <div class="space-y-1 px-4 py-3">
                     <ResponsiveNavLink :href="route('dashboard')">
                         Dashboard
                     </ResponsiveNavLink>
@@ -106,7 +106,7 @@ const showingNavigationDropdown = ref(false)
             </div>
         </header>
 
-        <!-- Conteúdo -->
+        <!-- Content -->
         <main>
             <slot />
         </main>

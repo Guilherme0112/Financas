@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
-use App\Http\Requests\IndexLancamentosRequest;
 use App\Models\Lancamento;
 use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
@@ -19,12 +18,12 @@ class LancamentoService
         public LancamentoRepository $lancamentoRepository
     ) { }
 
-    public function listar(IndexLancamentosRequest $filtros, int $perPage = 15): LengthAwarePaginator
+    public function listar(array $filtros, int $perPage = 15): LengthAwarePaginator
     {
-        return $this->lancamentoRepository->obterLancamentos($filtros->toArray(), $perPage);
+        return $this->lancamentoRepository->obterLancamentos($filtros, $perPage);
     }
 
-    // todo: a entidade deve se validar
+    // TODO: a entidade deve se validar
     private function validarTipoCategoria(array $dados): void
     {
         if ($dados['tipo'] === "ENTRADA") {

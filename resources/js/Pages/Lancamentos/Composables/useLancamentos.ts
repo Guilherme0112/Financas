@@ -1,18 +1,17 @@
 import { ref, computed } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import { toast } from 'vue3-toastify'
+import { formatarData } from '@/utils/helpers';
 
 export function useLancamentos() {
   const page = usePage();
   const lancamentos = computed(() => page.props.lancamentos as any);
-  const deleteForm = useForm({})
-
-  const showModal = ref(false)
-  const mostrarFiltro = ref(false)
-  const showDeleteModal = ref(false)
-  const lancamentoParaExcluir = ref<number | null>(null)
-
-  const lancamentosFiltrados = computed(() => lancamentos.value.data)
+  const deleteForm = useForm({});
+  const showModal = ref(false);
+  const mostrarFiltro = ref(false);
+  const showDeleteModal = ref(false);
+  const lancamentoParaExcluir = ref<number | null>(null);
+  const lancamentosFiltrados = computed(() => lancamentos.value.data);
 
   const totalEntradas = computed(() =>
     lancamentos.value.data.filter((l: any) => l.tipo === 'ENTRADA')
@@ -41,13 +40,37 @@ export function useLancamentos() {
     })
   }
 
-
   const mudarPagina = (page: number) => {
     router.get(route('lancamentos.index'), { page }, {
       preserveState: true,
       replace: true,
     })
   }
+
+  const headers = [
+    {
+      label: 'Tipo',
+      key: 'tipo',
+      align: 'center'
+    },
+    { label: 'Nome', key: 'nome' },
+    {
+      label: 'Valor',
+      key: 'valor',
+      align: 'right'
+    },
+    {
+      label: 'Categoria',
+      key: 'categoria_label',
+      align: 'center',
+    },
+    {
+      label: 'Mês',
+      key: 'mes_referencia',
+      align: 'center',
+      format: (v: any) => formatarData(v) || '-'
+    }
+  ];
 
   return {
     lancamentosFiltrados,
@@ -59,6 +82,7 @@ export function useLancamentos() {
     pedirExclusao,
     confirmarExclusao,
     mudarPagina,
-    deleteForm
+    deleteForm,
+    headers
   }
 }

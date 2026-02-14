@@ -139,7 +139,7 @@ watch(
 
 <template>
     <Modal :show="show" @close="emit('close')">
-        <div class="px-12 py-6 space-y-6">
+        <div class="px-12 py-6 space-y-2">
             <h3 class="text-lg font-bold text-gray-800">
                 Filtrar lançamentos
             </h3>
@@ -208,7 +208,7 @@ watch(
                         <InputError :message="form.errors.categoria_saida" />
                     </div>
                     <div v-if="form.tipo === 'TODOS'">
-                        <p class="text-xs text-gray-600 mt-2">Selecione um <b>Tipo</b> para conseguir escolher uma <b>Categoria.</b></p>
+                        <p class="text-xs text-gray-600 mt-3">Selecione um <b>Tipo</b> para conseguir escolher uma <b>Categoria.</b></p>
                     </div>
                 </div>
             </div>
