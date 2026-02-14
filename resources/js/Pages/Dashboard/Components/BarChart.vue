@@ -4,19 +4,23 @@ import { computed, onMounted, watch } from 'vue'
 import SemRegistro from '../Partials/SemRegistro.vue';
 
 const props = defineProps<{
-  gastos: [string, number][]
+  gastos: [string, number][],
+  color: string
 }>()
 
 const { load } = useGoogleCharts()
 
-const options = {
+const options = computed(() => ({
   backgroundColor: 'transparent',
   fontName: 'Figtree, sans-serif',
   legend: { position: 'none' },
   chartArea: { width: '80%', height: '70%' },
-  colors: ['#dc2626'],
-  title: 'Gastos por categoria (Este mês)',  titleTextStyle: { color: '#991b1b', fontSize: 16, bold: true },
-}
+  colors: [props.color],
+  animation: { startup: true, duration: 800, easing: 'out' },
+  title: 'Gastos por categoria (Este mês)',
+  titleTextStyle: { color: props.color, fontSize: 16, bold: true },
+}))
+
 
 const hasData = computed(() => props.gastos && props.gastos.length > 0)
 
@@ -32,7 +36,7 @@ const drawChart = async () => {
 
   new window.google.visualization.BarChart(
     document.getElementById('categoryBarChart')
-  ).draw(data, options)
+  ).draw(data, options.value)
 }
 
 onMounted(drawChart)
@@ -44,6 +48,6 @@ watch(() => props.gastos, drawChart, { deep: true })
     <div id="categoryBarChart" class="w-full h-[350px]"></div>
   </div>
   <div v-else>
-    <SemRegistro color="red" />
+    <SemRegistro :color="props.color" />
   </div>
 </template>

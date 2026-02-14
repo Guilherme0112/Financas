@@ -21,7 +21,7 @@ const { load } = useGoogleCharts()
 
 const hasData = computed(() => props.rows?.length > 0)
 
-const baseOptions = {
+const baseOptions = computed(() => ({
   backgroundColor: 'transparent',
   fontName: 'Figtree, sans-serif',
 
@@ -40,7 +40,7 @@ const baseOptions = {
     position: 'bottom',
     alignment: 'center',
     textStyle: {
-      color: '#475569',
+      color: props.color,
       fontSize: 12,
     },
   },
@@ -59,7 +59,7 @@ const baseOptions = {
     duration: 700,
     easing: 'out',
   },
-}
+}));
 
 const drawChart = async () => {
   if (!hasData.value) return
@@ -76,7 +76,7 @@ const drawChart = async () => {
   )
 
   chart.draw(data, {
-    ...baseOptions,
+    ...baseOptions.value,
     title: props.title,
     colors: props.colors,
   })

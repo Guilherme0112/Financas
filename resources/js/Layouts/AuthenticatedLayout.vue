@@ -7,11 +7,11 @@ import DropdownLink from '@/Components/DropdownLink.vue'
 import NavLink from '@/Components/NavLink.vue'
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
 
-const open = ref(false)
+const open = ref(false);
 </script>
 
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-emerald-50 to-white">
+    <div class="min-h-screen bg-gray-100">
         <!-- Header -->
         <header class="sticky top-0 z-50 border-b border-emerald-100 backdrop-blur-md">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -30,7 +30,7 @@ const open = ref(false)
                         <NavLink :href="route('dashboard')" :active="route().current('dashboard')" class="relative px-4 py-2 text-sm font-medium text-emerald-800
            after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0
            after:bg-emerald-600 after:transition-all after:duration-300
-           hover:after:w-full" :class="route().current('dashboard') && 'after:w-full'">
+           hover:after:w-full focus:after:w-full" :class="route().current('dashboard') && 'after:w-full'">
                             Dashboard
                         </NavLink>
 
@@ -38,11 +38,10 @@ const open = ref(false)
                             class="relative px-4 py-2 text-sm font-medium text-emerald-800
            after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0
            after:bg-emerald-600 after:transition-all after:duration-300
-           hover:after:w-full" :class="route().current('lancamentos.index') && 'after:w-full'">
+           hover:after:w-full hover:after:w-full" :class="route().current('lancamentos.index') && 'after:w-full'">
                             Lançamentos
                         </NavLink>
                     </nav>
-
 
                     <!-- User -->
                     <div class="hidden sm:flex items-center">
