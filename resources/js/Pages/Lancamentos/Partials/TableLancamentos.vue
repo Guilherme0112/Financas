@@ -11,7 +11,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <Table :headers="headers" :rows="rows" :actions="actions" theme="green">
+    <Table :headers="headers" :rows="rows" :actions="actions" theme="emerald">
         <template #cell-tipo="{ row }">
           <span v-if="row.tipo === 'ENTRADA'" class="inline-flex items-center px-2 py-1 text-xs font-semibold
              rounded-full bg-green-100 text-green-700">

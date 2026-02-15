@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import LancamentoForm from './Components/LancamentoForm.vue';
@@ -95,22 +95,18 @@ const abrirEdicao = (l: any) => {
 }
 
 onMounted(() => {
-  echo.private(`users.${page.props.auth.user.id}`)
-    .listen('.ImportacaoFinalizada', (e: any) => {
+  const canal = echo.private(`users.${page.props.auth.user.id}`);
+  canal.listen('.ImportacaoFinalizada', (e: any) => {
       loadImportacao.value = false;
       if(e.error){
         toast.error(`Ocorreu um erro durante a importação: ${e.error}`);
         return;
       }
-      
       mudarPagina(1);
       toast.success('Sua importação foi finalizada com sucesso!');
-    });
-});
+  });
 
-onMounted(() => {
-  echo.private(`users.${page.props.auth.user.id}`)
-    .listen('.ExportacaoFinalizada', (e: any) => {
+  canal.listen('.ExportacaoFinalizada', (e: any) => {
       showExport.value = false;
       loadExportacao.value = false;
 
@@ -121,26 +117,23 @@ onMounted(() => {
 
       const url = route("exportar.download", { id: e.exportacaoId });
       toast.success(
-        () =>
-          h('div', { class: 'flex flex-col gap-2' }, [
+        () => h('div', { class: 'flex flex-col gap-2' }, [
             h('span', 'Sua exportação está pronta!'),
-            h(
-              'a',
-              {
+            h('a', {
                 href: url,
                 class: 'text-emerald-600 font-semibold underline'
-              },
-              'Clique aqui para baixar'
-            )
+              }, 'Clique aqui para baixar')
           ]),
-        { autoClose: false }
+        { autoClose: false, toastId: 'export-success' }
       )
-    });
+  });
 });
 
+onUnmounted(() => {
+  echo.leave(`users.${page.props.auth.user.id}`);
+});
 </script>
 <template>
-
   <Head title="Lançamentos" />
   <AuthenticatedLayout>
     <div class="py-10 max-w-7xl mx-auto space-y-8 px-2">

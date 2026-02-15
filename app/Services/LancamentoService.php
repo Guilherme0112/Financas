@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
 use App\Models\Lancamento;
+use App\Models\User;
 use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
 use DB;
@@ -18,9 +19,9 @@ class LancamentoService
         public LancamentoRepository $lancamentoRepository
     ) { }
 
-    public function listar(array $filtros, int $perPage = 15): LengthAwarePaginator
+    public function listar(array $filtros, ?int $perPage = 15, int $userId): LengthAwarePaginator
     {
-        return $this->lancamentoRepository->obterLancamentos($filtros, $perPage);
+        return $this->lancamentoRepository->obterLancamentos($filtros, $perPage, $userId);
     }
 
     // TODO: a entidade deve se validar
@@ -63,6 +64,7 @@ class LancamentoService
                 $dados['mes_referencia'] = $dataBase
                     ->copy()
                     ->addMonths($i);
+                $dados['user_id'] = auth()->id();
 
                 $lancamentos->push(
                     Lancamento::create($dados)

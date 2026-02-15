@@ -15,14 +15,14 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class XlsxService
 {
-    public function buscarXlsx(string $path): Lancamento
+    public function buscarXlsx(string $path, int $userId): Lancamento
     {
         $spreadsheet = IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
-        return $this->importarParaLancamentos($sheet);
+        return $this->importarParaLancamentos($sheet, $userId);
     }
 
-    public function importarParaLancamentos(Worksheet $sheet): Lancamento
+    public function importarParaLancamentos(Worksheet $sheet, int $userId): Lancamento
     {
         $rows = $sheet->toArray(null, true, true, true);
 
@@ -43,6 +43,7 @@ class XlsxService
                 'tipo' => $tipo,
                 'mes_referencia' => $row['E'],
                 'foi_pago' => (bool) $row['G'],
+                'user_id' => $userId,
                 'categoria_entrada' => $tipo === TipoValor::ENTRADA
                     ? CategoriaEntrada::from(strtoupper(trim($row['F'])))
                     : null,

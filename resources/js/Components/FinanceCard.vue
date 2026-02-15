@@ -34,7 +34,7 @@ const formattedValue = computed(() =>
 </script>
 
 <template>
-  <div :class="['p-6 rounded-xl shadow-sm transition bg-white']">
+  <div :class="['p-6 rounded-xl shadow-lg transition bg-white']">
     <p :class="['text-sm font-medium', titleClass]">
       {{ title }}
     </p>

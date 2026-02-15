@@ -23,7 +23,8 @@ class Lancamento extends Model
         'mes_referencia',
         'categoria_entrada',
         'categoria_saida',
-        'foi_pago'
+        'foi_pago',
+        'user_id'
     ];
 
     protected $casts = [
@@ -47,4 +48,8 @@ class Lancamento extends Model
             : $this->categoria_entrada?->label();
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

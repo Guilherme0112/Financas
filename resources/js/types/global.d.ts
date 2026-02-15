@@ -7,6 +7,7 @@ declare global {
     interface Window {
         axios: AxiosInstance;
         Pusher: typeof Pusher;
+        google: any;
     }
 
     /* eslint-disable no-var */

@@ -50,6 +50,6 @@ watch(() => props.rows, drawChart)
     <div id="curveChart" class="w-full h-[350px]"></div>
   </div>
   <div v-else>
-    <SemRegistro color="green" />
+    <SemRegistro />
   </div>
 </template>

@@ -53,6 +53,6 @@ watch(() => props.rows, drawChart)
     <div id="lineChart" class="w-full h-[350px]"></div>
   </div>
   <div v-else>
-    <SemRegistro color="red" />
+    <SemRegistro />
   </div>
 </template>

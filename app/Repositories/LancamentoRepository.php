@@ -11,9 +11,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class LancamentoRepository
 {
 
-    public function obterLancamentos(array $filtros, int $perPage): LengthAwarePaginator
+    public function obterLancamentos(array $filtros, ?int $perPage = 15, int $userId): LengthAwarePaginator
     {
         return Lancamento::query()
+            ->where('user_id', $userId)
             ->when(
                 ($filtros['tipo'] ?? null) && $filtros['tipo'] !== 'TODOS',
                 fn($q) => $q->whereTipo($filtros['tipo'])
@@ -46,9 +47,10 @@ class LancamentoRepository
             ->paginate($perPage);
     }
 
-    public function obterTotalPorPeriodo($data_inicial, $data_final): Lancamento
+    public function obterTotalPorPeriodo($data_inicial, $data_final, int $userId): Lancamento
     {
         return Lancamento::select([])
+            ->where('user_id', $userId)
             ->selectRaw(
                 "SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as entradas,
                             SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
@@ -58,7 +60,7 @@ class LancamentoRepository
             ->first();
     }
 
-    public function obterTotaisMensaisPorPeriodo($data_inicial, $data_final): Collection
+    public function obterTotaisMensaisPorPeriodo($data_inicial, $data_final, int $userId): Collection
     {
         return Lancamento::selectRaw(
             "date_trunc('month', mes_referencia) as mes,
@@ -66,15 +68,17 @@ class LancamentoRepository
         SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
             [TipoValor::ENTRADA->value, TipoValor::SAIDA->value]
         )
+            ->where('user_id', $userId)
             ->whereBetween('mes_referencia', [$data_inicial, $data_final])
             ->groupByRaw("date_trunc('month', mes_referencia)")
             ->orderBy('mes')
             ->get();
     }
 
-    public function obterSaidasProximasDoVencimento(Carbon $emXdias, int $limit, bool $foi_pago = true): Collection
+    public function obterSaidasProximasDoVencimento(Carbon $emXdias, int $limit, bool $foi_pago = true, int $userId): Collection
     {
         return Lancamento::where('tipo', 'SAIDA')
+            ->where('user_id', $userId)
             ->whereBetween('mes_referencia', [now()->startOfDay(), $emXdias])
             ->whereFoiPago($foi_pago)
             ->orderBy('mes_referencia')
@@ -82,9 +86,10 @@ class LancamentoRepository
             ->get();
     }
 
-    public function obterSaidasVencidasPorPeriodo(Carbon $hoje, int $limit): Collection
+    public function obterSaidasVencidasPorPeriodo(Carbon $hoje, int $limit, int $userId): Collection
     {
         return Lancamento::whereDate('mes_referencia', '<', $hoje)
+            ->where('user_id', $userId)
             ->whereTipo(TipoValor::SAIDA)
             ->whereFoiPago(false)
             ->limit($limit)
@@ -92,12 +97,14 @@ class LancamentoRepository
             ->get();
     }
 
-    public function obterTotaisDeCategoriasPorPeriodo(Carbon $data_inicial, Carbon $data_final)
+    public function obterTotaisDeCategoriasPorPeriodo(Carbon $data_inicial, Carbon $data_final, int $userId)
     {
-        $baseMesAtual = Lancamento::whereBetween(
-            'mes_referencia',
-            [$data_inicial, $data_final]
-        );
+        $baseMesAtual = Lancamento::where('user_id', $userId)
+            ->whereBetween(
+                'mes_referencia',
+                [$data_inicial, $data_final]
+            );
+
         $gastosPorCategoria = (clone $baseMesAtual)
             ->whereTipo('SAIDA')
             ->selectRaw('tipo, categoria_saida, SUM(valor) as total')

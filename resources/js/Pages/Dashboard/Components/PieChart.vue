@@ -3,12 +3,6 @@ import { useGoogleCharts } from '@/hooks/useGoogleCharts'
 import { computed, onMounted, watch } from 'vue'
 import SemRegistro from '../Partials/SemRegistro.vue'
 
-declare global {
-  interface Window {
-    google: any
-  }
-}
-
 const props = defineProps<{
   chartId: string
   title: string
@@ -90,6 +84,6 @@ watch(() => props.rows, drawChart, { deep: true })
     <div :id="chartId" class="w-full h-[350px]"></div>
   </div>
   <div v-else>
-    <SemRegistro :color="color" />
+    <SemRegistro />
   </div>
 </template>

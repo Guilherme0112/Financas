@@ -79,16 +79,16 @@ const submit = () => {
   form.post(route(`importar.${extension}`), {
     forceFormData: true,
     onStart: () => {
-      loading.value = true
+      loading.value = true;
     },
     onSuccess: () => {
-      emit('close')
-      emit('start')
-      form.reset()
-      preview.value = []
+      emit('close');
+      emit('start');
+      form.reset();
+      preview.value = [];
     },
     onFinish: () => {
-      loading.value = false
+      loading.value = false;
     }
   })
 }
@@ -111,8 +111,7 @@ const cancel = () => {
       <h3 class="text-lg font-bold">Importar Dados</h3>
 
       <input ref="fileInput" type="file" accept=".xlsx,.csv" @change="onFileChange"
-        class="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-green-600 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" />
-
+        class="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2" />
 
       <!-- PREVIEW -->
       <div v-if="preview.length" class="max-h-64 overflow-auto border rounded">

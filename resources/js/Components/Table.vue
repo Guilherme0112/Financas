@@ -40,8 +40,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 <template>
   <div class="w-full p-1">
     <div 
-      class="overflow-hidden bg-white rounded-2xl border shadow-sm transition-all duration-300"
-      :class="[`border-${color}-100`, `shadow-${color}-100/50`]"
+      class="overflow-hidden bg-white rounded-2xl transition-all duration-300 shadow-lg"
     >
       <div class="overflow-x-auto">
         <table class="w-full text-left border-separate border-spacing-0">

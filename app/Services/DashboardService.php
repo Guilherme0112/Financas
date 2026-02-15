@@ -6,6 +6,7 @@ use App\DTOs\Dashboard;
 use App\DTOs\DashboardCards;
 use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class DashboardService
 {
@@ -14,32 +15,40 @@ class DashboardService
     ) {
     }
 
-    public function index()
+    public function index(int $userId)
     {
+        $mesAtual = now()->startOfMonth();
+        $fimMesAtual = now()->endOfMonth();
+
         $totais = $this->lancamentoRepository->obterTotalPorPeriodo(
-            data_inicial: now()->startOfMonth(),
-            data_final: now()->endOfMonth()
+            data_inicial: $mesAtual,
+            data_final: $fimMesAtual,
+            userId: $userId
         );
 
         $lancamentosPorCategoria = $this->lancamentoRepository->obterTotaisDeCategoriasPorPeriodo(
-            data_inicial: now()->startOfMonth(),
-            data_final: now()->endOfMonth()
+            data_inicial: $mesAtual,
+            data_final: $fimMesAtual,
+            userId: $userId
         );
 
         $lancamentosPorMes = $this->lancamentoRepository->obterTotaisMensaisPorPeriodo(
             data_inicial: now()->subMonths(5)->startOfMonth(),
-            data_final: now()->endOfMonth()
+            data_final: $fimMesAtual,
+            userId: $userId
         );
 
         $lancamentosPertoDeVencer = $this->lancamentoRepository->obterSaidasProximasDoVencimento(
             emXdias: Carbon::now()->addDays(7),
             limit: 5,
-            foi_pago: false
+            foi_pago: false,
+            userId: $userId
         );
 
         $lancamentosVencidos = $this->lancamentoRepository->obterSaidasVencidasPorPeriodo(
             hoje: Carbon::now(),
-            limit: 5
+            limit: 5,
+            userId: $userId
         );
 
         $dadosMes = $lancamentosPorMes->map(fn($item) => [
@@ -48,7 +57,7 @@ class DashboardService
             (float) $item->saidas,
         ]);
 
-        $porcentual = $this->calcularPorcentagemEmRelacaoAoMesAnterior(dadosMes: $dadosMes->toArray());
+        $comparacao = $this->calcularComparacaoMesAnterior(dadosMes: $dadosMes);
 
         $cards = new DashboardCards(
             entradas: (float) $totais->entradas,
@@ -65,28 +74,49 @@ class DashboardService
                 ],
                 'mensal' => $dadosMes,
             ],
-            porcentual: $porcentual,
+            porcentual: $comparacao,
             lancamentos_perto_de_vencer: $lancamentosPertoDeVencer->toArray(),
             lancamentos_vencidos: $lancamentosVencidos->toArray(),
         );
     }
 
-    private function calcularPorcentagemEmRelacaoAoMesAnterior(array $dadosMes)
+    private function calcularComparacaoMesAnterior(Collection $dadosMes): array
     {
-        $ultimo = count($dadosMes) - 1;
-        $anterior = $ultimo - 1;
-        $entradaAtual = $dadosMes[$ultimo][1] ?? 0;
-        $entradaAnterior = $dadosMes[$anterior][1] ?? 0;
-        $saidaAtual = $dadosMes[$ultimo][2] ?? 0;
-        $saidaAnterior = $dadosMes[$anterior][2] ?? 0;
+        $mesAtual = now()->format('Y-m');
+        $mesAnterior = now()->subMonth()->format('Y-m');
+
+        $dadosIndexados = $dadosMes->keyBy(fn($item) => $item[0]);
+
+        $entradaAtual = $dadosIndexados[$mesAtual][1] ?? 0;
+        $entradaAnterior = $dadosIndexados[$mesAnterior][1] ?? 0;
+
+        $saidaAtual = $dadosIndexados[$mesAtual][2] ?? 0;
+        $saidaAnterior = $dadosIndexados[$mesAnterior][2] ?? 0;
 
         return [
-            'entradas' => $entradaAnterior > 0
-                ? (($entradaAtual - $entradaAnterior) / $entradaAnterior) * 100
-                : null,
-            'saidas' => $saidaAnterior > 0
-                ? (($saidaAtual - $saidaAnterior) / $saidaAnterior) * 100
-                : null,
+            'entradas' => $this->compararValores($entradaAtual, $entradaAnterior),
+            'saidas' => $this->compararValores($saidaAtual, $saidaAnterior),
         ];
     }
+
+    private function compararValores(float $atual, float $anterior): array
+    {
+        $diferenca = $atual - $anterior;
+
+        $percentual = $anterior != 0
+            ? ($diferenca / $anterior) * 100
+            : null;
+
+        return [
+            'atual' => $atual,
+            'anterior' => $anterior,
+            'diferenca' => $diferenca,
+            'percentual' => $percentual,
+            'tendencia' => $diferenca > 0
+                ? 'up'
+                : ($diferenca < 0 ? 'down' : 'stable'),
+        ];
+    }
+
+
 }

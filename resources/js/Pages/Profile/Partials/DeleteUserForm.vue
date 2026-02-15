@@ -47,7 +47,7 @@ const closeModal = () => {
                 Deletar Conta
             </h2>
 
-            <p class="mt-1 text-sm text-red-600">
+            <p class="mt-1 text-sm text-red-900">
                 Após a exclusão da sua conta, todos os seus recursos e dados serão
                 excluídos permanentemente. Antes de excluir sua conta, faça o download de quaisquer dados ou informações
                 que você deseje manter.

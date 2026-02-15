@@ -11,7 +11,7 @@ class DashboardController extends Controller
     public function index(DashboardService $dashboardService): Response
     {
         return Inertia::render('Dashboard/Index', [
-            'dashboard' => $dashboardService->index(),
+            'dashboard' => $dashboardService->index(auth()->id()),
         ]);
     }
 }

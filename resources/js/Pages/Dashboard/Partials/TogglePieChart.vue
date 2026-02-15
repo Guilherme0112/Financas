@@ -28,7 +28,7 @@ const activeOption = computed(() =>
 </script>
 
 <template>
-  <div class="bg-white p-4 py-6 rounded-2xl shadow-sm border border-slate-100">
+  <div class="bg-white p-4 py-6 rounded-2xl shadow-lg border border-slate-100">
 
     <!-- Header -->
     <div class="flex justify-between items-center mb-4">
@@ -40,7 +40,7 @@ const activeOption = computed(() =>
           selected === option.key
             ? option.color === 'red'
               ? 'bg-red-500 text-white'
-              : 'bg-green-700 text-white'
+              : 'bg-emerald-700 text-white'
             : 'text-slate-600'
         ]">
           {{ option.label }}
@@ -52,7 +52,7 @@ const activeOption = computed(() =>
     </div>
 
     <!-- Chart -->
-    <div class="w-full flex justify-around">
+    <div class="w-full flex justify-around flex-wrap gap-6">
       <PieChart chart-id="pieChartToggle" :title="activeOption.title" :rows="activeOption.rows"
         :colors="activeOption.colors" :color="activeOption.colors[0]" />
 

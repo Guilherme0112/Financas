@@ -9,7 +9,7 @@ use App\Enums\CategoriaSaida;
 
 class CsvService
 {
-    public function importar(string $path): void
+    public function importar(string $path, int $userId): void
     {
         if (!file_exists($path)) {
             throw new \RuntimeException('Arquivo CSV não encontrado');
@@ -21,16 +21,14 @@ class CsvService
             throw new \RuntimeException('Não foi possível abrir o CSV');
         }
 
-        $header = fgetcsv($handle, 0, ',');
-
         while (($row = fgetcsv($handle, 0, ',')) !== false) {
-            $this->processarLinha($row);
+            $this->processarLinha($row, $userId);
         }
 
         fclose($handle);
     }
 
-    private function processarLinha(array $row): void
+    private function processarLinha(array $row, int $userId): void
     {
 
         if (empty(trim($row[3] ?? ''))) {
@@ -41,7 +39,6 @@ class CsvService
         if (!$tipo) {
             return;
         }
-
         // todo: use service e na service usar o db::collection
         Lancamento::create([
             'nome' => trim($row[0]),
@@ -49,6 +46,7 @@ class CsvService
             'valor' => (float) str_replace(',', '.', $row[2]),
             'tipo' => $tipo,
             'mes_referencia' => $row[4],
+            'user_id' => $userId,
             'foi_pago' => (bool) $row[6],
             'categoria_entrada' => $tipo === TipoValor::ENTRADA
                 ? CategoriaEntrada::from(strtoupper(trim($row[5])))

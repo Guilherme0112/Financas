@@ -51,6 +51,6 @@ watch(() => props.rows, drawChart)
     <div id="comparisonBarChart" class="w-full h-[350px]"></div>
   </div>
   <div v-else>
-    <SemRegistro color="green" />
+    <SemRegistro />
   </div>
 </template>

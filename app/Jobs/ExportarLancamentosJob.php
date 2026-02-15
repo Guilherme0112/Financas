@@ -34,7 +34,7 @@ class ExportarLancamentosJob implements ShouldQueue
                 'request' => $this->request
             ]);
             
-            $dados = $lancamentoService->listar((array) $this->request, 999);
+            $dados = $lancamentoService->listar((array) $this->request, 999, $this->userId);
             if ($dados->isEmpty()) {
                 broadcast(new ExportacaoFinalizada(
                     $this->userId,
@@ -58,7 +58,7 @@ class ExportarLancamentosJob implements ShouldQueue
                 'filename' => $filename
             ]);
             broadcast(new ExportacaoFinalizada($this->userId, $lancamentosExportado->id));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             logger()->error('Erro na exportação: ' . $e->getMessage(), [
                 'user_id' => $this->userId,
                 'request' => $this->request

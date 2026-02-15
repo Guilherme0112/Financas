@@ -6,9 +6,9 @@ import SemRegistro from '../Partials/SemRegistro.vue';
 const props = defineProps<{
   gastos: [string, number][],
   color: string
-}>()
+}>();
 
-const { load } = useGoogleCharts()
+const { load } = useGoogleCharts();
 
 const options = computed(() => ({
   backgroundColor: 'transparent',
@@ -19,10 +19,9 @@ const options = computed(() => ({
   animation: { startup: true, duration: 800, easing: 'out' },
   title: 'Gastos por categoria (Este mês)',
   titleTextStyle: { color: props.color, fontSize: 16, bold: true },
-}))
+}));
 
-
-const hasData = computed(() => props.gastos && props.gastos.length > 0)
+const hasData = computed(() => props.gastos && props.gastos.length > 0);
 
 const drawChart = async () => {
   if (!hasData.value) return;
@@ -36,18 +35,17 @@ const drawChart = async () => {
 
   new window.google.visualization.BarChart(
     document.getElementById('categoryBarChart')
-  ).draw(data, options.value)
+  ).draw(data, options.value);
 }
 
 onMounted(drawChart)
 watch(() => props.gastos, drawChart, { deep: true })
 </script>
-
 <template>
   <div v-if="hasData">
     <div id="categoryBarChart" class="w-full h-[350px]"></div>
   </div>
   <div v-else>
-    <SemRegistro :color="props.color" />
+    <SemRegistro />
   </div>
 </template>

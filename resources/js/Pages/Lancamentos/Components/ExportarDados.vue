@@ -60,7 +60,7 @@ const submit = () => {
             type="radio"
             value="xlsx"
             v-model="format"
-            class="text-green-600 focus:ring-green-500"
+            class="text-emerald-600 focus:ring-emerald-500"
           />
           <span class="text-sm text-gray-700">Excel (.xlsx)</span>
         </label>
@@ -70,7 +70,7 @@ const submit = () => {
             type="radio"
             value="pdf"
             v-model="format"
-            class="text-green-600 focus:ring-green-500"
+            class="text-emerald-600 focus:ring-emerald-500"
           />
           <span class="text-sm text-gray-700">PDF</span>
         </label>
@@ -87,7 +87,6 @@ const submit = () => {
         <PrimaryButton
           type="button"
           :disabled="!format || processing"
-          class="bg-green-600 hover:bg-green-500 disabled:opacity-50"
           @click="submit"
         >
           Exportar

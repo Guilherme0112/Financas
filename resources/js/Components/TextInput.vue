@@ -14,21 +14,21 @@ const checkboxClass = `
   border
   border-gray-300
   cursor-pointer
-  hover:border-green-500
-  checked:bg-green-600
-  checked:hover:bg-green-600
-  checked:focus:bg-green-600
-  checked:border-green-600
+  hover:border-emerald-500
+  checked:bg-emerald-600
+  checked:hover:bg-emerald-600
+  checked:focus:bg-emerald-600
+  checked:border-emerald-600
   focus:ring-2
-  focus:ring-green-500
+  focus:ring-emerald-500
 `;
 
 const inputClass = `
   rounded-md
-  border-green-300
+  border-emerald-300
   shadow-sm
-  focus:border-green-500
-  focus:ring-green-500
+  focus:border-emerald-500
+  focus:ring-emerald-500
 `;
 
 onMounted(() => {

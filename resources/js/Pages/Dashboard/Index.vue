@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
-import FinanceCard from '@/Components/FinanceCard.vue';
 import CurveChart from './Components/CurveChart.vue';
 import LineChart from './Components/LineChart.vue';
 import ComparisonBarChart from './Components/ComparisonBarChart.vue';
@@ -10,12 +9,8 @@ import LancamentosVencidos from './Partials/LancamentosVencidos.vue';
 import TogglePieChart from './Partials/TogglePieChart.vue';
 import { ArrowRight } from 'lucide-vue-next';
 import NavLink from '@/Components/NavLink.vue';
-
-declare global {
-  interface Window {
-    google: any;
-  }
-}
+import DangerButton from '@/Components/DangerButton.vue';
+import Cards from './Partials/Cards.vue';
 
 const page = usePage();
 const dashboard = page.props.dashboard as any;
@@ -37,12 +32,9 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
   <AuthenticatedLayout>
     <div class="py-12 bg-gray-100 min-h-screen">
       <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <FinanceCard title="Receitas do Mês" :value="dashboard.cards.entradas" type="positive" />
-          <FinanceCard title="Gastos do Mês" :value="dashboard.cards.saidas" type="negative" />
-          <FinanceCard title="Economia do Mês" :value="dashboard.cards.total" type="positive" />
-        </div>
 
+        <Cards :dashboard="dashboard" />
+        
         <TogglePieChart :options="[
           {
             key: 'gastos',
@@ -51,7 +43,7 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
             rows: gastosRows,
             colors: redPalette,
             color: 'red',
-            percentual: dashboard.porcentual.saidas,
+            percentual: dashboard.porcentual.saidas.percentual,
             tipo: 'saida'
           },
           {
@@ -61,34 +53,34 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
             rows: receitasRows,
             colors: greenPalette,
             color: 'green',
-            percentual: dashboard.porcentual.entradas,
+            percentual: dashboard.porcentual.entradas.percentual,
             tipo: 'entrada'
           }
         ]" />
 
-
         <div class="grid grid-cols-1 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
             <CurveChart :rows="dashboard.graficos.mensal" />
           </div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
             <ComparisonBarChart :rows="dashboard.graficos.mensal" />
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 w-full">
+          <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 w-full">
             <LineChart :rows="dashboard.graficos.mensal" />
           </div>
         </div>
 
-
         <div class="w-full">
-          <div class="grid bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="grid bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
             <div class="w-full flex justify-end">
               <NavLink :href="route('lancamentos.index', { tipo: 'SAIDA', foi_pago: false })"
                   :active="route().current('lancamentos.index')">
-                  Ver Mais
-                  <ArrowRight :size="12" class="ml-3 mt-[-3px]" />
+                  <DangerButton>
+                    Ver Mais
+                    <ArrowRight :size="12" class="ml-3 mt-[-3px]" />
+                  </DangerButton>
               </NavLink>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">

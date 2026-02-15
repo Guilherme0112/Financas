@@ -15,18 +15,14 @@ use Inertia\Response;
 
 class LancamentoController extends Controller
 {
-
-    protected $lancamentoService;
-
-    public function __construct(LancamentoService $lancamentoService)
+    public function __construct(public LancamentoService $lancamentoService)
     {
-        $this->lancamentoService = $lancamentoService;
     }
 
     public function index(IndexLancamentosRequest $request): Response
     {
         $request->validated();
-        $lancamentos = $this->lancamentoService->listar((array) $request->all());
+        $lancamentos = $this->lancamentoService->listar((array) $request->all(), null, auth()->id());
 
         return Inertia::render('Lancamentos/Index', [
             'lancamentos' => $lancamentos,

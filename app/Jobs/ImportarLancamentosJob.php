@@ -28,7 +28,7 @@ class ImportarLancamentosJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(XlsxService $xlsxService, CsvService $csvService, LancamentosExportadosRepository $lancamentosExportadosRepository): void
+    public function handle(XlsxService $xlsxService, CsvService $csvService): void
     {
         try {
             if (!Storage::disk('private')->exists($this->path)) {
@@ -40,15 +40,20 @@ class ImportarLancamentosJob implements ShouldQueue
 
             if ($this->tipo === 'xlsx') {
                 $fullPath = Storage::disk('private')->path($this->path);
-                $xlsxService->buscarXlsx($fullPath);
+                $xlsxService->buscarXlsx($fullPath, $this->userId);
             } 
             if ($this->tipo === 'csv') {
                 $fullPath = Storage::disk('private')->path($this->path);
-                $csvService->importar($fullPath);
+                $csvService->importar($fullPath, $this->userId);
             }
             Storage::disk('private')->delete($this->path);
             broadcast(new ImportacaoFinalizada($this->userId));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            logger()->error('Erro na exportação: ' . $e->getMessage(), [
+                'user_id' => $this->userId,
+                'tipo' => $this->tipo,
+                'path' => $this->path
+            ]);
             broadcast(new ImportacaoFinalizada($this->userId, "Ocorreu um erro durante a importação: " . $e->getMessage()));
         }
     }

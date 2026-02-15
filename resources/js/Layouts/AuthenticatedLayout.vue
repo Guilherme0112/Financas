@@ -13,7 +13,7 @@ const open = ref(false);
 <template>
     <div class="min-h-screen bg-gray-100">
         <!-- Header -->
-        <header class="sticky top-0 z-50 border-b border-emerald-100 backdrop-blur-md">
+        <header class="sticky top-0 z-50 shadow-lg backdrop-blur-md">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
 
