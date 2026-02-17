@@ -8,6 +8,13 @@ import NavLink from '@/Components/NavLink.vue'
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
 
 const open = ref(false);
+
+const links = [
+    { name: 'Dashboard', href: 'dashboard' },
+    { name: 'Lançamentos', href: 'lancamentos.index' },
+    { name: 'Metas', href: 'metas.index' },
+];
+
 </script>
 
 <template>
@@ -27,19 +34,11 @@ const open = ref(false);
 
                     <!-- Desktop Nav -->
                     <nav class="hidden sm:flex items-center gap-2">
-                        <NavLink :href="route('dashboard')" :active="route().current('dashboard')" class="relative px-4 py-2 text-sm font-medium text-emerald-800
-           after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0
-           after:bg-emerald-600 after:transition-all after:duration-300
-           hover:after:w-full focus:after:w-full" :class="route().current('dashboard') && 'after:w-full'">
-                            Dashboard
-                        </NavLink>
-
-                        <NavLink :href="route('lancamentos.index')" :active="route().current('lancamentos.index')"
-                            class="relative px-4 py-2 text-sm font-medium text-emerald-800
-           after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0
-           after:bg-emerald-600 after:transition-all after:duration-300
-           hover:after:w-full hover:after:w-full" :class="route().current('lancamentos.index') && 'after:w-full'">
-                            Lançamentos
+                        <NavLink v-for="l in links" :href="route(l.href)" :active="route().current(l.href)" class="relative px-4 py-2 text-sm font-medium text-emerald-800
+                            after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0
+                            after:bg-emerald-600 after:transition-all after:duration-300
+                            hover:after:w-full focus:after:w-full" :class="route().current(l.href) && 'after:w-full'">
+                            {{ l.name }}
                         </NavLink>
                     </nav>
 
@@ -51,7 +50,7 @@ const open = ref(false);
                                     class="flex items-center gap-3 rounded-full bg-emerald-50 px-3 py-1.5 hover:bg-emerald-100 transition">
 
                                     <div
-                                        class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
+                                        class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-green-500 text-sm font-semibold text-white">
                                         {{ $page.props.auth.user.name.charAt(0) }}
                                     </div>
 
@@ -63,7 +62,7 @@ const open = ref(false);
 
                             <template #content>
                                 <DropdownLink :href="route('profile.edit')">
-                                    Perfil
+                                    Configurações
                                 </DropdownLink>
                                 <DropdownLink :href="route('logout')" method="post" as="button">
                                     Sair
@@ -89,14 +88,11 @@ const open = ref(false);
             <!-- Mobile Menu -->
             <div v-if="open" class="sm:hidden border-t bg-white">
                 <div class="space-y-1 px-4 py-3">
-                    <ResponsiveNavLink :href="route('dashboard')">
-                        Dashboard
-                    </ResponsiveNavLink>
-                    <ResponsiveNavLink :href="route('lancamentos.index')">
-                        Lançamentos
+                    <ResponsiveNavLink v-for="l in links" :href="route(l.href)">
+                        {{ l.name }}
                     </ResponsiveNavLink>
                     <ResponsiveNavLink :href="route('profile.edit')">
-                        Perfil
+                        Configurações
                     </ResponsiveNavLink>
                     <ResponsiveNavLink :href="route('logout')" method="post" as="button">
                         Sair

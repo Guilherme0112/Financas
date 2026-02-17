@@ -18,7 +18,7 @@ const entradasClass = computed(() =>
 )
 
 const saidasClass = computed(() =>
-    saidasIsUp.value ? 'text-emerald-700' : 'text-red-700'
+    saidasIsUp.value ? 'text-red-700' : 'text-emerald-700'
 )
 
 const entradasIcon = computed(() =>
@@ -26,7 +26,7 @@ const entradasIcon = computed(() =>
 )
 
 const saidasIcon = computed(() =>
-    saidasIsUp.value ? '▼' : '▲'
+    saidasIsUp.value ? '▲' : '▼'
 )
 
 const total = computed(() => {

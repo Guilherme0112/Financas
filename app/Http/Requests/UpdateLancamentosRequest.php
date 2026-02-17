@@ -26,8 +26,8 @@ class UpdateLancamentosRequest extends FormRequest
     public function rules()
     {
         return [
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
+            'nome' => 'required|string|max:50',
+            'descricao' => 'nullable|string|max:500',
             'valor' => 'required|decimal:2|min:1',
             'tipo' => 'required|in:ENTRADA,SAIDA',
             'categoria_entrada' => [

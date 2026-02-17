@@ -18,10 +18,9 @@ const props = defineProps<{
   headers: TableHeader[]
   rows: Record<string, any>[]
   actions?: TableAction[]
-  theme?: string // Ex: 'emerald', 'blue', 'rose', 'amber'
+  theme?: string
 }>()
 
-// Define um padrão caso a prop não seja enviada
 const color = props.theme || 'emerald'
 
 const aberto = ref<number | null>(null)
@@ -40,9 +39,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 <template>
   <div class="w-full p-1">
     <div 
-      class="overflow-hidden bg-white rounded-2xl transition-all duration-300 shadow-lg"
+      class="bg-white rounded-2xl transition-all duration-300 shadow-lg"
     >
-      <div class="overflow-x-auto">
+      <div>
         <table class="w-full text-left border-separate border-spacing-0">
           
           <thead>
@@ -66,9 +65,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               <th v-if="actions" 
                 class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-widest border-b rounded-tr-2xl"
                 :class="[`text-${color}-800`, `border-${color}-100`]"
-              >
-                Ações
-              </th>
+              ></th>
             </tr>
           </thead>
 
@@ -89,7 +86,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               v-for="(row, index) in rows"
               :key="index"
               class="group transition-colors duration-150"
-              :class="[`hover:bg-${color}-50/30`]"
+              :class="[`hover:bg-${color}-50`]"
             >
               <td
                 v-for="header in headers"
@@ -106,7 +103,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 </slot>
               </td>
 
-              <td v-if="actions" class="px-6 py-4 text-center relative" data-menu>
+              <td v-if="actions" class="px-4 py-3 text-center relative" data-menu>
                 <button
                   @click.stop="toggle(index)"
                   class="inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 active:scale-90"
@@ -127,7 +124,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 >
                   <div
                     v-if="aberto === index"
-                    class="absolute right-10 top-2 w-48 bg-white rounded-xl shadow-xl border py-1.5 z-50 mt-10 mr-[60px]"
+                    class="absolute right-10 top-2 w-48 bg-white rounded-xl shadow-xl border py-1.5 z-50 mt-10 mr-[25px]"
                     :class="[`shadow-${color}-900/10`, `border-${color}-100`]"
                   >
                     <button

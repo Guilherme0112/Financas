@@ -55,7 +55,7 @@ export function useLancamentos() {
     },
     { label: 'Nome', key: 'nome' },
     {
-      label: 'Valor',
+      label: 'Valor (R$)',
       key: 'valor',
       align: 'right'
     },

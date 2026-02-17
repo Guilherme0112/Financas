@@ -46,7 +46,6 @@ class ImportarLancamentosJob implements ShouldQueue
                 $fullPath = Storage::disk('private')->path($this->path);
                 $csvService->importar($fullPath, $this->userId);
             }
-            Storage::disk('private')->delete($this->path);
             broadcast(new ImportacaoFinalizada($this->userId));
         } catch (\Throwable $e) {
             logger()->error('Erro na exportação: ' . $e->getMessage(), [
@@ -55,6 +54,8 @@ class ImportarLancamentosJob implements ShouldQueue
                 'path' => $this->path
             ]);
             broadcast(new ImportacaoFinalizada($this->userId, "Ocorreu um erro durante a importação: " . $e->getMessage()));
+        } finally {
+            Storage::disk('private')->delete($this->path);
         }
     }
 }

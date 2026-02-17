@@ -26,9 +26,9 @@ class StoreLancamentosRequest extends FormRequest
     public function rules()
     {
         return [
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'valor' => 'required|decimal:2|min:1',
+            'nome' => 'required|string|max:50',
+            'descricao' => 'nullable|string|max:500',
+            'valor' => 'required|decimal:2|min:1|max:999999.99',
             'tipo' => 'required|in:ENTRADA,SAIDA',
             'recorrente' => 'required|boolean',
             'meses_recorrentes' => "nullable|numeric|min:1|max:12",

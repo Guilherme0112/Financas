@@ -10,14 +10,18 @@ import 'flatpickr/dist/flatpickr.css'
 import { ref, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import InputError from '@/Components/InputError.vue'
+import Checkbox from '@/Components/Checkbox.vue'
+import TextArea from '@/Components/TextArea.vue'
+import { Wallet } from 'lucide-vue-next'
+import Icon from '@/Components/Icon.vue'
 
 const props = defineProps<{
     show: boolean
     form: any
     editando: boolean
     id?: number
-    categoriasEntrada: string[]
-    categoriasSaida: string[]
+    categoriasEntrada: Array<{ label: string; value: string }>
+    categoriasSaida: Array<{ label: string; value: string }>
 }>()
 
 const emit = defineEmits(['close', 'saved'])
@@ -112,27 +116,37 @@ watch(
     <Modal :show="show" @close="emit('close')">
         <div class="p-6 space-y-6">
 
-            <h3 class="text-lg font-bold text-gray-800">
-                {{ editando ? 'Editar lançamento' : 'Novo lançamento' }}
-            </h3>
+            <header class="mb-6">
+                <h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2">
+                    <Icon>
+                        <Wallet :size="22" />
+                    </Icon>
+                    {{ editando ? 'Editar Lançamento Financeiro' : 'Novo Lançamento Financeiro' }}
+                </h3>
+
+                <p class="text-sm text-emerald-700 mt-1 opacity-70">
+                    Registre uma entrada ou saída e mantenha seu controle financeiro atualizado.
+                </p>
+            </header>
+
 
             <div>
-                <InputLabel value="Nome" />
-                <TextInput v-model="form.nome" class="w-full" required
+                <InputLabel value="Nome *" />
+                <TextInput :limit="50" v-model="form.nome" class="w-full" required
                     :class="form.errors.nome ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
-                <InputError :message="form.errors.nome" />
+                <InputError :message="form.errors.nome" class="mt-[-20px]" />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <InputLabel value="Valor" />
+                    <InputLabel value="Valor (R$) *" />
                     <InputDinheiro v-model="form.valor"
                         :class="form.errors.valor ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
                     <InputError :message="form.errors.valor" />
                 </div>
 
                 <div>
-                    <InputLabel value="Tipo" />
+                    <InputLabel value="Tipo *" />
                     <select v-model="form.tipo"
                         class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                         :class="form.errors.tipo ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null"
@@ -148,7 +162,7 @@ watch(
                 <div class="w-[50%] grid">
                     <div v-if="!form.id">
                         <div>
-                            <TextInput type="checkbox" v-model="form.recorrente" />
+                            <Checkbox :checked="form.recorrente" v-model="form.recorrente" />
                             <span class="text-sm text-gray-700 ml-2">Lançamento recorrente</span>
                         </div>
                         <div v-if="form.recorrente" class="mt-4">
@@ -161,7 +175,7 @@ watch(
                 </div>
                 <div class="w-[50%] flex justify-start">
                     <div v-if="form.tipo === 'SAIDA'" class="ml-2">
-                        <TextInput type="checkbox" v-model="form.foi_pago" />
+                        <Checkbox :checked="form.foi_pago" v-model="form.foi_pago" />
                         <span class="text-sm text-gray-700 ml-2">Marcar como paga</span>
                     </div>
                 </div>
@@ -169,7 +183,7 @@ watch(
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <InputLabel value="Data de Vencimento" />
+                    <InputLabel value="Data de Vencimento *" />
                     <Flatpickr v-model="form.mes_referencia" :config="{
                         dateFormat: 'Y/m/d',
                         altInput: true,
@@ -185,7 +199,7 @@ watch(
                     <InputError :message="form.errors.mes_referencia" />
                 </div>
                 <div>
-                    <InputLabel value="Categoria" />
+                    <InputLabel value="Categoria *" />
                     <div>
                         <select v-if="form.tipo === 'ENTRADA'" v-model="form.categoria_entrada"
                             class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -214,13 +228,11 @@ watch(
 
             <div>
                 <InputLabel value="Descrição" />
-                <textarea v-model="form.descricao"
-                    class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                    :class="form.errors.descricao ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null" />
-                <InputError :message="form.errors.descricao" />
+                <TextArea v-model="form.descricao" :limit="500" />
+                <InputError :message="form.errors.descricao" class="mt-[-20px]" />
             </div>
 
-            <div class="flex justify-end gap-3 pt-6">
+            <div class="flex justify-end gap-3">
                 <SecondaryButton @click="emit('close')">Cancelar</SecondaryButton>
                 <PrimaryButton @click="salvar" :disabled="form.processing">Salvar</PrimaryButton>
             </div>

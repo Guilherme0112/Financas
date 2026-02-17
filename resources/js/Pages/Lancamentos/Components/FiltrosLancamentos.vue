@@ -8,6 +8,9 @@ import { useForm, router } from '@inertiajs/vue3'
 import InputError from '@/Components/InputError.vue';
 import { ref, watch } from 'vue';
 import TextInput from '@/Components/TextInput.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import { Filter } from 'lucide-vue-next';
+import Icon from '@/Components/Icon.vue';
 
 const props = defineProps<{
     show: boolean,
@@ -140,9 +143,19 @@ watch(
 <template>
     <Modal :show="show" @close="emit('close')">
         <div class="px-12 py-6 space-y-2">
-            <h3 class="text-lg font-bold text-gray-800">
-                Filtrar lançamentos
-            </h3>
+            <header class="mb-6">
+                <h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2">
+                    <Icon>
+                        <Filter :size="22" />
+                    </Icon>
+                    Filtrar Lançamentos
+                </h3>
+
+                <p class="text-sm text-emerald-700 mt-1 opacity-70">
+                    Refine os dados por período, categoria ou tipo para visualizar exatamente o que precisa.
+                </p>
+            </header>
+
 
             <!-- Período -->
             <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
@@ -208,7 +221,9 @@ watch(
                         <InputError :message="form.errors.categoria_saida" />
                     </div>
                     <div v-if="form.tipo === 'TODOS'">
-                        <p class="text-xs text-gray-600 mt-3">Selecione um <b>Tipo</b> para conseguir escolher uma <b>Categoria.</b></p>
+                        <p class="text-xs text-gray-600 mt-3">Selecione um <b>Tipo</b> para conseguir escolher uma
+                            <b>Categoria.</b>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -218,12 +233,12 @@ watch(
                     <div>
                         <div class="h-[24px]">
                             <div v-if="form.tipo === 'SAIDA' || form.tipo === 'TODOS'">
-                                <TextInput type="checkbox" v-model="form.foi_pago" />
+                                <Checkbox :checked="form.foi_pago ?? false" v-model="form.foi_pago" />
                                 <span class="text-sm text-gray-700 ml-2">Marcadas como Pagas</span>
                             </div>
                         </div>
                         <div class="h-[24px]">
-                            <TextInput type="checkbox" v-model="form.recorrentes" />
+                            <Checkbox :checked="form.recorrentes ?? false" v-model="form.recorrentes" />
                             <span class="text-sm text-gray-700 ml-2">Marcadas como Recorrentes</span>
                         </div>
                     </div>

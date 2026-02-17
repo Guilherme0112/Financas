@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LancamentoController;
+use App\Http\Controllers\LimiteCategoriaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TrocaDeDadosController;
 use Illuminate\Foundation\Application;
@@ -35,6 +36,16 @@ Route::prefix('lancamentos')
     Route::delete('/{id}', [LancamentoController::class, 'destroy'])->name('destroy');
 });
 
+Route::prefix('metas')
+    ->middleware('auth')
+    ->name('metas.')
+    ->group(function () {
+    Route::get('/', action: [LimiteCategoriaController::class, 'index'])->name('index');
+    Route::post('/', action: [LimiteCategoriaController::class, 'store'])->name('store');
+    Route::put('/{id}', action: [LimiteCategoriaController::class, 'update'])->name('update');
+    Route::delete('/{id}', action: [LimiteCategoriaController::class, 'destroy'])->name('destroy');
+});
+
 Route::prefix('importar')
     ->middleware('auth')
     ->name('importar.')
@@ -42,6 +53,7 @@ Route::prefix('importar')
     Route::post('/xlsx', [TrocaDeDadosController::class, 'importarXLSX'])->name('xlsx');
     Route::post('/csv', [TrocaDeDadosController::class, 'importarCSV'])->name('csv');
 });
+
 
 Route::prefix(prefix: 'exportar')
     ->middleware('auth')

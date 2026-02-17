@@ -5,6 +5,8 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import * as XLSX from 'xlsx'
+import { Upload } from 'lucide-vue-next'
+import Icon from '@/Components/Icon.vue'
 
 const props = defineProps<{ show: boolean }>()
 
@@ -108,10 +110,24 @@ const cancel = () => {
 <template>
   <Modal :show="props.show" @close="cancel">
     <form @submit.prevent="submit" class="px-8 py-6 space-y-6">
-      <h3 class="text-lg font-bold">Importar Dados</h3>
+      <header class="mb-6">
+        <h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2">
+          <Icon>
+            <Upload :size="22" />
+          </Icon>
+          Importar Dados Financeiros
+        </h3>
 
-      <input ref="fileInput" type="file" accept=".xlsx,.csv" @change="onFileChange"
-        class="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2" />
+        <p class="text-sm text-emerald-700 mt-1 opacity-70">
+          Envie um arquivo com seus lançamentos para atualizar seu controle financeiro.
+        </p>
+      </header>
+
+      <div>
+        <input ref="fileInput" type="file" accept=".xlsx,.csv" @change="onFileChange"
+          class="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2" />
+        <p class="text-xs text-gray-800 mt-1 opacity-70">Somente são aceitos arquivos CSV e XLSX.</p>
+      </div>
 
       <!-- PREVIEW -->
       <div v-if="preview.length" class="max-h-64 overflow-auto border rounded">

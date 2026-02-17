@@ -23,8 +23,10 @@ return new class extends Migration {
             $table->string('categoria_saida')->nullable();
             $table->boolean(column: 'foi_pago')->nullable()->default(false);
             $table->boolean('recorrente')->default(false);
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->index();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->date('mes_referencia')->nullable();
+
+            $table->index('user_id');
             $table->timestamps();
         });
     }

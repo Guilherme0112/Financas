@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lancamentos_exportados', function (Blueprint $table) {
+        Schema::create('limite_categorias', function (Blueprint $table) {
             $table->id();
+            $table->string('categoria_saida');
+            $table->decimal('limite', 10, 2);
+            $table->string('mes_referencia', 7);
+            $table->boolean('notificar_ao_atingir')->default(false);
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('status', ['iniciado', 'pendente', 'concluido', 'falhou'])->default('iniciado');
-            $table->enum('tipo', ['xlsx', 'pdf']);
-            $table->string('filename')->nullable();
-            $table->string('error')->nullable();
-
-            $table->index('user_id');
+            $table->index('user_id');   
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lancamentos_exportados');
+        Schema::dropIfExists('limite_categorias');
     }
 };
