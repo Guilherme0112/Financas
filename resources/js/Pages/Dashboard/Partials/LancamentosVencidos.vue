@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import NavLink from '@/Components/NavLink.vue';
 import Table from '@/Components/Table.vue';
 import { formatarData, formatarDinheiro } from '@/utils/helpers';
-import { ArrowRight } from 'lucide-vue-next';
 
 const props = defineProps<{
   lancamentos: any[]
@@ -27,10 +25,10 @@ const headers = [
     align: 'center',
     format: (v: any) => formatarData(v) || '-'
   }
-];
+] as any;
 
 </script>
 <template>
-  <h3 class="font-bold pl-2 pb-3 text-red-800">Lançamentos Vencidos</h3>
+  <h3 class="font-bold pl-2 text-red-800">Lançamentos Vencidos</h3>
   <Table :headers="headers" :rows="props.lancamentos" theme="gray" />
 </template>

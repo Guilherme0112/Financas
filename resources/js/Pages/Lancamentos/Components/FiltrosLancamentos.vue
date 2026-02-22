@@ -7,10 +7,10 @@ import Flatpickr from 'vue-flatpickr-component'
 import { useForm, router } from '@inertiajs/vue3'
 import InputError from '@/Components/InputError.vue';
 import { ref, watch } from 'vue';
-import TextInput from '@/Components/TextInput.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import { Filter } from 'lucide-vue-next';
 import Icon from '@/Components/Icon.vue';
+import { configInertia } from '@/inertia';
 
 const props = defineProps<{
     show: boolean,
@@ -42,8 +42,7 @@ const form = useForm({
 
 const filtrar = () => {
     form.get(route('lancamentos.index'), {
-        preserveState: true,
-        replace: true,
+      ...configInertia,
         onSuccess: () => {
             emit('close')
         },

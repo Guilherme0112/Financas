@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\LimiteCategoriaController;
+use App\Http\Controllers\MetasController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TrocaDeDadosController;
 use Illuminate\Foundation\Application;
@@ -36,14 +37,24 @@ Route::prefix('lancamentos')
     Route::delete('/{id}', [LancamentoController::class, 'destroy'])->name('destroy');
 });
 
-Route::prefix('metas')
+Route::prefix('limites')
     ->middleware('auth')
-    ->name('metas.')
+    ->name('limites.')
     ->group(function () {
     Route::get('/', action: [LimiteCategoriaController::class, 'index'])->name('index');
     Route::post('/', action: [LimiteCategoriaController::class, 'store'])->name('store');
     Route::put('/{id}', action: [LimiteCategoriaController::class, 'update'])->name('update');
     Route::delete('/{id}', action: [LimiteCategoriaController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('metas')
+    ->middleware('auth')
+    ->name('metas.')
+    ->group(function () {
+    Route::get('/', action: [MetasController::class, 'index'])->name('index');
+    Route::post('/', action: [MetasController::class, 'store'])->name('store');
+    Route::put('/{id}', action: [MetasController::class, 'update'])->name('update');
+    Route::delete('/{id}', action: [MetasController::class, 'destroy'])->name('destroy');
 });
 
 Route::prefix('importar')

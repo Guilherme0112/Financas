@@ -11,7 +11,9 @@ use Illuminate\Support\Collection;
 class DashboardService
 {
     public function __construct(
-        public LancamentoRepository $lancamentoRepository
+        public LancamentoRepository $lancamentoRepository,
+        public LimiteCategoriaService $limiteCategoriaService,
+        public MetasService $metaService
     ) {
     }
 
@@ -72,11 +74,13 @@ class DashboardService
                     "gastos" => $lancamentosPorCategoria['gastos'],
                     "receitas" => $lancamentosPorCategoria['receitas'],
                 ],
-                'mensal' => $dadosMes,
+            'mensal' => $dadosMes,
             ],
             porcentual: $comparacao,
             lancamentos_perto_de_vencer: $lancamentosPertoDeVencer->toArray(),
             lancamentos_vencidos: $lancamentosVencidos->toArray(),
+            limites: $this->limiteCategoriaService->listar([], $userId, 6),
+            metas: $this->metaService->listar([], $userId, 3)
         );
     }
 

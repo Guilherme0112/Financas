@@ -7,7 +7,7 @@ import { Lancamento } from '@/types/Lancamentos';
 import { Page } from '@/types/Page';
 import FiltrosLancamentos from './Components/FiltrosLancamentos.vue';
 import Paginacao from '@/Components/Paginacao.vue';
-import DeleteLancamento from './Components/DeleteLancamento.vue';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal.vue';
 import { useLancamentos } from './Composables/useLancamentos';
 import ImportarDados from './Components/ImportarDados.vue';
 import ExportarDados from './Components/ExportarDados.vue';
@@ -18,11 +18,14 @@ import Acoes from './Partials/Acoes.vue';
 import { h } from 'vue'
 import Resumo from './Partials/Resumo.vue';
 import Load from '@/Components/Load.vue';
+import { Metas } from '@/types/Metas';
 
 const props = defineProps<{
-  lancamentos: Page<Lancamento>
+  lancamentos: Page<Lancamento>,
+  metas: Page<Metas>,
   categoriasEntrada: any[],
   categoriasSaida: any[]
+  tipo: any[]
 }>();
 
 const {
@@ -57,7 +60,9 @@ const form = useForm({
   mes_referencia: '',
   categoria_entrada: null,
   categoria_saida: null,
-  foi_pago: null
+  foi_pago: null,
+  meta_id: null,
+  meta: null
 });
 
 const actions = [
@@ -91,42 +96,56 @@ const abrirEdicao = (l: any) => {
   form.categoria_entrada = l.categoria_entrada;
   form.mes_referencia = l.mes_referencia || '';
   form.foi_pago = l.foi_pago;
+  form.meta_id = l.meta?.id;
+  form.meta = l.meta ? { id: l.meta.id, nome: l.meta.nome } : null;
   showModal.value = true;
 }
 
 onMounted(() => {
   const canal = echo.private(`users.${page.props.auth.user.id}`);
   canal.listen('.ImportacaoFinalizada', (e: any) => {
-      loadImportacao.value = false;
-      if(e.error){
-        toast.error(`Ocorreu um erro durante a importação: ${e.error}`);
-        return;
-      }
-      mudarPagina(1);
-      toast.success('Sua importação foi finalizada com sucesso!');
+    loadImportacao.value = false;
+    if (e.error) {
+      toast.error(`Ocorreu um erro durante a importação: ${e.error}`);
+      return;
+    }
+    mudarPagina(1);
+    toast.success('Sua importação foi finalizada com sucesso!');
   });
 
-  canal.listen('.ExportacaoFinalizada', (e: any) => {
-      showExport.value = false;
-      loadExportacao.value = false;
+  // Timeout pois algumas exportações são tão rápidas que faz a var que 
+  // controla o load mudar para false antes mesmo de inicar, logo ela inicia
+  // em true e fica carregando infinitamente
+  canal.listen('.ExportacaoFinalizada', async (e: any) => {
+    const start = performance.now();
 
-      if(e.error){
-        toast.error(`Ocorreu um erro durante a exportação: ${e.error}`);
-        return;
-      }
+    showExport.value = false;
+
+    if (e.error) {
+      loadExportacao.value = false;
+      toast.error(`Ocorreu um erro durante a exportação: ${e.error}`);
+      return;
+    }
+
+    const elapsed = performance.now() - start;
+    const delay = Math.max(1000 - elapsed, 0);
+    setTimeout(() => {
+      loadExportacao.value = false;
 
       const url = route("exportar.download", { id: e.exportacaoId });
       toast.success(
         () => h('div', { class: 'flex flex-col gap-2' }, [
-            h('span', 'Sua exportação está pronta!'),
-            h('a', {
-                href: url,
-                class: 'text-emerald-600 font-semibold underline'
-              }, 'Clique aqui para baixar')
-          ]),
+          h('span', 'Sua exportação está pronta!'),
+          h('a', {
+            href: url,
+            class: 'text-emerald-600 font-semibold underline'
+          }, 'Clique aqui para baixar')
+        ]),
         { autoClose: false, toastId: 'export-success' }
-      )
+      );
+    }, delay);
   });
+
 });
 
 onUnmounted(() => {
@@ -134,9 +153,10 @@ onUnmounted(() => {
 });
 </script>
 <template>
+
   <Head title="Lançamentos" />
   <AuthenticatedLayout>
-    <div class="py-10 max-w-7xl mx-auto space-y-8 px-2">
+    <div class="py-10 space-y-5 px-2">
 
       <!-- RESUMO -->
       <Resumo :total-entradas="totalEntradas" :total-saidas="totalSaidas" />
@@ -148,13 +168,15 @@ onUnmounted(() => {
       <!-- TABELA -->
       <TableLancamentos :headers="headers" :rows="lancamentosFiltrados" :actions="actions" theme="green" />
 
-      <!-- PAGINAÇÃO  -->
-      <Paginacao :pagination="lancamentos" @change="mudarPagina" />
+        <!-- PAGINAÇÃO  -->
+      <div class="w-full flex justify-end">
+        <Paginacao :pagination="lancamentos" route-name="lancamentos.index" />
+      </div>  
 
       <!-- FORMULÁRIO PARA CRIAR LANÇAMENTO -->
       <LancamentoForm :show="showModal" :form="form" :editando="!!editando"
         :categorias-entrada="props.categoriasEntrada" :categorias-saida="props.categoriasSaida"
-        @close="showModal = false; form.resetAndClearErrors()" :id="editando?.id" />
+        @close="showModal = false; form.resetAndClearErrors()" :id="editando?.id" :tipo="props.tipo" :metas="props.metas.data" />
 
       <!-- IMPORTAR DADOS -->
       <ImportarDados :show="importarDados" @close="importarDados = false" @start="loadImportacao = true" />
@@ -167,8 +189,13 @@ onUnmounted(() => {
         :categorias-entrada="props.categoriasEntrada" :categorias-saida="props.categoriasSaida" />
 
       <!-- DELETAR LANÇAMENTOS -->
-      <DeleteLancamento :show="showDeleteModal" @close="showDeleteModal = false" @confirm="confirmarExclusao"
-        :isDisabled="deleteForm.processing" />
+      <ConfirmDeleteModal 
+        :show="showDeleteModal" 
+        message="Tem certeza que deseja excluir este lançamento?"
+        @close="showDeleteModal = false" 
+        @confirm="confirmarExclusao"
+        :isDisabled="deleteForm.processing" 
+      />
     </div>
 
     <!-- LOAD DE IMPORTAÇÃO -->

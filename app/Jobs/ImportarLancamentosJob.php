@@ -38,6 +38,7 @@ class ImportarLancamentosJob implements ShouldQueue
                 return;
             }
 
+            logger()->info("Inciando processo de importação com o tipo ".$this->tipo);
             if ($this->tipo === 'xlsx') {
                 $fullPath = Storage::disk('private')->path($this->path);
                 $xlsxService->buscarXlsx($fullPath, $this->userId);

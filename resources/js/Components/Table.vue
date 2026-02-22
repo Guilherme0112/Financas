@@ -37,12 +37,12 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <div class="w-full p-1">
+  <div class="w-full">
     <div 
-      class="bg-white rounded-2xl transition-all duration-300 shadow-lg"
+      class="transition-all duration-300 "
     >
       <div>
-        <table class="w-full text-left border-separate border-spacing-0">
+        <table class="w-full text-left border-separate border-spacing-0 shadow-lg rounded">
           
           <thead>
             <tr :class="[`bg-${color}-100`]">
@@ -55,15 +55,15 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                   `border-${color}-100`,
                   header.align === 'center' ? 'text-center' : 
                   header.align === 'right' ? 'text-right' : 'text-left',
-                  index === 0 ? 'rounded-tl-2xl' : '',
-                  !actions && index === headers.length - 1 ? 'rounded-tr-2xl' : ''
+                  index === 0 ? 'rounded' : '',
+                  !actions && index === headers.length - 1 ? 'rounded' : ''
                 ]"
               >
                 {{ header.label }}
               </th>
 
               <th v-if="actions" 
-                class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-widest border-b rounded-tr-2xl"
+                class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-widest border-b rounded"
                 :class="[`text-${color}-800`, `border-${color}-100`]"
               ></th>
             </tr>
@@ -85,7 +85,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               v-else
               v-for="(row, index) in rows"
               :key="index"
-              class="group transition-colors duration-150"
+              class="group transition-colors duration-150 bg-white"
               :class="[`hover:bg-${color}-50`]"
             >
               <td

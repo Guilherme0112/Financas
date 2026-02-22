@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import { toast } from 'vue3-toastify'
 import { formatarData } from '@/utils/helpers';
+import { configInertia } from '@/inertia';
 
 export function useLancamentos() {
   const page = usePage();
@@ -32,6 +33,7 @@ export function useLancamentos() {
     if (!lancamentoParaExcluir.value) return
 
     deleteForm.delete(route('lancamentos.destroy', lancamentoParaExcluir.value), {
+      ...configInertia,
       onSuccess: () => {
         toast.success('Lançamento excluído com sucesso!')
         showDeleteModal.value = false
@@ -42,8 +44,7 @@ export function useLancamentos() {
 
   const mudarPagina = (page: number) => {
     router.get(route('lancamentos.index'), { page }, {
-      preserveState: true,
-      replace: true,
+      ...configInertia
     })
   }
 

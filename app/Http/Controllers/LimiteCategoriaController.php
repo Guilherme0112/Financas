@@ -3,25 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CategoriaSaida;
+use App\Http\Requests\IndexLimiteCategoriaRequest;
 use App\Http\Requests\StoreLimiteCategoriaRequest;
 use App\Http\Requests\UpdateLimiteCategoriaRequest;
 use App\Services\LimiteCategoriaService;
+use App\Services\MetasService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LimiteCategoriaController extends Controller
 {
-    public function index(LimiteCategoriaService $limiteCategoriaService): Response
+    public function index(IndexLimiteCategoriaRequest $request, LimiteCategoriaService $limiteCategoriaService, MetasService $metasService): Response
     {
-        $limites = $limiteCategoriaService->listarMetasComLancamentos(auth()->id());
-        return Inertia::render('Metas/Index', [
-            'categoriasSaida' => array_map(fn($c) => [
-                'value' => $c->value,
-                'label' => $c->label(),
-            ], CategoriaSaida::cases()),
-            "metas" => $limites
-        ]);
+        try {
+            $data = $request->validated();
+            $limites = $limiteCategoriaService->listar($data, auth()->id(), 6);
+            $metas = $metasService->listar([], auth()->id());
+            return Inertia::render('Metas/Index', [
+                'categoriasSaida' => array_map(fn($c) => [
+                    'value' => $c->value,
+                    'label' => $c->label(),
+                ], CategoriaSaida::cases()),
+                "limites" => $limites,
+                "metas" => $metas
+            ]);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 
     public function store(StoreLimiteCategoriaRequest $request, LimiteCategoriaService $limiteCategoriaService): RedirectResponse

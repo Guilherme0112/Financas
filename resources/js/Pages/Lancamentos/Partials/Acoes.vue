@@ -16,7 +16,9 @@ const emit = defineEmits<{
       <PrimaryButton @click="emit('filtro')">
         <SlidersHorizontal :size="16" :stroke-width="3" />
       </PrimaryButton>
+    </div>
 
+    <div class="flex gap-2">
       <PrimaryButton @click="emit('importar')">
         <ArrowUpFromLineIcon :size="16" :stroke-width="3" />
       </PrimaryButton>
@@ -24,10 +26,9 @@ const emit = defineEmits<{
       <PrimaryButton @click="emit('exportar')">
         <ArrowDownToLineIcon :size="16" :stroke-width="3" />
       </PrimaryButton>
+      <PrimaryButton @click="emit('novo')">
+        <Plus :size="16" :stroke-width="3" />
+      </PrimaryButton>
     </div>
-
-    <PrimaryButton @click="emit('novo')">
-      <Plus :size="16" :stroke-width="3" />
-    </PrimaryButton>
   </div>
 </template>

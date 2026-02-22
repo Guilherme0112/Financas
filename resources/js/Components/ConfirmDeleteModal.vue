@@ -3,10 +3,11 @@ import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
 
-const props = defineProps<{
+defineProps<{
   show: boolean;
-  isDisabled: boolean
-}>()
+  isDisabled?: boolean;
+  message: string;
+}>();
 
 const emit = defineEmits<{
   (e: 'confirm'): void
@@ -22,7 +23,7 @@ const emit = defineEmits<{
       </h2>
 
       <p class="text-sm text-slate-600">
-        Tem certeza que deseja excluir este lançamento?
+        {{ message }}
         <br />
         <span class="text-red-600 font-semibold">Essa ação não pode ser desfeita.</span>
       </p>
@@ -32,7 +33,7 @@ const emit = defineEmits<{
           Cancelar
         </SecondaryButton>
 
-        <DangerButton :disabled="props.isDisabled" @click="emit('confirm')">
+        <DangerButton :disabled="isDisabled" @click="emit('confirm')">
           Excluir
         </DangerButton>
       </div>

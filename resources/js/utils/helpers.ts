@@ -34,6 +34,11 @@ export function formatarMesAno(mesReferencia: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
 
+export function sanitizarData(data: string){
+  if(!data) return;
+  return data.replaceAll("/", "-");
+}
+
 export const toNumber = (value: any): number => {
   if (!value) return 0
   return Number(value)

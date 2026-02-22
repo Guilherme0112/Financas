@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\LimiteCategoria;
 use App\Repositories\LimiteCategoriaRepository;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class LimiteCategoriaService
@@ -14,18 +13,21 @@ class LimiteCategoriaService
     {
     }
 
-    public function listarMetas(array $filtros, int $userId): Collection
+    public function listar(array $filtros, int $userId, ?int $perPage = 20): LengthAwarePaginator
     {
-        $limites = $this->limiteCategoriaRepository->listar($filtros, $userId);
-        return $limites->map(function ($limite) {
+        $limites = $this->limiteCategoriaRepository->listar($filtros, $userId, $perPage);
+
+        $limites->getCollection()->transform(function ($limite) {
             $limite->categoria_saida_label = $limite->categoria_saida->label();
             return $limite;
         });
+
+        return $limites;
     }
 
-    public function listarMetasComLancamentos(int $userId): LengthAwarePaginator
+    public function listarMetasComLancamentos(array $filtros, int $userId, ?int $perPage = 20): LengthAwarePaginator
     {
-        $limites = $this->limiteCategoriaRepository->listarLimitesComLancamentos($userId);
+        $limites = $this->limiteCategoriaRepository->listar($filtros, $userId, $perPage);
 
         $limites->getCollection()->transform(function ($limite) {
             $limite->categoria_saida_label = $limite->categoria_saida->label();

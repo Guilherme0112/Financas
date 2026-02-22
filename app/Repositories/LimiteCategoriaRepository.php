@@ -2,65 +2,45 @@
 
 namespace App\Repositories;
 
-use App\Enums\TipoValor;
-use App\Models\Lancamento;
 use App\Models\LimiteCategoria;
+use Arr;
 use Carbon\Carbon;
 use DB;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class LimiteCategoriaRepository
 {
 
-    public function listar(array $filtros, int $userId): Collection
+    public function listar(array $filtros, int $userId, ?int $perPage = 20): LengthAwarePaginator
     {
-        return LimiteCategoria::where('user_id', $userId)->get();
-    }
+        $ano = Arr::get($filtros, 'ano');
+        $mes = Arr::get($filtros, 'mes');
 
-    public function listarLimitesComLancamentos(int $userId, ?int $perPage = 20)
-    {
-        $limites = LimiteCategoria::where('user_id', $userId)
-            ->paginate($perPage);
-
-        $gastos = Lancamento::select(
-            'categoria_saida',
-            DB::raw("TO_CHAR(mes_referencia, 'YYYY-MM') as mes_referencia"),
-            DB::raw('SUM(valor) as total_gasto')
-        )
+        return LimiteCategoria::query()
             ->where('user_id', $userId)
-            ->where('tipo', TipoValor::SAIDA)
-            ->whereFoiPago(true)
-            ->groupBy('categoria_saida', DB::raw("TO_CHAR(mes_referencia, 'YYYY-MM')"))
-            ->get()
-            ->keyBy(
-                fn($item) =>
-                (is_object($item->categoria_saida) ? $item->categoria_saida->value : $item->categoria_saida)
-                . '_' . $item->mes_referencia
-            );
-
-        $limites->getCollection()->transform(function ($limite) use ($gastos) {
-            $categoria = is_object($limite->categoria_saida) ? $limite->categoria_saida->value : $limite->categoria_saida;
-            $chave = $categoria . '_' . $limite->mes_referencia;
-            $limite->total_gasto = $gastos[$chave]->total_gasto ?? 0;
-            return $limite;
-        });
-
-        return $limites;
+            ->when(!$ano || !$mes, function ($q) {
+                $q->whereYear('mes_referencia', now()->year)
+                    ->whereMonth('mes_referencia', now()->month);
+            })
+            ->when($ano && $mes, function ($q) use ($ano, $mes) {
+                $q->whereYear('mes_referencia', $ano)
+                    ->whereMonth('mes_referencia', $mes);
+            })
+            ->paginate($perPage)
+            ->withQueryString();
     }
-
-
 
     public function criar(array $dados, int $userId): LimiteCategoria
     {
         $dados['user_id'] = $userId;
         $quantidadeMeses = (int) ($dados['meses_recorrentes'] ?? 1);
-        $dataBase = Carbon::parse($dados['mes_referencia']); // Carbon
+        $dataBase = Carbon::parse($dados['mes_referencia']);
 
         $limiteLancamentos = collect();
 
         DB::transaction(function () use ($dados, $quantidadeMeses, $dataBase, $userId, $limiteLancamentos) {
             for ($i = 0; $i < $quantidadeMeses; $i++) {
-                $mesReferencia = $dataBase->copy()->addMonths($i)->format('Y-m');
+                $mesReferencia = $dataBase->copy()->addMonths($i)->format('Y-m-d');
 
                 $dados['mes_referencia'] = $mesReferencia;
                 $dados['user_id'] = $userId;

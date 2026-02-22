@@ -11,16 +11,24 @@ const props = defineProps<{
 </script>
 
 <template>
-    <Table :headers="headers" :rows="rows" :actions="actions" theme="emerald">
+    <Table :headers="headers" :rows="rows" :actions="actions" theme="gray">
         <template #cell-tipo="{ row }">
           <span v-if="row.tipo === 'ENTRADA'" class="inline-flex items-center px-2 py-1 text-xs font-semibold
              rounded-full bg-green-100 text-green-700">
             + Entrada
           </span>
 
-          <span v-else class="inline-flex items-center px-2 py-1 text-xs font-semibold
+          <span v-else-if="row.tipo === 'SAIDA'" class="inline-flex items-center px-2 py-1 text-xs font-semibold
              rounded-full bg-red-100 text-red-700">
             − Saída
+          </span>
+          <span v-else-if="row.tipo === 'RESERVA_META'" class="inline-flex items-center px-2 py-1 text-xs font-semibold
+             rounded-full bg-blue-100 text-blue-700">
+            Reserva para Meta
+          </span>
+          <span v-else class="inline-flex items-center px-2 py-1 text-xs font-semibold
+             rounded-full bg-yellow-100 text-yellow-700">
+            Reserva de Emergência
           </span>
         </template>
 

@@ -5,6 +5,7 @@ namespace App\Enums;
 enum CategoriaEntrada: string
 {
     case SALARIO = 'SALARIO';
+    case BENEFICIOS = "BENEFICIOS";
     case FREELANCE = 'FREELANCE';
     case INVESTIMENTOS = 'INVESTIMENTOS';
     case BONUS = 'BONUS';
@@ -16,6 +17,7 @@ enum CategoriaEntrada: string
     {
         return match ($this) {
             self::SALARIO => 'Salário',
+            self::BENEFICIOS => "Benefícios",
             self::FREELANCE => 'Freelance',
             self::INVESTIMENTOS => 'Investimentos',
             self::BONUS => 'Bônus',

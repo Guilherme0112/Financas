@@ -1,17 +1,6 @@
-import { toNumber } from "@/utils/helpers"
 import { computed, ref } from "vue"
 
 export function useMetas(categoria: any) {
-
-  const percentual = computed(() => {
-    const limite = Number(categoria.limite) || 0;
-    const gasto = Number(categoria.total_gasto) || 0;
-    if (limite <= 0) return 0;
-    return (gasto / limite) * 100;
-  });
-
-
-  const mostrarAlerta = computed(() => percentual.value >= 80);
 
   const metaGlobal = ref({
     objetivo: 5000,
@@ -40,9 +29,6 @@ export function useMetas(categoria: any) {
   });
 
   return {
-    toNumber,
-    percentual,
-    mostrarAlerta,
     porcentagemEconomizada,
     statusMensagem,
     statusColorClass,

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
+use App\Enums\TipoValor;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,9 +30,12 @@ class StoreLancamentosRequest extends FormRequest
             'nome' => 'required|string|max:50',
             'descricao' => 'nullable|string|max:500',
             'valor' => 'required|decimal:2|min:1|max:999999.99',
-            'tipo' => 'required|in:ENTRADA,SAIDA',
             'recorrente' => 'required|boolean',
             'meses_recorrentes' => "nullable|numeric|min:1|max:12",
+            'tipo' => [
+                'required',
+                Rule::enum(TipoValor::class)
+            ],
             'categoria_entrada' => [
                 "nullable",
                 Rule::requiredIf($this->tipo === 'ENTRADA'),
@@ -43,8 +47,13 @@ class StoreLancamentosRequest extends FormRequest
                 Rule::requiredIf($this->tipo === 'SAIDA'),
                 Rule::enum(CategoriaSaida::class),
             ],
-            'mes_referencia' => 'required|date_format:Y/m/d',
-            'foi_pago' => 'nullable|boolean'
+            'mes_referencia' => 'nullable|date_format:Y/m/d',
+            'foi_pago' => 'nullable|boolean',
+            "meta_id" => [
+                "nullable",
+                Rule::requiredIf($this->tipo === "RESERVA_META"),
+                "exists:metas,id"
+            ]
         ];
     }
 

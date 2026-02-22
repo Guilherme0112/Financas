@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
 use App\Models\Lancamento;
-use App\Models\User;
 use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
 use DB;
@@ -19,7 +18,7 @@ class LancamentoService
         public LancamentoRepository $lancamentoRepository
     ) { }
 
-    public function listar(array $filtros, ?int $perPage = 15, int $userId): LengthAwarePaginator
+    public function listar(array $filtros, ?int $perPage = 20, int $userId): LengthAwarePaginator
     {
         return $this->lancamentoRepository->obterLancamentos($filtros, $perPage, $userId);
     }

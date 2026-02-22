@@ -7,6 +7,7 @@ import { useForm } from '@inertiajs/vue3'
 import * as XLSX from 'xlsx'
 import { Upload } from 'lucide-vue-next'
 import Icon from '@/Components/Icon.vue'
+import { configInertia } from '@/inertia'
 
 const props = defineProps<{ show: boolean }>()
 
@@ -80,6 +81,7 @@ const submit = () => {
 
   form.post(route(`importar.${extension}`), {
     forceFormData: true,
+    ...configInertia,
     onStart: () => {
       loading.value = true;
     },

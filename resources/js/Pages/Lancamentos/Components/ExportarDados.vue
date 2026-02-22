@@ -6,6 +6,7 @@ import { ref } from 'vue';
 import { router } from '@inertiajs/vue3'
 import { Download } from 'lucide-vue-next';
 import Icon from '@/Components/Icon.vue';
+import { configInertia } from '@/inertia';
 
 const props = defineProps<{
   show: boolean
@@ -31,8 +32,7 @@ const submit = () => {
   router.post(route('exportar.' + format.value), {
     ...query,
   }, {
-    preserveState: true,
-    preserveScroll: true,
+    ...configInertia,
     onFinish: () => {
       processing.value = false
     },

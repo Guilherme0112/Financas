@@ -10,6 +10,7 @@
     "@inertiajs/vue3": "^2.2.19",
     "@vuepic/vue-datepicker": "^12.1.0",
     "axios": "^1.11.0",
+    "debounce": "^3.0.0",
     "flatpickr": "^4.6.13",
     "lucide-vue-next": "^0.563.0",
     "v-money3": "^3.24.1",

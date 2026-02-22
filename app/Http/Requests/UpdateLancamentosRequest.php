@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
+use App\Enums\TipoValor;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,7 +30,10 @@ class UpdateLancamentosRequest extends FormRequest
             'nome' => 'required|string|max:50',
             'descricao' => 'nullable|string|max:500',
             'valor' => 'required|decimal:2|min:1',
-            'tipo' => 'required|in:ENTRADA,SAIDA',
+            'tipo' => [
+                'required',
+                Rule::enum(TipoValor::class)
+            ],
             'categoria_entrada' => [
                 "nullable",
                 Rule::requiredIf($this->tipo === 'ENTRADA'),
@@ -42,7 +46,12 @@ class UpdateLancamentosRequest extends FormRequest
                 Rule::enum(CategoriaSaida::class),
             ],
             'mes_referencia' => 'required|date_format:Y/m/d',
-            'foi_pago' => 'nullable|boolean'
+            'foi_pago' => 'nullable|boolean',
+            "meta_id" => [
+                "nullable",
+                Rule::requiredIf($this->tipo === "RESERVA_META"),
+                "exists:metas,id"
+            ]
         ];
     }
 

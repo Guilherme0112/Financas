@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use Illuminate\Pagination\LengthAwarePaginator;
+
 class Dashboard
 {
 
@@ -10,7 +12,9 @@ class Dashboard
         public array $graficos,
         public array $porcentual,
         public array $lancamentos_perto_de_vencer,
-        public array $lancamentos_vencidos
+        public array $lancamentos_vencidos,
+        public LengthAwarePaginator $limites,
+        public LengthAwarePaginator $metas
     )
     { }
 }

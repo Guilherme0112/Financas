@@ -22,10 +22,9 @@ class XlsxService
         return $this->importarParaLancamentos($sheet, $userId);
     }
 
-    public function importarParaLancamentos(Worksheet $sheet, int $userId): Lancamento
+    public function importarParaLancamentos(Worksheet $sheet, int $userId)
     {
         $rows = $sheet->toArray(null, true, true, true);
-
         // remove cabeçalho
         unset($rows[1]);
 
@@ -36,7 +35,7 @@ class XlsxService
             if (!$tipo) continue;
 
             // TODO: chamar service para salvar
-            return Lancamento::create([
+            Lancamento::create([
                 'nome' => trim($row['A']),
                 'descricao' => trim($row['B']),
                 'valor' => (float) $row['C'],

@@ -12,7 +12,7 @@ const open = ref(false);
 const links = [
     { name: 'Dashboard', href: 'dashboard' },
     { name: 'Lançamentos', href: 'lancamentos.index' },
-    { name: 'Metas', href: 'metas.index' },
+    { name: 'Metas/Limites', href: 'limites.index' },
 ];
 
 </script>
@@ -102,7 +102,7 @@ const links = [
         </header>
 
         <!-- Content -->
-        <main>
+        <main class="mx-auto max-w-7xl">
             <slot />
         </main>
     </div>

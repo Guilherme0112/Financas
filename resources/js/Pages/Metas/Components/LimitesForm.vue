@@ -12,11 +12,12 @@ import { toast } from 'vue3-toastify'
 import { Portuguese } from 'flatpickr/dist/l10n/pt.js'
 import Checkbox from '@/Components/Checkbox.vue';
 import monthSelectPlugin from "flatpickr/dist/plugins/monthSelect";
-import { Goal, Trash2 } from 'lucide-vue-next'
-import DangerButton from '@/Components/DangerButton.vue'
+import { Goal } from 'lucide-vue-next'
 import TextInput from '@/Components/TextInput.vue'
 import HelpMessage from '@/Components/HelpMessage.vue'
 import { ref, watch } from 'vue'
+import Icon from '@/Components/Icon.vue'
+import { configInertia } from '@/inertia'
 
 const MonthSelectPlugin = monthSelectPlugin as any
 
@@ -31,13 +32,13 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'saved'])
 
 const salvar = () => {
-    if (props.form.periodo instanceof Date) {
-        const d = props.form.periodo;
-        props.form.periodo = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+    if (props.form.mes_referencia.length === 7) {
+        props.form.mes_referencia = props.form.mes_referencia + "-01";
     }
 
     if (props.editando && props.form.id) {
-        props.form.put(route('metas.update', props.form.id), {
+        props.form.put(route('limites.update', props.form.id), {
+            ...configInertia,
             onSuccess: () => {
                 toast.success('Limite atualizado com sucesso!')
                 emit('saved')
@@ -47,7 +48,8 @@ const salvar = () => {
         return;
     }
 
-    props.form.post(route('metas.store'), {
+    props.form.post(route('limites.store'), {
+        ...configInertia,
         onSuccess: () => {
             toast.success('Limite configurado com sucesso!')
             emit('saved')
@@ -56,17 +58,6 @@ const salvar = () => {
     })
 }
 
-const deletar = () => {
-    if (!props.form.id) return;
-
-    props.form.delete(route('metas.destroy', props.form.id), {
-        onSuccess: () => {
-            toast.success('Limite removido com sucesso!')
-            emit('saved')
-            emit('close')
-        }
-    })
-}
 
 const fpInstance = ref<any>(null)
 const aplicarClasse = () => {
@@ -133,21 +124,18 @@ const configFlatpickr = {
 <template>
     <Modal :show="show" @close="emit('close')">
         <div class="p-6 space-y-6">
-
             <header class="flex items-start justify-between">
                 <div>
                     <h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2">
-                        <Goal :size="23" />
+                        <Icon>
+                            <Goal :size="23" />
+                        </Icon>
                         {{ editando ? 'Editar Limite de Gasto' : 'Configurar Novo Limite' }}
                     </h3>
                     <p class="text-sm text-emerald-700 mt-1 opacity-70">
                         Defina um teto para não estourar seu orçamento nesta categoria.
                     </p>
                 </div>
-
-                <DangerButton v-if="editando" @click="deletar" :disabled="props.form.processing">
-                    <Trash2 :size="15" color="white" />
-                </DangerButton>
             </header>
 
 
@@ -161,10 +149,10 @@ const configFlatpickr = {
                         {{ cat.label }}
                     </option>
                 </select>
-                <InputError :message="form.errors.categoria_saida_id" />
+                <InputError :message="form.errors.categoria_saida" />
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                     <InputLabel value="Teto Máximo (R$)" />
                     <InputDinheiro v-model="form.limite" class="mt-1"

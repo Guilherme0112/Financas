@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Enums\TipoValor;
 use App\Models\Lancamento;
+use Arr;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -11,9 +12,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class LancamentoRepository
 {
 
-    public function obterLancamentos(array $filtros, ?int $perPage = 15, int $userId): LengthAwarePaginator
+    public function obterLancamentos(array $filtros, ?int $perPage = 20, int $userId): LengthAwarePaginator
     {
         return Lancamento::query()
+            ->with("meta")
             ->where('user_id', $userId)
             ->when(
                 ($filtros['tipo'] ?? null) && $filtros['tipo'] !== 'TODOS',
@@ -28,12 +30,12 @@ class LancamentoRepository
                 fn($q) => $q->whereCategoriaSaida($filtros['categoria_saida'])
             )
             ->when(
-                $filtros['data_inicio'] ?? null,
-                fn($q) => $q->whereDate('mes_referencia', '>=', $filtros['data_inicio'])
+                Arr::get($filtros, 'data_inicio', Carbon::now()->startOfMonth()),
+                fn($q, $dataInicio) => $q->whereDate('mes_referencia', '>=', $dataInicio)
             )
             ->when(
-                $filtros['data_fim'] ?? null,
-                fn($q) => $q->whereDate('mes_referencia', '<=', $filtros['data_fim'])
+                Arr::get($filtros, 'data_fim', Carbon::now()->endOfMonth()),
+                fn($q, $dataFim) => $q->whereDate('mes_referencia', '<=', $dataFim)
             )
             ->when(
                 $filtros['foi_pago'] ?? null,

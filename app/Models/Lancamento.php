@@ -24,7 +24,8 @@ class Lancamento extends Model
         'categoria_entrada',
         'categoria_saida',
         'foi_pago',
-        'user_id'
+        'user_id',
+        'meta_id'
     ];
 
     protected $casts = [
@@ -36,9 +37,9 @@ class Lancamento extends Model
         'categoria_saida' => CategoriaSaida::class,
     ];
 
-    public function categoria()
+    public function meta()
     {
-        return $this->belongsTo(Categoria::class);
+        return $this->belongsTo(Meta::class);
     }
 
     public function getCategoriaLabelAttribute(): ?string

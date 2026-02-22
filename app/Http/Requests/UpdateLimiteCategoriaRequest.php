@@ -30,7 +30,7 @@ class UpdateLimiteCategoriaRequest extends FormRequest
             ],
             "limite" => 'required|decimal:2|min:1|max:999999.99',
             "notificar_ao_atingir" => 'required|boolean',
-            "mes_referencia" => 'required|date_format:Y-m',
+            "mes_referencia" => 'required|date_format:Y-m-d',
         ];
     }
 

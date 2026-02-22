@@ -1,18 +1,24 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import CardLimite from '../Components/CardLimite.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import LimitesForm from '../Components/LimitesForm.vue';
 import HelpMessage from '@/Components/HelpMessage.vue';
-import { Receipt } from 'lucide-vue-next';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal.vue';
+import { Receipt, Plus } from 'lucide-vue-next';
 import Icon from '@/Components/Icon.vue';
+import { toast } from 'vue3-toastify';
+import Paginacao from '@/Components/Paginacao.vue';
+import { Page } from '@/types/Page';
+import PaginacaoPorMes from '@/Components/PaginacaoPorMes.vue';
+import SemRegistro from '@/Pages/Dashboard/Partials/SemRegistro.vue';
+import { configInertia } from '@/inertia';
 
 const props = defineProps<{
-    metas: any
+    limites: Page<any>
     categoriasSaida: any
 }>();
-
 const form = useForm({
     id: null,
     categoria_saida: '',
@@ -24,6 +30,8 @@ const form = useForm({
 });
 
 const abrirModal = ref(false);
+const mostrarModalDeletar = ref(false);
+const limiteIdToDelete = ref<number | string | null>(null);
 
 const editarMeta = (categoria: any) => {
     form.id = categoria.id;
@@ -36,40 +44,73 @@ const editarMeta = (categoria: any) => {
     abrirModal.value = true;
 }
 
+const pedirDeletarLimite = (id: number | string) => {
+    limiteIdToDelete.value = id;
+    mostrarModalDeletar.value = true;
+}
+
+const confirmarDeletarLimite = () => {
+    if (!limiteIdToDelete.value) return;
+    form.delete(route('limites.destroy', limiteIdToDelete.value), {
+        ...configInertia,
+        onSuccess: () => {
+            toast.success('Limite removido com sucesso!')
+            mostrarModalDeletar.value = false;
+            limiteIdToDelete.value = null;
+        },
+    })
+}
+
+const mudarPagina = (page: number) => {
+    router.get(route('limites.index'), { page }, {
+      ...configInertia
+    })
+  }
+
 </script>
 <template>
-    <div class="max-w-4xl mx-auto p-6 bg-gray-50 rounded-3xl shadow-lg m-6">
-            <section
-                class="flex flex-col md:flex-row items-start md:items-center justify-start mb-8 pb-4 border-b border-gray-100 gap-4">
-                <div class="flex items-center gap-3">
-                    <Icon>
-                        <Receipt :size="25" />
-                    </Icon>
-                    <div>
-                        <h1 class="flex text-2xl font-extrabold text-gray-900 tracking-tight">
-                            Limite Financeiro
-                            <HelpMessage class="ml-[200px] mx-3 text-amber-800"
-                                message="Apenas lançamentos marcados como pagos são considerados no cálculo das metas. Esse critério pode ser alterado nas configurações." />
-                        </h1>
-                        <p class="text-sm text-gray-500">Acompanhe seu progresso em tempo real</p>
-                    </div>
+    <div class="p-6 bg-gray-50 rounded-3xl shadow-lg">
+        <section
+            class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-gray-100 gap-4">
+            <div class="flex items-center gap-3">
+                <Icon>
+                    <Receipt :size="25" />
+                </Icon>
+                <div>
+                    <h1 class="flex items-center text-2xl font-extrabold text-gray-900 tracking-tight">
+                        Limite Financeiro
+                        <HelpMessage class="relative ml-6 text-amber-800"
+                            message="Apenas lançamentos marcados como pagos são considerados no cálculo dos limites." />
+                    </h1>
+                    <p class="text-sm text-gray-500">Acompanhe seu progresso em tempo real</p>
                 </div>
-            </section>
+            </div>
 
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <CardLimite v-for="categoria in props.metas" :categoria="categoria" @click="editarMeta(categoria)" />
-            </section>
+            <PrimaryButton @click="abrirModal = true">
+                <Plus :size="16" :stroke-width="3" />
+            </PrimaryButton>
 
-            <footer class="mt-8 p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between">
-                <p class="text-sm text-emerald-700 font-medium">
-                    Mantenha o controle dos seus <strong>gastos</strong> e aproveite cada centavo do seu <strong>Lazer</strong> sem estourar o limite!
-                </p>
-                <PrimaryButton @click="abrirModal = true">
-                    Criar Limite
-                </PrimaryButton>
-            </footer>
+        </section>
+
+        <section>
+            <div v-if="props?.limites?.data?.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardLimite v-for="categoria in props.limites.data" :actions="true" :categoria="categoria"
+                @click="editarMeta(categoria)" @delete="pedirDeletarLimite(categoria.id!)" />
+            </div>
+            <div v-else>
+                <SemRegistro />
+            </div>
+        </section>
+
+        <div class="w-full flex flex-col items-end">
+            <PaginacaoPorMes route-name="limites.index" />
+            <Paginacao :pagination="props.limites" route-name="limites.index" />
         </div>
+    </div>
 
-        <LimitesForm :show="abrirModal" :form="form" :editando="!!form.id" @close="abrirModal = false; form.resetAndClearErrors()"
-            :categorias-saida="props.categoriasSaida" />
+    <LimitesForm :show="abrirModal" :form="form" :editando="!!form.id"
+        @close="abrirModal = false; form.resetAndClearErrors()" :categorias-saida="props.categoriasSaida" />
+
+    <ConfirmDeleteModal :show="mostrarModalDeletar" message="Tem certeza que deseja excluir este limite de gastos?"
+        :isDisabled="form.processing" @confirm="confirmarDeletarLimite" @close="mostrarModalDeletar = false" />
 </template>

@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('limite_categorias', function (Blueprint $table) {
+        Schema::create('metas', function (Blueprint $table) {
             $table->id();
-            $table->string('categoria_saida');
-            $table->decimal('limite', 10, 2);
-            $table->date('mes_referencia');
-            $table->boolean('notificar_ao_atingir')->default(false);
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->index('user_id');   
+            $table->string("nome");
+            $table->decimal('valor_objetivo', 15, 2);
+            $table->date('ate_quando');
+            
+            $table->index('user_id');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('limite_categorias');
+        Schema::dropIfExists('metas');
     }
 };
