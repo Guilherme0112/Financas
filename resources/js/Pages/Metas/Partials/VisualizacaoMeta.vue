@@ -143,8 +143,8 @@ const dataMeta = computed(() => {
             <div v-if="mesesRestantes > 0" class="grid grid-cols-3 gap-4">
                 <div class="bg-purple-50 rounded-2xl p-4 border border-purple-100 text-center">
                     <p class="text-[10px] font-bold text-purple-600 uppercase mb-1">Tempo restante</p>
-                    <p class="text-lg font-black text-purple-700">{{ mesesRestantes }} mês{{ mesesRestantes > 1 ? 'es' :
-                        '' }}</p>
+                    <p class="text-lg font-black text-purple-700">{{ mesesRestantes }} {{ mesesRestantes > 1 ? 'meses' :
+                        'mês' }}</p>
                 </div>
                 <div v-if="percentual >= 100"
                     class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex flex-col items-center justify-center">

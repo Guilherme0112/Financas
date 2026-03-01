@@ -80,9 +80,9 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
               </PrimaryButton>
             </NavLink>
           </HeaderSecao>
-          <template v-if="dashboard.metas.data.length > 0">
+          <div v-if="dashboard.metas.data.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" >
             <CardMeta v-for="meta in dashboard.metas.data" :meta="meta" :actions="false" class="max-w-[370px]" />
-          </template>
+          </div>
           <div v-else class="col-span-full flex items-center justify-center min-h-[200px]">
             <SemRegistro />
           </div>

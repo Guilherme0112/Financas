@@ -8,7 +8,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class MetasRepository
 {
-    public function listar(array $filtros, int $userId, ?int $perPage = 20): LengthAwarePaginator
+    public function  listar(array $filtros, int $userId, ?int $perPage = 20): LengthAwarePaginator
     {
         return Meta::query()
             ->with('lancamentos')
@@ -17,7 +17,7 @@ class MetasRepository
                 $q->where("nome", "like", "%{$search}%");
             })
             ->orderBy('nome', 'asc')
-            ->paginate(1);
+            ->paginate($perPage, ["*"], "pageMeta");
     }
 
     public function listarPaginado(int $userId, ?int $perPage = 20): LengthAwarePaginator
@@ -35,6 +35,7 @@ class MetasRepository
     public function criar(array $dados, int $userId): Meta
     {
         $dados['user_id'] = $userId;
+        $dados['meta_id'] = $dados['meta'];
         return Meta::create($dados);
     }
 

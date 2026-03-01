@@ -24,7 +24,7 @@ class UpdateMetaRequest extends FormRequest
         return [
             "nome" => "required|string|max:50",
             'valor_objetivo' => 'required|decimal:2|min:1|max:999999.99',
-            "ate_quando" => 'required|date_format:Y-m-d',
+            "ate_quando" => 'required|date_format:Y-m-d|after:today',
         ];
     }
 }

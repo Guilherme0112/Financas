@@ -47,7 +47,7 @@ const statusCorTexto = computed(() => {
 
 <template>
     <div 
-        class="bg-white p-5 shadow-lg rounded-2xl border border-gray-100 cursor-pointer hover:shadow-xl transition-all relative"
+        class="bg-white p-5 shadow-lg rounded-2xl border border-gray-100 hover:shadow-xl transition-all relative"
     >
         <div class="flex justify-between items-start mb-4">
             <div class="flex-1">

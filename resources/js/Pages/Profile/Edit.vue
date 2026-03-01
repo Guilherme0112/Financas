@@ -15,29 +15,28 @@ defineProps<{
     <Head title="Configurações" />
 
     <AuthenticatedLayout>
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                <div
-                    class="bg-white p-4 shadow-lg sm:rounded-lg sm:p-8"
-                >
+        <div class="space-y-6 py-10 max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            <div class="flex flex-col md:flex-row gap-8 bg-white p-4 shadow-lg sm:rounded-lg sm:p-8 w-full items-start">
+                
+                <div class="flex-1 w-full">
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
-                        class="max-w-xl"
                     />
                 </div>
 
-                <div
-                    class="bg-white p-4 shadow-lg sm:rounded-lg sm:p-8"
-                >
-                    <UpdatePasswordForm class="max-w-xl" />
+                <div class="hidden md:block self-stretch w-px bg-emerald-200"></div>
+                <hr class="md:hidden w-full border-emerald-200" />
+
+                <div class="flex-1 w-full">
+                    <UpdatePasswordForm />
                 </div>
 
-                <div
-                    class="bg-white p-4 shadow-lg sm:rounded-lg sm:p-8"
-                >
-                    <DeleteUserForm class="max-w-xl" />
-                </div>
+            </div>
+
+            <div class="bg-white p-4 shadow-lg sm:rounded-lg sm:p-8">
+                <DeleteUserForm />
             </div>
         </div>
     </AuthenticatedLayout>

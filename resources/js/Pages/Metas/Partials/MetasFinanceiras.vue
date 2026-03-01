@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    PiggyBank,
+    Target,
 } from 'lucide-vue-next';
 import { router, useForm } from '@inertiajs/vue3';
 import MetaForm from '../Components/MetaForm.vue';
@@ -11,6 +11,8 @@ import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal.vue';
 import { ref } from 'vue';
 import { configInertia } from '@/inertia';
 import Paginacao from '@/Components/Paginacao.vue';
+import SemRegistro from '@/Pages/Dashboard/Partials/SemRegistro.vue';
+import Icon from '@/Components/Icon.vue';
 
 const props = defineProps<{
     metas: any
@@ -64,12 +66,6 @@ const formEditar = useForm({
     ate_quando: null
 });
 
-const mudarPagina = (page: number) => {
-    router.get(route('metas.index'), { page }, {
-      ...configInertia
-    })
-  }
-
 const resetForm = () => {
     form.resetAndClearErrors();
 };
@@ -77,9 +73,9 @@ const resetForm = () => {
 <template>
     <div class="bg-white rounded-3xl shadow-lg p-6 space-y-4">
         <header class="flex items-center gap-4">
-            <div class="p-3 bg-emerald-500 text-white rounded-2xl shadow-lg">
-                <PiggyBank :size="25" />
-            </div>
+            <Icon>
+                <Target :size="25" />
+            </Icon>
             <div>
                 <h1 class="text-2xl font-black text-gray-800">Metas Financeiras</h1>
                 <p class="text-gray-500 text-sm">Planeje seus sonhos e veja quanto precisa poupar.</p>
@@ -92,14 +88,17 @@ const resetForm = () => {
         </div>
 
         <div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" v-if="props.metas.data.length > 0">
                 <CardMeta v-for="meta in props.metas.data" :key="meta.id" :meta="meta" :actions="true" @click="editarMeta(meta)" @delete="deletarMeta(meta.id)" />
+            </div>
+            <div v-else>
+                <SemRegistro />
             </div>
         </div>
 
-        <!-- <div class="w-full flex justify-end">
-            <Paginacao :pagination="props.metas" routeName="metas.index" />
-        </div> -->
+        <div class="w-full flex justify-end">
+            <Paginacao :pagination="props.metas" routeName="limites.index" param="pageMeta" />
+        </div>
     </div>
 
     <!-- MODAL PARA EDITAR META -->

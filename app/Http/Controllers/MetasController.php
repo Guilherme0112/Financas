@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\CategoriaSaida;
 use App\Http\Requests\IndexMetaRequest;
-use App\Http\Requests\StoreLimiteCategoriaRequest;
 use App\Http\Requests\StoreMetaRequest;
-use App\Http\Requests\UpdateLimiteCategoriaRequest;
 use App\Http\Requests\UpdateMetaRequest;
 use App\Services\MetasService;
 use Illuminate\Http\RedirectResponse;

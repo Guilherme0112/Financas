@@ -12,10 +12,15 @@ const props = defineProps<{
     next_page_url: string | null
   },
   routeName: string
-}>()
+  param?: string
+}>();
 
 const mudarPagina = (page: number) => {
-  router.get(route(props.routeName), { page }, {
+  const query = {
+    [props.param ?? 'page']: page
+  }
+
+  router.get(route(props.routeName), query, {
     ...configInertia
   })
 }
@@ -33,13 +38,8 @@ const next = () => {
 }
 </script>
 <template>
-  <div class="flex justify-center items-center gap-2 select-none mt-5">
-    <PrimaryButton
-      @click="prev"
-      :disabled="!pagination.prev_page_url"
-      class="!px-2"
-      aria-label="Página anterior"
-    >
+  <div class="flex justify-center items-center gap-2 select-none">
+    <PrimaryButton @click="prev" :disabled="!pagination.prev_page_url" class="!px-2" aria-label="Página anterior">
       <ChevronLeft :size="20" />
     </PrimaryButton>
 
@@ -50,12 +50,7 @@ const next = () => {
       <span class="text-sm font-bold text-gray-700">{{ pagination.last_page }}</span>
     </div>
 
-    <PrimaryButton
-      @click="next"
-      :disabled="!pagination.next_page_url"
-      class="!px-2"
-      aria-label="Próxima página"
-    >
+    <PrimaryButton @click="next" :disabled="!pagination.next_page_url" class="!px-2" aria-label="Próxima página">
       <ChevronRight :size="20" />
     </PrimaryButton>
   </div>

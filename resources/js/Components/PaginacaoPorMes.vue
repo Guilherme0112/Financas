@@ -1,19 +1,42 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import PrimaryButton from './PrimaryButton.vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import debounce from 'debounce';
 import { configInertia } from '@/inertia';
 
 const props = defineProps<{
   routeName: string
+  mes?: number 
+  ano?: number
 }>()
 
 const hoje = new Date()
 
-const ano = ref(hoje.getFullYear())
-const mes = ref(hoje.getMonth() + 1)
+const getUrlParam = (param: string) => {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get(param);
+}
+
+const ano = ref(
+  props.ano || 
+  Number(getUrlParam('ano')) || 
+  hoje.getFullYear()
+)
+
+const mes = ref(
+  props.mes || 
+  Number(getUrlParam('mes')) || 
+  (hoje.getMonth() + 1)
+)
+
+// 2. Sincroniza se as props mudarem (ex: navegação via Inertia)
+watch(() => [props.mes, props.ano], ([newMes, newAno]) => {
+  if (newMes) mes.value = Number(newMes)
+  if (newAno) ano.value = Number(newAno)
+})
 
 const trocarMesDebounce = debounce(() => {
   router.get(route(props.routeName), {
@@ -23,8 +46,7 @@ const trocarMesDebounce = debounce(() => {
   }, {
     ...configInertia,
   })
-
-}, 800);
+}, 500);
 
 const prev = () => {
   if (mes.value === 1) {
@@ -33,7 +55,6 @@ const prev = () => {
   } else {
     mes.value--
   }
-
   trocarMesDebounce()
 }
 
@@ -44,16 +65,17 @@ const next = () => {
   } else {
     mes.value++
   }
-
   trocarMesDebounce()
 }
 
 const monthName = computed(() => {
+  // Garantimos que o mês seja tratado como index 0 para o Date
   return new Date(ano.value, mes.value - 1).toLocaleDateString('pt-BR', {
     month: 'long',
   })
 })
 </script>
+
 <template>
   <div class="flex justify-center items-center gap-2 select-none mt-5">
     <PrimaryButton @click="prev" class="!px-2" aria-label="Mês anterior">
@@ -69,9 +91,7 @@ const monthName = computed(() => {
         {{ monthName }}
       </span>
 
-      <span class="text-sm font-medium text-gray-400 mx-1.5">
-        /
-      </span>
+      <span class="text-sm font-medium text-gray-400 mx-1.5">/</span>
 
       <span class="text-sm font-bold text-gray-700">
         {{ ano }}

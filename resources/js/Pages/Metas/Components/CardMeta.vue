@@ -65,8 +65,8 @@ const corProgresso = computed(() => {
 });
 </script>
 <template>
-  <div @click="emits('click', meta)"
-    class="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 hover:shadow-md transition-all cursor-pointer relative">
+  <div
+    class="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 hover:shadow-md transition-all relative">
     <div @click.stop class="absolute top-4 right-4 z-10" v-if="actions">
       <Dropdown align="right" width="48">
         <template #trigger>

@@ -9,12 +9,18 @@ const props = defineProps<{
   clearable?: boolean
 }>()
 
-const model = defineModel<string>({ required: true })
-const attrs = useAttrs()
-const input = ref<HTMLInputElement | null>(null)
-const open = ref(false)
-const query = ref('')
-const highlighted = ref(-1)
+const model = defineModel<number | null>({ required: true });
+const attrs = useAttrs();
+const input = ref<HTMLInputElement | null>(null);
+const open = ref(false);
+const query = ref('');
+const highlighted = ref(-1);
+const isUserTyping = ref(false)
+
+function onInput(e: Event) {
+  isUserTyping.value = true
+  query.value = (e.target as HTMLInputElement).value
+}
 
 const inputClass = `
   w-full 
@@ -33,17 +39,7 @@ const normOptions = computed(() => {
   const base = (props.options || []).map(o =>
     typeof o === 'string' ? { value: o, label: o } : o
   )
-
-  if (base.length) return base
-
-  // mock options used when none are passed (useful during development)
-  return [
-    { value: 'salario', label: 'Salário' },
-    { value: 'freelance', label: 'Freelance' },
-    { value: 'aluguel', label: 'Aluguel' },
-    { value: 'transporte', label: 'Transporte' },
-    { value: 'supermercado', label: 'Supermercado' }
-  ]
+  return base;
 })
 
 const filtered = computed(() => {
@@ -53,11 +49,13 @@ const filtered = computed(() => {
   )
 })
 
-// emit typed query so parent can read what user is writing
-watch(query, (v) => emit('update:query', v))
+watch(query, (value) => {
+  if (!isUserTyping.value) return
+
+  emit('update:query', value)
+})
 
 watch(model, (v) => {
-  // keep input query in sync with model value
   const found = normOptions.value.find(o => o.value === v)
   query.value = found ? found.label : (v ?? '')
 })
@@ -69,13 +67,13 @@ onMounted(() => {
 })
 
 function selectOption(opt: { value: any; label: string }) {
-  model.value = opt.value
-  query.value = opt.label
-  open.value = false
+  model.value = opt.value;
+  query.value = opt.label;
+  open.value = false;
 }
 
 function clear() {
-  model.value = ''
+  model.value = null
   query.value = ''
   open.value = false
 }
@@ -86,7 +84,6 @@ function onFocus() {
 }
 
 function onBlur() {
-  // small timeout so click on option registers
   setTimeout(() => (open.value = false), 150)
 }
 
@@ -106,6 +103,19 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
+onMounted(() => {
+  if (model.value != null) {
+    const found = normOptions.value.find(o => o.value === model.value)
+    if (found) {
+      query.value = found.label
+    }
+  }
+
+  if (input.value?.hasAttribute('autofocus')) {
+    input.value.focus()
+  }
+})
+
 defineExpose({ focus: () => input.value?.focus() })
 </script>
 
@@ -118,7 +128,7 @@ defineExpose({ focus: () => input.value?.focus() })
       :placeholder="placeholder"
       @focus="onFocus"
       @blur="onBlur"
-      @input="open = true"
+      @input="onInput"
       @keydown="onKeydown"
       :class="inputClass"
     />

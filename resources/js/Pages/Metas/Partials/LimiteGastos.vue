@@ -61,11 +61,6 @@ const confirmarDeletarLimite = () => {
     })
 }
 
-const mudarPagina = (page: number) => {
-    router.get(route('limites.index'), { page }, {
-      ...configInertia
-    })
-  }
 
 </script>
 <template>
@@ -102,7 +97,7 @@ const mudarPagina = (page: number) => {
             </div>
         </section>
 
-        <div class="w-full flex flex-col items-end">
+        <div class="w-full flex flex-col items-end gap-3">
             <PaginacaoPorMes route-name="limites.index" />
             <Paginacao :pagination="props.limites" route-name="limites.index" />
         </div>
