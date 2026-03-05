@@ -49,7 +49,7 @@ class StoreLancamentosRequest extends FormRequest
             ],
             'mes_referencia' => 'nullable|date_format:Y/m/d',
             'foi_pago' => 'nullable|boolean',
-            "meta_id" => [
+            "meta" => [
                 "nullable",
                 Rule::requiredIf($this->tipo === "RESERVA_META"),
                 "exists:metas,id"

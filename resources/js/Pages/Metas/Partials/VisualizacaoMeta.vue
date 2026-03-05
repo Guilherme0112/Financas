@@ -20,7 +20,7 @@ const objetivoNumerico = computed(() => {
 });
 
 const valorAtualNumerico = computed(() => {
-    const v = props.form?.valor_atual || 0;
+    const v = props.form?.lancamentos_sum_valor || 0;
     return v ? parseFloat(v.toString()) : 0;
 });
 

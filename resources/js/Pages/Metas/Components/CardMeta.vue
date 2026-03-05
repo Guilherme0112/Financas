@@ -14,7 +14,7 @@ const props = defineProps<{
     nome: string;
     valor_objetivo: string | number;
     ate_quando: string;
-    soma_lancamentos: number | string
+    lancamentos_sum_valor: number | string
   },
   actions?: boolean
 }>();
@@ -27,7 +27,7 @@ const objetivoNumerico = computed(() => {
 });
 
 const valorAtualNumerico = computed(() => {
-  const v = props.meta?.soma_lancamentos;
+  const v = props.meta?.lancamentos_sum_valor;
   return v ? parseFloat(v.toString()) : 0;
 });
 
@@ -106,7 +106,7 @@ const corProgresso = computed(() => {
       </div>
       <div class="text-right">
         <span class="text-[11px] uppercase tracking-wider text-gray-400 font-bold">Já tenho</span>
-        <p class="text-lg font-black text-emerald-600">{{ formatarDinheiro(meta.soma_lancamentos) }}</p>
+        <p class="text-lg font-black text-emerald-600">{{ formatarDinheiro(meta.lancamentos_sum_valor) }}</p>
       </div>
     </div>
 

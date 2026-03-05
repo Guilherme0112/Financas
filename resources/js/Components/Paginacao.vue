@@ -17,6 +17,7 @@ const props = defineProps<{
 
 const mudarPagina = (page: number) => {
   const query = {
+    ...route().params,
     [props.param ?? 'page']: page
   }
 

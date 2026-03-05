@@ -60,6 +60,7 @@ class LancamentoService
         $lancamentos = collect();
         DB::transaction(function () use ($quantidadeMeses, $dataBase, $dados, &$lancamentos) {
             for ($i = 0; $i < $quantidadeMeses; $i++) {
+                $dados['meta_id'] = $dados['meta'];
                 $dados['mes_referencia'] = $dataBase
                     ->copy()
                     ->addMonths($i);
@@ -78,6 +79,7 @@ class LancamentoService
     {
         $lancamento = Lancamento::findOrFail($id);
         $this->validarTipoCategoria($dados);
+        $dados['meta_id'] = $dados['meta'];
         $lancamento->update($dados);
         return $lancamento;
     }

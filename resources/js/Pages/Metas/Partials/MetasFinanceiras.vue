@@ -2,7 +2,7 @@
 import {
     Target,
 } from 'lucide-vue-next';
-import { router, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import MetaForm from '../Components/MetaForm.vue';
 import CalcularMeta from '../Components/CalcularMeta.vue';
 import CardMeta from '../Components/CardMeta.vue';
@@ -33,6 +33,7 @@ const editarMeta = (meta: any) => {
     formEditar.nome = meta.nome;
     formEditar.valor_objetivo = meta.valor_objetivo;
     formEditar.ate_quando = meta.ate_quando;
+    formEditar.lancamentos_sum_valor = meta.lancamentos_sum_valor;
     formEditar.id = meta.id;
 
     form.nome = meta.nome;
@@ -63,7 +64,9 @@ const formEditar = useForm({
     id: null,
     nome: "",
     valor_objetivo: 0,
-    ate_quando: null
+    ate_quando: null,
+    lancamentos_sum_valor: 0
+
 });
 
 const resetForm = () => {

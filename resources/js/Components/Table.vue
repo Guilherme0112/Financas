@@ -37,112 +37,89 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <div class="w-full">
-    <div 
-      class="transition-all duration-300 "
-    >
-      <div>
-        <table class="w-full text-left border-separate border-spacing-0 shadow-lg rounded">
-          
-          <thead>
-            <tr :class="[`bg-${color}-100`]">
-              <th
-                v-for="(header, index) in headers"
-                :key="header.key"
-                class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest border-b"
-                :class="[
-                  `text-${color}-800`,
-                  `border-${color}-100`,
-                  header.align === 'center' ? 'text-center' : 
-                  header.align === 'right' ? 'text-right' : 'text-left',
-                  index === 0 ? 'rounded' : '',
-                  !actions && index === headers.length - 1 ? 'rounded' : ''
-                ]"
-              >
-                {{ header.label }}
-              </th>
+  <div class="w-full select-none">
+    <div class="flex px-5 mb-1">
+      <div 
+        v-for="header in headers" 
+        :key="header.key"
+        class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400/70"
+        :style="{ width: 100 / (headers.length + (actions ? 0.4 : 0)) + '%' }"
+        :class="[
+          header.align === 'center' ? 'text-center' : 
+          header.align === 'right' ? 'text-right' : 'text-left'
+        ]"
+      >
+        {{ header.label }}
+      </div>
+      <div v-if="actions" class="w-8"></div>
+    </div>
 
-              <th v-if="actions" 
-                class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-widest border-b rounded"
-                :class="[`text-${color}-800`, `border-${color}-100`]"
-              ></th>
-            </tr>
-          </thead>
+    <div class="flex flex-col gap-1">
+      <div v-if="rows.length === 0" class="p-6 text-center bg-zinc-50/30 rounded-xl border border-dashed border-zinc-200">
+        <p class="text-zinc-400 text-[10px] uppercase font-bold tracking-tighter">Vazio</p>
+      </div>
 
-          <tbody class="divide-y" :class="[`divide-${color}-50/50`]">
-            <tr v-if="rows.length === 0">
-              <td :colspan="headers.length + (actions ? 1 : 0)" class="px-6 py-10 text-center">
-                <div class="flex flex-col items-center justify-center" :class="[`text-gray-500`]">
-                  <svg class="w-14 h-14 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p class="font-medium italic" :class="[`text-${color}-800/50`]">Nenhum registro encontrado</p>
-                </div>
-              </td>
-            </tr>
+      <div
+        v-else
+        v-for="(row, index) in rows"
+        :key="index"
+        class="relative group bg-white border border-zinc-100 py-4 px-5 rounded-lg transition-all duration-200 hover:border-zinc-200 hover:shadow-sm flex items-center"
+      >
 
-            <tr
-              v-else
-              v-for="(row, index) in rows"
-              :key="index"
-              class="group transition-colors duration-150 bg-white"
-              :class="[`hover:bg-${color}-50`]"
+        <div 
+          v-for="(header, hIndex) in headers" 
+          :key="header.key"
+          :style="{ width: 100 / (headers.length + (actions ? 0.4 : 0)) + '%' }"
+          class="px-2 truncate"
+          :class="[
+            header.align === 'center' ? 'text-center' : 
+            header.align === 'right' ? 'text-right' : 'text-left',
+            hIndex === 0 ? 'font-bold text-zinc-800 text-[13px]' : 'text-zinc-500 text-[13px] font-medium'
+          ]"
+        >
+          <slot :name="`cell-${header.key}`" :row="row" :value="row[header.key]">
+            {{ header.format ? header.format(row[header.key], row) : row[header.key] }}
+          </slot>
+        </div>
+
+        <div v-if="actions" class="ml-auto relative" data-menu>
+          <button
+            @click.stop="toggle(index)"
+            class="w-6 h-6 flex items-center justify-center rounded-md transition-all"
+            :class="aberto === index ? `bg-${color}-100 text-${color}-600` : `text-zinc-700 hover:text-zinc-500 hover:bg-zinc-50`"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v.01M12 12v.01M12 19v.01" />
+            </svg>
+          </button>
+
+          <transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="transform scale-95 opacity-0 translate-y-1"
+            enter-to-class="transform scale-100 opacity-100 translate-y-0"
+          >
+            <div
+              v-if="aberto === index"
+              class="absolute right-0 mt-1.5 w-36 bg-white rounded-xl shadow-xl p-1 z-[100] border border-zinc-100"
             >
-              <td
-                v-for="header in headers"
-                :key="header.key"
-                class="px-6 py-4 text-sm text-zinc-600 transition-colors"
-                :class="[
-                  `group-hover:text-${color}-900`,
-                  header.align === 'center' ? 'text-center' : 
-                  header.align === 'right' ? 'text-right font-semibold' : 'text-left'
-                ]"
+              <button
+                v-for="(action, i) in actions"
+                :key="i"
+                @click="() => { action.onClick(row); fechar() }"
+                class="w-full text-left px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight rounded-lg transition-all flex items-center justify-between group/item"
+                :class="[`text-zinc-500 hover:bg-${color}-50 hover:text-${color}-700`, action.class]"
               >
-                <slot :name="`cell-${header.key}`" :row="row" :value="row[header.key]">
-                  {{ header.format ? header.format(row[header.key], row) : row[header.key] }}
-                </slot>
-              </td>
-
-              <td v-if="actions" class="px-4 py-3 text-center relative" data-menu>
-                <button
-                  @click.stop="toggle(index)"
-                  class="inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 active:scale-90"
-                  :class="[
-                    `text-${color}-600 hover:bg-${color}-100/80 hover:text-${color}-700`,
-                    aberto === index ? `bg-${color}-100 text-${color}-800` : ''
-                  ]"
+                {{ action.label }}
+                <svg 
+                  class="w-3 h-3 opacity-0 -translate-x-1 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" 
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 >
-                  <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
-
-                <transition
-                  enter-active-class="transition duration-200 ease-out"
-                  enter-from-class="transform -translate-y-2 opacity-0"
-                  enter-to-class="transform translate-y-0 opacity-100"
-                >
-                  <div
-                    v-if="aberto === index"
-                    class="absolute right-10 top-2 w-48 bg-white rounded-xl shadow-xl border py-1.5 z-50 mt-10 mr-[25px]"
-                    :class="[`shadow-${color}-900/10`, `border-${color}-100`]"
-                  >
-                    <button
-                      v-for="(action, i) in actions"
-                      :key="i"
-                      @click="() => { action.onClick(row); fechar() }"
-                      class="w-full text-left px-2 py-2 text-[13px] text-zinc-600 transition-colors flex items-center gap-2"
-                      :class="[`hover:bg-${color}-50 hover:text-${color}-700`, action.class]"
-                    >
-                      <div class="w-1.5 h-1.5 rounded-full" :class="[`bg-${color}-400`]"></div>
-                      {{ action.label }}
-                    </button>
-                  </div>
-                </transition>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </transition>
+        </div>
       </div>
     </div>
   </div>

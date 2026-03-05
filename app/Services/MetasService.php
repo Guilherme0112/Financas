@@ -14,18 +14,12 @@ class MetasService
 
     public function listar(array $filtros, int $userId, ?int $perPage = 20): LengthAwarePaginator
     {
-        $paginator = $this->metasRepository->listar($filtros, $userId, $perPage);
-        $paginator->getCollection()->transform(function ($meta) {
-            $meta->soma_lancamentos = $meta->lancamentos->sum('valor');
-            return $meta;
-        });
-
-        return $paginator;
+        return $this->metasRepository->listar($filtros, $userId, $perPage);
     }
-
 
     public function criar(array $dados, int $userId): Meta
     {
+        $dados['user_id'] = $userId;
         return $this->metasRepository->criar($dados, $userId);
     }
 

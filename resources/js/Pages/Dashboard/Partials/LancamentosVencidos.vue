@@ -29,6 +29,6 @@ const headers = [
 
 </script>
 <template>
-  <h3 class="font-bold pl-2 text-red-800">Lançamentos Vencidos</h3>
+  <h3 class="font-bold pl-2 text-red-800 py-2">Lançamentos Vencidos</h3>
   <Table :headers="headers" :rows="props.lancamentos" theme="gray" />
 </template>

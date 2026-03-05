@@ -9,7 +9,6 @@ const props = defineProps<{
     metas: any,
     limites: any
 }>();
-
 </script>
 <template>
     <Head title="Metas" />

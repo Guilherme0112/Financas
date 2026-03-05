@@ -100,7 +100,7 @@ const abrirEdicao = (l: any) => {
     form.categoria_entrada = l.categoria_entrada;
     form.mes_referencia = l.mes_referencia || "";
     form.foi_pago = l.foi_pago;
-    form.meta = l.meta.id;
+    form.meta = l?.meta?.id || null;
     showModal.value = true;
 };
 
@@ -115,7 +115,7 @@ const duplicar = (l: any) => {
     form.categoria_entrada = l.categoria_entrada;
     form.mes_referencia = l.mes_referencia || "";
     form.foi_pago = l.foi_pago;
-    form.meta = l.meta.id;
+    form.meta = l?.meta?.id || null;
     showModal.value = true;
 };
 
