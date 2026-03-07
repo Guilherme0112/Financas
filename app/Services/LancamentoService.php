@@ -8,7 +8,6 @@ use App\Models\Lancamento;
 use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
 use DB;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -18,9 +17,14 @@ class LancamentoService
         public LancamentoRepository $lancamentoRepository
     ) { }
 
-    public function listar(array $filtros, ?int $perPage = 20, int $userId): LengthAwarePaginator
+    public function listar(array $filtros, ?int $perPage = 20, int $userId): array
     {
         return $this->lancamentoRepository->obterLancamentos($filtros, $perPage, $userId);
+    }
+
+    public function obterTotaisMensaisPorPeriodo($data_inicial, $data_final, int $userId): Collection
+    {
+        return $this->lancamentoRepository->obterTotaisMensaisPorPeriodo($data_inicial, $data_final, $userId);
     }
 
     // TODO: a entidade deve se validar

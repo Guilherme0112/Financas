@@ -5,6 +5,7 @@ use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\LimiteCategoriaController;
 use App\Http\Controllers\MetasController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProspeccaoFuturoController;
 use App\Http\Controllers\TrocaDeDadosController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -74,5 +75,12 @@ Route::prefix(prefix: 'exportar')
     Route::post('/xlsx', [TrocaDeDadosController::class, 'exportarXLSX'])->name('xlsx');
     Route::post('/pdf', [TrocaDeDadosController::class, 'exportarPDF'])->name('pdf');
 });
+
+Route::prefix('prospeccao-futuro')
+    ->middleware('auth')
+    ->name('prospeccao-futuro.')
+    ->group(function () {
+        Route::get('/', [ProspeccaoFuturoController::class, 'index'])->name('index');
+    });
 
 require __DIR__.'/auth.php';

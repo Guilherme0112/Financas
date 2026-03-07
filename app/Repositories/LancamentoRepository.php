@@ -12,9 +12,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class LancamentoRepository
 {
 
-    public function obterLancamentos(array $filtros, ?int $perPage = 20, int $userId): LengthAwarePaginator
+    public function obterLancamentos(array $filtros, ?int $perPage = 20, int $userId): array
     {
-        return Lancamento::query()
+        $query = Lancamento::query()
             ->with("meta")
             ->where('user_id', $userId)
             ->when(
@@ -44,9 +44,27 @@ class LancamentoRepository
             ->when(
                 $filtros['recorrentes'] ?? null,
                 fn($q) => $q->whereRecorrente($filtros['recorrentes'])
-            )
+            );
+
+        $totais = (clone $query)
+            ->selectRaw("
+                    SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as total_entradas,
+                    SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as total_saidas
+                ")
+            ->first();
+
+        $lancamentos = $query
             ->latest()
             ->paginate($perPage);
+
+        return [
+            'paginacao' => $lancamentos,
+            'resumo' => [
+                'total_entradas' => (float) ($totais->total_entradas ?? 0),
+                'total_saidas' => (float) ($totais->total_saidas ?? 0),
+                'saldo' => (float) (($totais->total_entradas ?? 0) - ($totais->total_saidas ?? 0))
+            ]
+        ];
     }
 
     public function obterTotalPorPeriodo($data_inicial, $data_final, int $userId): Lancamento

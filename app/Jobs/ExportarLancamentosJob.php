@@ -7,7 +7,6 @@ use App\Models\LancamentosExportados;
 use App\Services\LancamentoService;
 use App\Services\PdfService;
 use App\Services\XlsxService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -35,7 +34,7 @@ class ExportarLancamentosJob implements ShouldQueue
             ]);
             
             $dados = $lancamentoService->listar((array) $this->request, 999, $this->userId);
-            if ($dados->isEmpty()) {
+            if ($dados['paginacao']->isEmpty()) {
                 broadcast(new ExportacaoFinalizada(
                     $this->userId,
                     null,
@@ -46,9 +45,9 @@ class ExportarLancamentosJob implements ShouldQueue
 
             $filename = null;
             if($this->request['tipo_arquivo'] === 'pdf') {
-                $filename = $pdfService->exportarPDF($dados->items());
+                $filename = $pdfService->exportarPDF($dados['paginacao']->items());
             } else {
-                $filename = $xlsxService->exportarXlsx($dados->items());
+                $filename = $xlsxService->exportarXlsx($dados['paginacao']->items());
             }
 
             $lancamentosExportado = LancamentosExportados::create([

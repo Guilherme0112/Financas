@@ -14,16 +14,6 @@ export function useLancamentos() {
   const lancamentoParaExcluir = ref<number | null>(null);
   const lancamentosFiltrados = computed(() => lancamentos.value.data);
 
-  const totalEntradas = computed(() =>
-    lancamentos.value.data.filter((l: any) => l.tipo === 'ENTRADA')
-      .reduce((t: number, l: any) => t + Number(l.valor), 0)
-  )
-
-  const totalSaidas = computed(() =>
-    lancamentos.value.data.filter((l: any) => l.tipo === 'SAIDA')
-      .reduce((t: number, l: any) => t + Number(l.valor), 0)
-  )
-
   const pedirExclusao = (id: number) => {
     lancamentoParaExcluir.value = id
     showDeleteModal.value = true
@@ -75,8 +65,6 @@ export function useLancamentos() {
 
   return {
     lancamentosFiltrados,
-    totalEntradas,
-    totalSaidas,
     showModal,
     mostrarFiltro,
     showDeleteModal,

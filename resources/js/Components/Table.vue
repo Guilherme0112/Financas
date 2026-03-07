@@ -55,7 +55,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     </div>
 
     <div class="flex flex-col gap-1">
-      <div v-if="rows.length === 0" class="p-6 text-center bg-zinc-50/30 rounded-xl border border-dashed border-zinc-200">
+      <div v-if="rows.length === 0" class="p-6 text-center bg-white rounded-xl border border-dashed border-zinc-200">
         <p class="text-zinc-400 text-[10px] uppercase font-bold tracking-tighter">Vazio</p>
       </div>
 

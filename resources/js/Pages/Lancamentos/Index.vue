@@ -22,16 +22,14 @@ import { Metas } from "@/types/Metas";
 
 const props = defineProps<{
     lancamentos: Page<Lancamento>;
+    resumo: any;
     metas: Page<Metas>;
     categoriasEntrada: any[];
     categoriasSaida: any[];
     tipo: any[];
 }>();
-
 const {
     lancamentosFiltrados,
-    totalEntradas,
-    totalSaidas,
     showDeleteModal,
     pedirExclusao,
     confirmarExclusao,
@@ -179,8 +177,9 @@ onUnmounted(() => {
         <div class="py-10 space-y-5 px-2">
             <!-- RESUMO -->
             <Resumo
-                :total-entradas="totalEntradas"
-                :total-saidas="totalSaidas"
+                :total-entradas="props.resumo.total_entradas"
+                :total-saidas="props.resumo.total_saidas"
+                :saldo="props.resumo.saldo"
             />
 
             <!-- AÇÕES -->
