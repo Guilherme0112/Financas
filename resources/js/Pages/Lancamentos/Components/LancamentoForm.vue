@@ -244,8 +244,7 @@ const mostrarCampoEmergencia = (tipo: string) => {
                     <div class="w-[50%] grid">
                         <div
                             v-if="
-                                !form.id ||
-                                mostrarCampoEntradaOuSaida(form.tipo)
+                                !form.id && mostrarCampoEntradaOuSaida(form.tipo)
                             "
                         >
                             <div>

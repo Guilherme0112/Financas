@@ -33,7 +33,7 @@ class LancamentoService
     private function validarTipoCategoria(array $dados): void
     {
 
-        if(!TipoValor::tryFrom($dados['tipo'])){
+        if (!TipoValor::tryFrom($dados['tipo'])) {
             throw ValidationException::withMessages([
                 'tipo' => 'Tipo de lançamento inválido.'
             ]);
@@ -86,12 +86,17 @@ class LancamentoService
         });
     }
 
-    public function atualizar(string $id, int $userId, array $dados): Lancamento
+    public function atualizar(int $id, int $userId, array $dados): Lancamento
     {
         $lancamento = $this->lancamentoRepository->obterPorIdAndUserId($id, $userId);
         $this->validarTipoCategoria($dados);
         $lancamento->update($dados);
         return $lancamento;
+    }
+
+    public function marcarComoPaga(int $id, int $userId): Lancamento
+    {
+        return $this->lancamentoRepository->marcarComoPaga($id, $userId);
     }
 
     public function deletar(string $id, int $userId): void

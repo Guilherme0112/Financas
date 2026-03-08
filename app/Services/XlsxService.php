@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Lancamento;
+use App\Services\LancamentoService;
 use App\Enums\TipoValor;
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
@@ -15,11 +15,26 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class XlsxService
 {
-    public function buscarXlsx(string $path, int $userId): Lancamento
+    public function __construct(
+        private LancamentoService $lancamentoService
+    ) {
+    }
+    public function buscarXlsx(string $path, int $userId): void
     {
         $spreadsheet = IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
-        return $this->importarParaLancamentos($sheet, $userId);
+        $resultado = $this->importarParaLancamentos($sheet, $userId);
+        logger()->info('Importação XLSX concluída', [
+            'user_id' => $userId,
+            'importados' => $resultado['importados'],
+            'erros' => count($resultado['erros'])
+        ]);
+        if (!empty($resultado['erros'])) {
+            logger()->warning('Erros na importação XLSX', [
+                'user_id' => $userId,
+                'erros' => $resultado['erros']
+            ]);
+        }
     }
 
     public function importarParaLancamentos(Worksheet $sheet, int $userId)
@@ -28,29 +43,56 @@ class XlsxService
         // remove cabeçalho
         unset($rows[1]);
 
-        foreach ($rows as $row) {
+        $importados = 0;
+        $erros = [];
+
+        foreach ($rows as $rowIndex => $row) {
             if (empty(trim($row['D'] ?? ''))) continue;
             
-            $tipo = TipoValor::tryFrom(strtoupper(trim($row['D'])));
-            if (!$tipo) continue;
+            try {
+                $tipo = TipoValor::tryFrom(strtoupper(trim($row['D'])));
+                if (!$tipo) {
+                    $erros[] = "Linha {$rowIndex}: Tipo inválido";
+                    continue;
+                }
 
-            // TODO: chamar service para salvar
-            Lancamento::create([
-                'nome' => trim($row['A']),
-                'descricao' => trim($row['B']),
-                'valor' => (float) $row['C'],
-                'tipo' => $tipo,
-                'mes_referencia' => $row['E'],
-                'foi_pago' => (bool) $row['G'],
-                'user_id' => $userId,
-                'categoria_entrada' => $tipo === TipoValor::ENTRADA
-                    ? CategoriaEntrada::from(strtoupper(trim($row['F'])))
-                    : null,
-                'categoria_saida' => $tipo === TipoValor::SAIDA
-                    ? CategoriaSaida::from(strtoupper(trim($row['F'])))
-                    : null,
-            ]);
+                $dados = [
+                    'nome' => trim($row['A']),
+                    'descricao' => trim($row['B']),
+                    'valor' => (float) $row['C'],
+                    'tipo' => $tipo->value,
+                    'mes_referencia' => $row['E'],
+                    'foi_pago' => (bool) $row['G'],
+                    'recorrente' => false,
+                ];
+
+                if ($tipo === TipoValor::ENTRADA) {
+                    $categoria = CategoriaEntrada::tryFrom(strtoupper(trim($row['F'])));
+                    if (!$categoria) {
+                        $erros[] = "Linha {$rowIndex}: Categoria de entrada inválida";
+                        continue;
+                    }
+                    $dados['categoria_entrada'] = $categoria->value;
+                } else {
+                    $categoria = CategoriaSaida::tryFrom(strtoupper(trim($row['F'])));
+                    if (!$categoria) {
+                        $erros[] = "Linha {$rowIndex}: Categoria de saída inválida";
+                        continue;
+                    }
+                    $dados['categoria_saida'] = $categoria->value;
+                }
+
+                $this->lancamentoService->criar($userId, $dados);
+                $importados++;
+            } catch (\Throwable $e) {
+                $erros[] = "Linha {$rowIndex}: " . $e->getMessage();
+            }
         }
+
+        return [
+            'importados' => $importados,
+            'erros' => $erros
+        ];
     }
 
     public function exportarXlsx(array $lancamentos): string

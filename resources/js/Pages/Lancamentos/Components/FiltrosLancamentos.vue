@@ -30,14 +30,22 @@ const formatar = (date: Date) => {
     return `${y}/${m}/${d}`
 }
 
+const parseBool = (val: string | null) => {
+    if (val === 'true' || val === '1') return true;
+    if (val === 'false' || val === '0') return false;
+    return null;
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+
 const form = useForm({
-    data_inicio: formatar(primeiroDiaMes),
-    data_fim: formatar(ultimoDiaMes),
-    tipo: 'TODOS',
-    foi_pago: null,
-    recorrentes: null,
-    categoria_entrada: null,
-    categoria_saida: null
+    data_inicio: urlParams.get('data_inicio') || formatar(primeiroDiaMes),
+    data_fim: urlParams.get('data_fim') || formatar(ultimoDiaMes),
+    tipo: urlParams.get('tipo') || 'TODOS',
+    foi_pago: urlParams.get('foi_pago') || '',
+    recorrentes: parseBool(urlParams.get('recorrentes')),
+    categoria_entrada: urlParams.get('categoria_entrada') || null,
+    categoria_saida: urlParams.get('categoria_saida') || null
 });
 
 const filtrar = () => {
@@ -53,14 +61,9 @@ const filtrar = () => {
 }
 
 const limparFiltros = () => {
-    form.data_inicio = '';
-    form.data_fim = '';
-    form.tipo = 'TODOS';
-    form.foi_pago = null;
-    form.categoria_entrada = null;
-    form.categoria_saida = null;
-    router.get(route('lancamentos.index'), {}, { replace: true, preserveState: false })
-    emit('close')
+    form.reset();
+    router.get(route('lancamentos.index')); 
+    emit('close');
 }
 
 const fpInstanceInicio = ref<any>(null)
@@ -136,7 +139,20 @@ watch(
 watch(
     () => form.errors.data_fim,
     () => aplicarClasse(fpInstanceFim.value, 'data_fim')
-)
+);
+
+watch(() => props.show, (isShown) => {
+    if (isShown) {
+        const params = new URLSearchParams(window.location.search);
+        form.data_inicio = params.get('data_inicio') || formatar(primeiroDiaMes);
+        form.data_fim = params.get('data_fim') || formatar(ultimoDiaMes);
+        form.tipo = params.get('tipo') || 'TODOS';
+        form.foi_pago = params.get('foi_pago') || '';
+        form.recorrentes = parseBool(params.get('recorrentes'));
+        form.categoria_entrada = params.get('categoria_entrada') || null;
+        form.categoria_saida = params.get('categoria_saida') || null;
+    }
+});
 </script>
 
 <template>
@@ -195,47 +211,55 @@ watch(
                     </div>
                 </div>
                 <span class="w-[44px] flex items-center pt-8 px-3 text-sm text-gray-500"></span>
+                <div class="flex flex-col">
+                    <InputLabel value="Status de Pagamento" class="mb-1" />
+                    <select v-model="form.foi_pago"
+                        class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                        <option value="">Todos</option>
+                        <option value="true">Pagos</option>
+                        <option value="false">Não Pagos</option>
+                    </select>
+
+                    <div class="min-h-[24px] mt-1">
+                        <InputError :message="form.errors.foi_pago" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col">
+                <InputLabel value="Categoria" />
                 <div>
-                    <InputLabel value="Categoria" />
-                    <div>
-                        <select v-if="form.tipo === 'ENTRADA'" v-model="form.categoria_entrada"
-                            class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                            :class="form.errors.categoria_entrada ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
-                            <option disabled value="">Selecione</option>
-                            <option v-for="cat in categoriasEntrada" :key="cat.value" :value="cat.value">
-                                {{ cat.label }}
-                            </option>
-                        </select>
-                        <InputError :message="form.errors.categoria_entrada" />
-                    </div>
-                    <div v-if="form.tipo === 'SAIDA'">
-                        <select v-model="form.categoria_saida"
-                            class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                            :class="form.errors.categoria_saida ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
-                            <option disabled value="">Selecione</option>
-                            <option v-for="cat in categoriasSaida" :key="cat.value" :value="cat.value">
-                                {{ cat.label }}
-                            </option>
-                        </select>
-                        <InputError :message="form.errors.categoria_saida" />
-                    </div>
-                    <div v-if="form.tipo === 'TODOS'">
-                        <p class="text-xs text-gray-600 mt-3">Selecione um <b>Tipo</b> para conseguir escolher uma
-                            <b>Categoria.</b>
-                        </p>
-                    </div>
+                    <select v-if="form.tipo === 'ENTRADA'" v-model="form.categoria_entrada"
+                        class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                        :class="form.errors.categoria_entrada ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
+                        <option disabled value="">Selecione</option>
+                        <option v-for="cat in categoriasEntrada" :key="cat.value" :value="cat.value">
+                            {{ cat.label }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.categoria_entrada" />
+                </div>
+                <div v-if="form.tipo === 'SAIDA'">
+                    <select v-model="form.categoria_saida"
+                        class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                        :class="form.errors.categoria_saida ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : null">
+                        <option disabled value="">Selecione</option>
+                        <option v-for="cat in categoriasSaida" :key="cat.value" :value="cat.value">
+                            {{ cat.label }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.categoria_saida" />
+                </div>
+                <div v-if="form.tipo === 'TODOS'">
+                    <p class="text-xs text-gray-600 mt-3">Selecione um <b>Tipo</b> para conseguir escolher uma
+                        <b>Categoria.</b>
+                    </p>
                 </div>
             </div>
 
             <div>
                 <div class="flex flex-col">
                     <div>
-                        <div class="h-[24px]">
-                            <div v-if="form.tipo === 'SAIDA' || form.tipo === 'TODOS'">
-                                <Checkbox :checked="form.foi_pago ?? false" v-model="form.foi_pago" />
-                                <span class="text-sm text-gray-700 ml-2">Marcadas como Pagas</span>
-                            </div>
-                        </div>
                         <div class="h-[24px]">
                             <Checkbox :checked="form.recorrentes ?? false" v-model="form.recorrentes" />
                             <span class="text-sm text-gray-700 ml-2">Marcadas como Recorrentes</span>

@@ -5,12 +5,12 @@ import { formatarDinheiro } from "@/utils/helpers";
 const props = defineProps<{
     headers: any[];
     rows: any[];
-    actions: any[];
+    actions: any[] | ((row: any) => any[]);
 }>();
 </script>
 
 <template>
-    <Table :headers="headers" :rows="rows" :actions="actions" theme="gray">
+    <Table :headers="headers" :rows="rows" :actions="actions" :selectable="true" theme="gray">
         <template #cell-tipo="{ row }">
             <span
                 v-if="row.tipo === 'ENTRADA'"

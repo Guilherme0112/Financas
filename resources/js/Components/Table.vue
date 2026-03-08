@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import Checkbox from './Checkbox.vue'
 
 interface TableHeader {
   label: string
@@ -17,15 +18,58 @@ interface TableAction {
 const props = defineProps<{
   headers: TableHeader[]
   rows: Record<string, any>[]
-  actions?: TableAction[]
+  actions?: TableAction[] | ((row: any) => TableAction[])
   theme?: string
+  selectable?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'selectionChange', selectedRows: Record<string, any>[]): void
 }>()
 
 const color = props.theme || 'emerald'
 
 const aberto = ref<number | null>(null)
+const selectedRows = ref<Set<number>>(new Set())
+const selectAll = ref(false)
+
 const toggle = (index: number) => aberto.value = aberto.value === index ? null : index
 const fechar = () => aberto.value = null
+
+const toggleRowSelection = (index: number) => {
+  if (selectedRows.value.has(index)) {
+    selectedRows.value.delete(index)
+  } else {
+    selectedRows.value.add(index)
+  }
+  updateSelectAll()
+  emitSelection()
+}
+
+const updateSelectAll = () => {
+  if (selectedRows.value.size === props.rows.length && props.rows.length > 0) {
+    selectAll.value = true
+  } else {
+    selectAll.value = false
+  }
+}
+
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedRows.value.clear()
+    selectAll.value = false
+  } else {
+    selectedRows.value.clear()
+    props.rows.forEach((_, index) => selectedRows.value.add(index))
+    selectAll.value = true
+  }
+  emitSelection()
+}
+
+const emitSelection = () => {
+  const selected = props.rows.filter((_, index) => selectedRows.value.has(index))
+  emit('selectionChange', selected)
+}
 
 const handleClickOutside = (event: MouseEvent) => {
   const alvo = event.target as HTMLElement
@@ -38,12 +82,19 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 <template>
   <div class="w-full select-none">
-    <div class="flex px-5 mb-1">
+    <div class="flex px-6 mb-1">
+      <div v-if="selectable" class="w-8 flex items-center justify-center">
+        <Checkbox
+          :checked="selectAll" 
+          @change="toggleSelectAll"
+          class="w-4 h-4 rounded cursor-pointer bg-white border-emerald-300 border-2 checked:bg-emerald-500 checked:border-emerald-500"
+        />
+      </div>
       <div 
         v-for="header in headers" 
         :key="header.key"
-        class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400/70"
-        :style="{ width: 100 / (headers.length + (actions ? 0.4 : 0)) + '%' }"
+        class="text-xs font-black uppercase tracking-[0.2em] text-zinc-400/70"
+        :style="{ width: 100 / (headers.length + (selectable ? 0.4 : 0) + (actions ? 0.4 : 0)) + '%' }"
         :class="[
           header.align === 'center' ? 'text-center' : 
           header.align === 'right' ? 'text-right' : 'text-left'
@@ -63,18 +114,25 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         v-else
         v-for="(row, index) in rows"
         :key="index"
-        class="relative group bg-white border border-zinc-100 py-4 px-5 rounded-lg transition-all duration-200 hover:border-zinc-200 hover:shadow-sm flex items-center"
+        class="relative group bg-white border border-zinc-100 py-5 px-6 rounded-lg transition-all duration-200 hover:border-zinc-200 hover:shadow-sm flex items-center"
       >
+        <div v-if="selectable" class="w-8 flex items-center justify-center">
+          <Checkbox 
+            :checked="selectedRows.has(index)" 
+            @change="toggleRowSelection(index)"
+            class="w-4 h-4 rounded cursor-pointer bg-white border-emerald-300 border-2 checked:bg-emerald-500 checked:border-emerald-500"
+          />
+        </div>
 
         <div 
           v-for="(header, hIndex) in headers" 
           :key="header.key"
-          :style="{ width: 100 / (headers.length + (actions ? 0.4 : 0)) + '%' }"
+          :style="{ width: 100 / (headers.length + (selectable ? 0.4 : 0) + (actions ? 0.4 : 0)) + '%' }"
           class="px-2 truncate"
           :class="[
             header.align === 'center' ? 'text-center' : 
             header.align === 'right' ? 'text-right' : 'text-left',
-            hIndex === 0 ? 'font-bold text-zinc-800 text-[13px]' : 'text-zinc-500 text-[13px] font-medium'
+            hIndex === 0 ? 'font-bold text-zinc-800 text-sm' : 'text-zinc-500 text-sm font-medium'
           ]"
         >
           <slot :name="`cell-${header.key}`" :row="row" :value="row[header.key]">
@@ -89,24 +147,24 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             :class="aberto === index ? `bg-${color}-100 text-${color}-600` : `text-zinc-700 hover:text-zinc-500 hover:bg-zinc-50`"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v.01M12 12v.01M12 19v.01" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M12 5v.01M12 12v.01M12 19v.01" />
             </svg>
           </button>
 
           <transition
             enter-active-class="transition duration-150 ease-out"
-            enter-from-class="transform scale-95 opacity-0 translate-y-1"
-            enter-to-class="transform scale-100 opacity-100 translate-y-0"
+            enter-from-class="transform opacity-0 translate-y-1"
+            enter-to-class="transform opacity-100 translate-y-0"
           >
             <div
               v-if="aberto === index"
-              class="absolute right-0 mt-1.5 w-36 bg-white rounded-xl shadow-xl p-1 z-[100] border border-zinc-100"
+              class="absolute right-0 mt-1.5 w-[200px] bg-white rounded-xl shadow-xl p-1 z-[100] border border-zinc-100"
             >
               <button
-                v-for="(action, i) in actions"
+                v-for="(action, i) in (typeof actions === 'function' ? actions(row) : actions)"
                 :key="i"
                 @click="() => { action.onClick(row); fechar() }"
-                class="w-full text-left px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight rounded-lg transition-all flex items-center justify-between group/item"
+                class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-tight rounded-lg transition-all flex items-center justify-between group/item"
                 :class="[`text-zinc-500 hover:bg-${color}-50 hover:text-${color}-700`, action.class]"
               >
                 {{ action.label }}

@@ -32,49 +32,51 @@ Route::prefix('lancamentos')
     ->middleware('auth')
     ->name('lancamentos.')
     ->group(function () {
-    Route::get('/', action: [LancamentoController::class, 'index'])->name('index');
-    Route::put('/{id}', [LancamentoController::class, 'update'])->name('update');
-    Route::post('/', [LancamentoController::class, 'store'])->name('store');
-    Route::delete('/{id}', [LancamentoController::class, 'destroy'])->name('destroy');
-});
+        Route::get('/', action: [LancamentoController::class, 'index'])->name('index');
+        Route::put('/{id}', [LancamentoController::class, 'update'])->name('update');
+        Route::put('/{id}/marcar-como-paga', [LancamentoController::class, 'marcarComoPaga'])->name('marcar-como-paga');
+        Route::post('/', [LancamentoController::class, 'store'])->name('store');
+        Route::delete('/{id}', [LancamentoController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk/delete', [LancamentoController::class, 'destroyBulk'])->name('destroy-bulk');
+    });
 
 Route::prefix('limites')
     ->middleware('auth')
     ->name('limites.')
     ->group(function () {
-    Route::get('/', action: [LimiteCategoriaController::class, 'index'])->name('index');
-    Route::post('/', action: [LimiteCategoriaController::class, 'store'])->name('store');
-    Route::put('/{id}', action: [LimiteCategoriaController::class, 'update'])->name('update');
-    Route::delete('/{id}', action: [LimiteCategoriaController::class, 'destroy'])->name('destroy');
-});
+        Route::get('/', action: [LimiteCategoriaController::class, 'index'])->name('index');
+        Route::post('/', action: [LimiteCategoriaController::class, 'store'])->name('store');
+        Route::put('/{id}', action: [LimiteCategoriaController::class, 'update'])->name('update');
+        Route::delete('/{id}', action: [LimiteCategoriaController::class, 'destroy'])->name('destroy');
+    });
 
 Route::prefix('metas')
     ->middleware('auth')
     ->name('metas.')
     ->group(function () {
-    Route::get('/', action: [MetasController::class, 'index'])->name('index');
-    Route::post('/', action: [MetasController::class, 'store'])->name('store');
-    Route::put('/{id}', action: [MetasController::class, 'update'])->name('update');
-    Route::delete('/{id}', action: [MetasController::class, 'destroy'])->name('destroy');
-});
+        Route::get('/', action: [MetasController::class, 'index'])->name('index');
+        Route::post('/', action: [MetasController::class, 'store'])->name('store');
+        Route::put('/{id}', action: [MetasController::class, 'update'])->name('update');
+        Route::delete('/{id}', action: [MetasController::class, 'destroy'])->name('destroy');
+    });
 
 Route::prefix('importar')
     ->middleware('auth')
     ->name('importar.')
     ->group(function () {
-    Route::post('/xlsx', [TrocaDeDadosController::class, 'importarXLSX'])->name('xlsx');
-    Route::post('/csv', [TrocaDeDadosController::class, 'importarCSV'])->name('csv');
-});
+        Route::post('/xlsx', [TrocaDeDadosController::class, 'importarXLSX'])->name('xlsx');
+        Route::post('/csv', [TrocaDeDadosController::class, 'importarCSV'])->name('csv');
+    });
 
 
 Route::prefix(prefix: 'exportar')
     ->middleware('auth')
     ->name('exportar.')
     ->group(function () {
-    Route::get("/download/{id}", [TrocaDeDadosController::class, 'download'])->name('download');
-    Route::post('/xlsx', [TrocaDeDadosController::class, 'exportarXLSX'])->name('xlsx');
-    Route::post('/pdf', [TrocaDeDadosController::class, 'exportarPDF'])->name('pdf');
-});
+        Route::get("/download/{id}", [TrocaDeDadosController::class, 'download'])->name('download');
+        Route::post('/xlsx', [TrocaDeDadosController::class, 'exportarXLSX'])->name('xlsx');
+        Route::post('/pdf', [TrocaDeDadosController::class, 'exportarPDF'])->name('pdf');
+    });
 
 Route::prefix('prospeccao-futuro')
     ->middleware('auth')
@@ -83,4 +85,4 @@ Route::prefix('prospeccao-futuro')
         Route::get('/', [ProspeccaoFuturoController::class, 'index'])->name('index');
     });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

@@ -37,10 +37,7 @@ class LancamentoRepository
                 Arr::get($filtros, 'data_fim', Carbon::now()->endOfMonth()),
                 fn($q, $dataFim) => $q->whereDate('mes_referencia', '<=', $dataFim)
             )
-            ->when(
-                $filtros['foi_pago'] ?? null,
-                fn($q) => $q->whereFoiPago($filtros['foi_pago'])
-            )
+            ->when($filtros['foi_pago'] ?? null, fn($q, $v) => $q->where('foi_pago', filter_var($v, FILTER_VALIDATE_BOOLEAN)))
             ->when(
                 $filtros['recorrentes'] ?? null,
                 fn($q) => $q->whereRecorrente($filtros['recorrentes'])
@@ -151,5 +148,19 @@ class LancamentoRepository
     {
         Lancamento::insert($dados);
         return collect($dados);
+    }
+
+    public function atualizar(int $id, array $dados): Lancamento
+    {
+        $lancamento = $this->obterPorIdAndUserId($id, $dados['user_id']);
+        $lancamento->update($dados);
+        return $lancamento;
+    }
+
+    public function marcarComoPaga(int $id, int $userId): Lancamento
+    {
+        $lancamento = $this->obterPorIdAndUserId($id, $userId);
+        $lancamento->update(['foi_pago' => true]);
+        return $lancamento;
     }
 }

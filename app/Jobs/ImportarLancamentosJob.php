@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Events\ImportacaoFinalizada;
-use App\Repositories\LancamentosExportadosRepository;
 use App\Services\CsvService;
 use App\Services\XlsxService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -49,7 +48,7 @@ class ImportarLancamentosJob implements ShouldQueue
             }
             broadcast(new ImportacaoFinalizada($this->userId));
         } catch (\Throwable $e) {
-            logger()->error('Erro na exportação: ' . $e->getMessage(), [
+            logger()->error('Erro na importação: ' . $e->getMessage(), [
                 'user_id' => $this->userId,
                 'tipo' => $this->tipo,
                 'path' => $this->path

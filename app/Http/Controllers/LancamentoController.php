@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateLancamentosRequest;
 use App\Services\LancamentoService;
 use App\Services\MetasService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,6 +48,16 @@ class LancamentoController extends Controller
         }
     }
 
+    public function marcarComoPaga($id, LancamentoService $lancamentoService): RedirectResponse
+    {
+        try {
+            $lancamentoService->marcarComoPaga($id, auth()->id());
+            return redirect()->back()->with('success', 'Lançamento marcado como pago com sucesso.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->withErrors('erro', $e->getMessage());
+        }
+    }
+
     public function update(UpdateLancamentosRequest $request, LancamentoService $lancamentoService, $id): RedirectResponse
     {
         try {
@@ -61,5 +72,23 @@ class LancamentoController extends Controller
     public function destroy($id, LancamentoService $lancamentoService): void
     {
         $lancamentoService->deletar($id, auth()->id());
+    }
+
+    public function destroyBulk(Request $request, LancamentoService $lancamentoService): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        
+        if (empty($ids)) {
+            return redirect()->back()->withErrors('erro', 'Nenhum lançamento selecionado.');
+        }
+
+        try {
+            foreach ($ids as $id) {
+                $lancamentoService->deletar($id, auth()->id());
+            }
+            return redirect()->back()->with('success', count($ids) . ' lançamento(s) deletado(s) com sucesso.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->withErrors('erro', $e->getMessage());
+        }
     }
 }

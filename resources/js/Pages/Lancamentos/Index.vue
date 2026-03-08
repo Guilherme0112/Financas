@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { Head, useForm, usePage } from "@inertiajs/vue3";
+import { Head, useForm, usePage, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import LancamentoForm from "./Components/LancamentoForm.vue";
 import { Lancamento } from "@/types/Lancamentos";
@@ -8,6 +8,9 @@ import { Page } from "@/types/Page";
 import FiltrosLancamentos from "./Components/FiltrosLancamentos.vue";
 import Paginacao from "@/Components/Paginacao.vue";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal.vue";
+import ConfirmModal from "@/Components/ConfirmModal.vue";
+import DangerButton from "@/Components/DangerButton.vue";
+import SecondaryButton from "@/Components/SecondaryButton.vue";
 import { useLancamentos } from "./Composables/useLancamentos";
 import ImportarDados from "./Components/ImportarDados.vue";
 import ExportarDados from "./Components/ExportarDados.vue";
@@ -46,6 +49,11 @@ const showExport = ref(false);
 const mostrarFiltro = ref(false);
 const loadImportacao = ref(false);
 const loadExportacao = ref(false);
+const showMarkAsPaidModal = ref(false);
+const lancamentoToMark = ref<Lancamento | null>(null);
+const loadingMarkAsPaid = ref(false);
+const selectedLancamentos = ref<any[]>([]);
+const deletarSelecionados = ref(false);
 
 const form = useForm({
     id: null,
@@ -62,23 +70,38 @@ const form = useForm({
     meta_id: null,
 });
 
-const actions = [
-    {
-        label: "Editar",
-        class: "hover:bg-green-50 text-green-700",
-        onClick: (row: any) => abrirEdicao(row),
-    },
-    {
-        label: "Duplicar",
-        class: "hover:bg-green-50 text-green-700",
-        onClick: (row: any) => duplicar(row),
-    },
-    {
-        label: "Excluir",
-        class: "hover:bg-red-50 text-red-600",
-        onClick: (row: any) => pedirExclusao(row.id),
-    },
-];
+const actions = (row: any) => {
+    const baseActions = [
+        {
+            label: "Editar",
+            class: "hover:bg-green-50 text-green-700",
+            onClick: (row: any) => abrirEdicao(row),
+        },
+        {
+            label: "Duplicar",
+            class: "hover:bg-green-50 text-green-700",
+            onClick: (row: any) => duplicar(row),
+        },
+        {
+            label: "Excluir",
+            class: "hover:bg-red-50 text-red-600",
+            onClick: (row: any) => pedirExclusao(row.id),
+        },
+    ];
+
+    if (row.tipo === 'SAIDA' && !row.foi_pago) {
+        baseActions.unshift({
+            label: "Marcar como paga",
+            class: "hover:bg-green-50 text-green-700",
+            onClick: (row: any) => {
+                lancamentoToMark.value = row;
+                showMarkAsPaidModal.value = true;
+            },
+        });
+    }
+
+    return baseActions;
+};
 
 const abrirNovo = () => {
     editando.value = null;
@@ -115,6 +138,43 @@ const duplicar = (l: any) => {
     form.foi_pago = l.foi_pago;
     form.meta_id = l?.meta?.id || null;
     showModal.value = true;
+};
+
+const confirmarMarcarComoPaga = () => {
+    if (!lancamentoToMark.value) return;
+
+    loadingMarkAsPaid.value = true;
+    router.put(route('lancamentos.marcar-como-paga', lancamentoToMark.value.id), {}, {
+        onSuccess: () => {
+            toast.success('Lançamento marcado como pago!');
+            showMarkAsPaidModal.value = false;
+            lancamentoToMark.value = null;
+            loadingMarkAsPaid.value = false;
+            router.reload();
+        },
+        onError: () => {
+            toast.error('Erro ao marcar como pago.');
+            loadingMarkAsPaid.value = false;
+        }
+    });
+};
+
+const handleSelectionChange = (selected: any[]) => {
+    selectedLancamentos.value = selected;
+};
+
+const deletarLancamentosSelecionados = () => {
+    deletarSelecionados.value = false;
+    const ids = selectedLancamentos.value.map((l: any) => l.id);
+    
+    router.post(route('lancamentos.destroy-bulk'), { ids }, {
+        onSuccess: () => {
+            selectedLancamentos.value = [];
+        },
+        onError: () => {
+            toast.error('Erro ao deletar lançamentos selecionados.');
+        }
+    });
 };
 
 onMounted(() => {
@@ -191,10 +251,26 @@ onUnmounted(() => {
             />
 
             <!-- TABELA -->
+            <div 
+                v-if="selectedLancamentos.length > 0"
+                class="mb-4 p-4 bg-white border border-zinc-200 rounded-lg flex justify-between items-center"
+            >
+                <p class="text-sm font-semibold text-zinc-700">
+                    {{ selectedLancamentos.length }} {{ selectedLancamentos.length === 1 ? 'lançamento selecionado' : 'lançamentos selecionados' }}
+                </p>
+                <div class="flex items-center gap-2">
+                    <DangerButton @click="deletarSelecionados = true" type="button">
+                        Excluir
+                    </DangerButton>
+                </div>
+            </div>
+
             <TableLancamentos
                 :headers="headers"
                 :rows="lancamentosFiltrados"
                 :actions="actions"
+                :selectable="true"
+                @selectionChange="handleSelectionChange"
                 theme="green"
             />
 
@@ -250,6 +326,26 @@ onUnmounted(() => {
                 message="Tem certeza que deseja excluir este lançamento?"
                 @close="showDeleteModal = false"
                 @confirm="confirmarExclusao"
+                :isDisabled="deleteForm.processing"
+            />
+
+            <!-- MARCAR COMO PAGA -->
+            <ConfirmModal
+                :show="showMarkAsPaidModal"
+                message="Tem certeza que deseja marcar este lançamento como pago?"
+                title="Marcar como pago"
+                confirm-text="Marcar como pago"
+                @close="showMarkAsPaidModal = false; lancamentoToMark = null"
+                @confirm="confirmarMarcarComoPaga"
+                :isDisabled="loadingMarkAsPaid"
+            />
+
+            <!-- DELETAR SELECIONADOS -->
+            <ConfirmDeleteModal
+                :show="deletarSelecionados"
+                :message="`Tem certeza que deseja deletar ${selectedLancamentos.length} lançamento(s)?`"
+                @close="deletarSelecionados = false"
+                @confirm="deletarLancamentosSelecionados"
                 :isDisabled="deleteForm.processing"
             />
         </div>
