@@ -170,6 +170,7 @@ const deletarLancamentosSelecionados = () => {
     router.post(route('lancamentos.destroy-bulk'), { ids }, {
         onSuccess: () => {
             selectedLancamentos.value = [];
+            toast.success('Lançamentos deletados com sucesso!');
         },
         onError: () => {
             toast.error('Erro ao deletar lançamentos selecionados.');
@@ -185,7 +186,7 @@ onMounted(() => {
             toast.error(`Ocorreu um erro durante a importação: ${e.error}`);
             return;
         }
-        mudarPagina(1);
+        router.reload();
         toast.success("Sua importação foi finalizada com sucesso!");
     });
 
@@ -239,6 +240,7 @@ onUnmounted(() => {
             <Resumo
                 :total-entradas="props.resumo.total_entradas"
                 :total-saidas="props.resumo.total_saidas"
+                :total-reserva-meta="props.resumo.total_reserva_meta"
                 :saldo="props.resumo.saldo"
             />
 

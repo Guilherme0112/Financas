@@ -12,7 +12,6 @@ declare global {
 const props = defineProps<{
   rows: any[]
 }>();
-
 const { load } = useGoogleCharts();
 const hasData = computed(() => props.rows && props.rows
   .length > 0)
@@ -23,7 +22,7 @@ const baseOptions = {
   legend: { position: 'bottom', textStyle: { color: '#64748b', fontSize: 12 } },
   animation: { startup: true, duration: 800, easing: 'out' },
   curveType: 'function',
-  colors: ['#059669', '#dc2626'],
+  colors: ['#059669', '#dc2626', '#3b82f6'],
   lineWidth: 4,
 }
 
@@ -32,7 +31,7 @@ const drawChart = async () => {
   await load();
 
   const data = window.google.visualization.arrayToDataTable([
-    ['Mês', 'Receitas', 'Despesas'],
+    ['Mês', 'Receitas', 'Despesas', 'Metas'],
     ...props.rows,
   ])
 

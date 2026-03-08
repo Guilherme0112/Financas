@@ -11,7 +11,7 @@ declare global {
 
 const props = defineProps<{
   rows: any[]
-}>()
+}>();
 
 const { load } = useGoogleCharts();
 const hasData = computed(() => props.rows && props.rows
@@ -24,7 +24,7 @@ const baseOptions = {
   animation: { startup: true, duration: 800, easing: 'out' },
   title: 'Comparativo: Entradas vs Saídas',
   titleTextStyle: { color: '#064e3b', fontSize: 16, bold: true },
-  colors: ['#059669', '#dc2626'],
+  colors: ['#059669', '#dc2626', '#3b82f6'],
   bar: { groupWidth: '70%' },
 }
 
@@ -33,7 +33,7 @@ const drawChart = async () => {
   await load();
 
   const data = window.google.visualization.arrayToDataTable([
-    ['Mês', 'Receitas', 'Despesas'],
+    ['Mês', 'Receitas', 'Despesas', 'Metas'],
     ...props.rows,
   ])
 

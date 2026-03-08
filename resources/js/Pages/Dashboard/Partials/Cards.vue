@@ -17,23 +17,23 @@ const porcentualTotal = computed(() => {
     // Total Atual (Saldo)
     const atual = props.dashboard.cards.total;
     const diferenca = atual - anterior;
-    
+
     // Cálculo da tendência
-    let tendencia: 'up' | 'down' | 'stable' = 'stable';
-    if (diferenca > 0) tendencia = 'up';
-    if (diferenca < 0) tendencia = 'down';
+    let tendencia: "up" | "down" | "stable" = "stable";
+    if (diferenca > 0) tendencia = "up";
+    if (diferenca < 0) tendencia = "down";
 
     return {
         anterior,
         atual,
         diferenca,
-        tendencia
+        tendencia,
     };
 });
 </script>
 
 <template>
-    <section class="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <section class="grid grid-cols-1 gap-6 md:grid-cols-4">
         <FinanceCard
             title="Entradas"
             :value="dashboard.cards.entradas"
@@ -62,7 +62,20 @@ const porcentualTotal = computed(() => {
         </FinanceCard>
 
         <FinanceCard
-            title="Saldo Disponível"
+            title="Metas"
+            :value="dashboard.cards.reserva_meta"
+            type="metas"
+        >
+            <template #trend>
+                <Tendencia
+                    :value="dashboard.porcentual.reserva_meta.diferenca"
+                    :trend="dashboard.porcentual.reserva_meta.tendencia"
+                />
+            </template>
+        </FinanceCard>
+
+        <FinanceCard
+            title="Saldo"
             :value="dashboard.cards.total"
             :type="dashboard.cards.total >= 0 ? 'positive' : 'negative'"
         >

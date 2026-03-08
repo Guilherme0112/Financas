@@ -46,7 +46,8 @@ class LancamentoRepository
         $totais = (clone $query)
             ->selectRaw("
                     SUM(CASE WHEN tipo = 'ENTRADA' THEN valor ELSE 0 END) as total_entradas,
-                    SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as total_saidas
+                    SUM(CASE WHEN tipo = 'SAIDA' THEN valor ELSE 0 END) as total_saidas,
+                    SUM(CASE WHEN tipo = 'RESERVA_META' THEN valor ELSE 0 END) as total_reserva_meta
                 ")
             ->first();
 
@@ -59,7 +60,8 @@ class LancamentoRepository
             'resumo' => [
                 'total_entradas' => (float) ($totais->total_entradas ?? 0),
                 'total_saidas' => (float) ($totais->total_saidas ?? 0),
-                'saldo' => (float) (($totais->total_entradas ?? 0) - ($totais->total_saidas ?? 0))
+                'total_reserva_meta' => (float) ($totais->total_reserva_meta ?? 0),
+                'saldo' => (float) (($totais->total_entradas ?? 0) - (($totais->total_saidas + $totais->total_reserva_meta) ?? 0))
             ]
         ];
     }
@@ -75,8 +77,9 @@ class LancamentoRepository
             ->where('user_id', $userId)
             ->selectRaw(
                 "SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as entradas,
-                            SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
-                [TipoValor::ENTRADA->value, TipoValor::SAIDA->value]
+                            SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas,
+                            SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as reserva_meta",
+                [TipoValor::ENTRADA->value, TipoValor::SAIDA->value, TipoValor::RESERVA_META->value]
             )
             ->whereBetween('mes_referencia', [$data_inicial, $data_final])
             ->first();
@@ -87,8 +90,9 @@ class LancamentoRepository
         return Lancamento::selectRaw(
             "date_trunc('month', mes_referencia) as mes,
         SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as entradas,
-        SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas",
-            [TipoValor::ENTRADA->value, TipoValor::SAIDA->value]
+        SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as saidas,
+        SUM(CASE WHEN tipo::text = ? THEN valor ELSE 0.00 END) as reserva_meta",
+            [TipoValor::ENTRADA->value, TipoValor::SAIDA->value, TipoValor::RESERVA_META->value]
         )
             ->where('user_id', $userId)
             ->whereBetween('mes_referencia', [$data_inicial, $data_final])
@@ -162,5 +166,12 @@ class LancamentoRepository
         $lancamento = $this->obterPorIdAndUserId($id, $userId);
         $lancamento->update(['foi_pago' => true]);
         return $lancamento;
+    }
+
+    public function deletarVarios(array $ids, int $userId): int
+    {
+        return Lancamento::whereIn('id', $ids)
+            ->where('user_id', $userId)
+            ->delete();
     }
 }

@@ -10,7 +10,8 @@ class DashboardCards
     public function __construct(
         public float $entradas,
         public float $saidas,
-        public float $total
+        public float $reserva_meta = 0.0,
+        public float $total,
     )
     { }
 }

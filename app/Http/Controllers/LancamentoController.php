@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
 use App\Enums\TipoValor;
+use App\Http\Requests\DestroyLancamentosRequest;
 use App\Http\Requests\IndexLancamentosRequest;
 use App\Http\Requests\StoreLancamentosRequest;
 use App\Http\Requests\UpdateLancamentosRequest;
@@ -74,19 +75,12 @@ class LancamentoController extends Controller
         $lancamentoService->deletar($id, auth()->id());
     }
 
-    public function destroyBulk(Request $request, LancamentoService $lancamentoService): RedirectResponse
+    public function destroyBulk(DestroyLancamentosRequest $request, LancamentoService $lancamentoService): RedirectResponse
     {
-        $ids = $request->input('ids', []);
-        
-        if (empty($ids)) {
-            return redirect()->back()->withErrors('erro', 'Nenhum lançamento selecionado.');
-        }
-
+        $dados = $request->validated();
         try {
-            foreach ($ids as $id) {
-                $lancamentoService->deletar($id, auth()->id());
-            }
-            return redirect()->back()->with('success', count($ids) . ' lançamento(s) deletado(s) com sucesso.');
+            $lancamentoService->deletarVarios($dados['ids'], auth()->id());
+            return redirect()->back()->with('success', count($dados['ids']) . ' lançamento(s) deletado(s) com sucesso.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors('erro', $e->getMessage());
         }

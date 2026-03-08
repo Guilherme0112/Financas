@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\DTOs\Dashboard;
 use App\DTOs\DashboardCards;
+use App\Models\Meta;
+use App\Models\Lancamento;
 use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -57,14 +59,44 @@ class DashboardService
             Carbon::parse($item->mes)->format('Y-m'),
             (float) $item->entradas,
             (float) $item->saidas,
+            (float) $item->reserva_meta
         ]);
 
         $comparacao = $this->calcularComparacaoMesAnterior(dadosMes: $dadosMes);
 
+        $metasAtual = $this->obterTotalMetasPeriodo(
+            data_inicial: $mesAtual,
+            data_final: $fimMesAtual,
+            userId: $userId
+        );
+
+        $metasAnterior = $this->obterTotalMetasPeriodo(
+            data_inicial: now()->subMonth()->startOfMonth(),
+            data_final: now()->subMonth()->endOfMonth(),
+            userId: $userId
+        );
+
+        $valorAlocadoMetasAtual = $this->obterValorAlocadoMetasPeriodo(
+            data_inicial: $mesAtual,
+            data_final: $fimMesAtual,
+            userId: $userId
+        );
+
+        $valorAlocadoMetasAnterior = $this->obterValorAlocadoMetasPeriodo(
+            data_inicial: now()->subMonth()->startOfMonth(),
+            data_final: now()->subMonth()->endOfMonth(),
+            userId: $userId
+        );
+
+        $comparacao['reserva_meta'] = $this->compararValores($valorAlocadoMetasAtual, $valorAlocadoMetasAnterior);
+        $comparacao['objetivo_metas'] = $this->compararValores($metasAtual, $metasAnterior);
+        unset($comparacao['valor_alocado_meta']);
+
         $cards = new DashboardCards(
             entradas: (float) $totais->entradas,
             saidas: (float) $totais->saidas,
-            total: (float) $totais->entradas - (float) $totais->saidas,
+            reserva_meta: $valorAlocadoMetasAtual,
+            total: (float) $totais->entradas - ((float) $totais->saidas + (float) $totais->reserva_meta),
         );
 
         return new Dashboard(
@@ -74,7 +106,7 @@ class DashboardService
                     "gastos" => $lancamentosPorCategoria['gastos'],
                     "receitas" => $lancamentosPorCategoria['receitas'],
                 ],
-            'mensal' => $dadosMes,
+                'mensal' => $dadosMes,
             ],
             porcentual: $comparacao,
             lancamentos_perto_de_vencer: $lancamentosPertoDeVencer->toArray(),
@@ -97,9 +129,13 @@ class DashboardService
         $saidaAtual = $dadosIndexados[$mesAtual][2] ?? 0;
         $saidaAnterior = $dadosIndexados[$mesAnterior][2] ?? 0;
 
+        $reservaMetaAtual = $dadosIndexados[$mesAtual][3] ?? 0;
+        $reservaMetaAnterior = $dadosIndexados[$mesAnterior][3] ?? 0;
+
         return [
             'entradas' => $this->compararValores($entradaAtual, $entradaAnterior),
             'saidas' => $this->compararValores($saidaAtual, $saidaAnterior),
+            'reserva_meta' => $this->compararValores($reservaMetaAtual, $reservaMetaAnterior),
         ];
     }
 
@@ -122,5 +158,25 @@ class DashboardService
         ];
     }
 
+    private function obterTotalMetasPeriodo($data_inicial, $data_final, int $userId): float
+    {
+        $metas = Meta::where('user_id', $userId)
+            ->where(function ($query) use ($data_inicial, $data_final) {
+                $query->whereBetween('ate_quando', [$data_inicial, $data_final])
+                    ->orWhereNull('ate_quando');
+            })
+            ->sum('valor_objetivo');
 
+        return (float) $metas;
+    }
+
+    private function obterValorAlocadoMetasPeriodo($data_inicial, $data_final, int $userId): float
+    {
+        $valorAlocado = Lancamento::where('user_id', $userId)
+            ->whereNotNull('meta_id')
+            ->whereBetween('mes_referencia', [$data_inicial, $data_final])
+            ->sum('valor');
+
+        return (float) $valorAlocado;
+    }
 }

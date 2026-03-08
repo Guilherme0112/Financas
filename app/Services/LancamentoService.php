@@ -104,4 +104,9 @@ class LancamentoService
         $lancamento = $this->lancamentoRepository->obterPorIdAndUserId($id, $userId);
         $lancamento->delete();
     }
+
+    public function deletarVarios(array $ids, int $userId): int
+    {
+        return $this->lancamentoRepository->deletarVarios($ids, $userId);
+    }
 }

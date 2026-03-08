@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { formatarDinheiro } from '@/utils/helpers'
-import { computed } from 'vue'
-
 interface Props {
   title: string
   value: number | string
-  type?: 'positive' | 'negative' | 'neutral'
+  type?: 'positive' | 'negative' | 'neutral' | 'metas'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -16,13 +13,15 @@ const props = withDefaults(defineProps<Props>(), {
 const styles = {
   positive: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
   negative: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
-  neutral: 'text-slate-400 bg-slate-500/10 border-slate-500/20'
+  neutral: 'text-slate-400 bg-slate-500/10 border-slate-500/20',
+  metas: 'text-blue-500 bg-blue-500/10 border-blue-500/20'
 }
 
 const iconColors = {
   positive: 'bg-emerald-500',
   negative: 'bg-rose-500',
-  neutral: 'bg-slate-500'
+  neutral: 'bg-slate-500',
+  metas: 'bg-blue-500'
 }
 </script>
 
@@ -43,7 +42,7 @@ const iconColors = {
       <main class="mt-5">
         <div class="flex items-baseline gap-1">
           <span class="text-sm font-medium text-slate-400">R$</span>
-          <p class="text-4xl font-black tabular-nums tracking-tighter text-slate-800">
+          <p class="text-3xl font-black tabular-nums tracking-tighter text-slate-800">
             {{ Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
           </p>
         </div>
