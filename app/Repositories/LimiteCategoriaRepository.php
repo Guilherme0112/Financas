@@ -30,6 +30,11 @@ class LimiteCategoriaRepository
             ->withQueryString();
     }
 
+    public function obterPorUserIdAndId(int $id, int $userId): LimiteCategoria
+    {
+        return LimiteCategoria::where('id', $id)->where('user_id', $userId)->firstOrFail();
+    }
+
     public function criar(array $dados, int $userId): LimiteCategoria
     {
         $dados['user_id'] = $userId;
@@ -57,14 +62,14 @@ class LimiteCategoriaRepository
 
     public function atualizar(int $id, array $dados, int $userId): LimiteCategoria
     {
-        $limite = LimiteCategoria::where('id', $id)->where('user_id', $userId)->firstOrFail();
+        $limite = $this->obterPorUserIdAndId($id, $userId);
         $limite->update($dados);
         return $limite;
     }
 
     public function excluir(int $id, int $userId): void
     {
-        $limite = LimiteCategoria::where('id', $id)->where('user_id', $userId)->firstOrFail();
+        $limite = $this->obterPorUserIdAndId($id, $userId);
         $limite->delete();
     }
 }

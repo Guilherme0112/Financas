@@ -59,7 +59,7 @@ const form = useForm({
     categoria_entrada: null,
     categoria_saida: null,
     foi_pago: null,
-    meta: null,
+    meta_id: null,
 });
 
 const actions = [
@@ -98,7 +98,7 @@ const abrirEdicao = (l: any) => {
     form.categoria_entrada = l.categoria_entrada;
     form.mes_referencia = l.mes_referencia || "";
     form.foi_pago = l.foi_pago;
-    form.meta = l?.meta?.id || null;
+    form.meta_id = l?.meta?.id || null;
     showModal.value = true;
 };
 
@@ -113,7 +113,7 @@ const duplicar = (l: any) => {
     form.categoria_entrada = l.categoria_entrada;
     form.mes_referencia = l.mes_referencia || "";
     form.foi_pago = l.foi_pago;
-    form.meta = l?.meta?.id || null;
+    form.meta_id = l?.meta?.id || null;
     showModal.value = true;
 };
 
@@ -174,7 +174,7 @@ onUnmounted(() => {
 <template>
     <Head title="Lançamentos" />
     <AuthenticatedLayout>
-        <div class="py-10 space-y-5 px-2">
+        <div class="py-4 space-y-5">
             <!-- RESUMO -->
             <Resumo
                 :total-entradas="props.resumo.total_entradas"

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\CategoriaEntrada;
 use App\Enums\CategoriaSaida;
+use App\Enums\TipoValor;
 use App\Models\Lancamento;
 use App\Repositories\LancamentoRepository;
 use Carbon\Carbon;
@@ -15,7 +16,8 @@ class LancamentoService
 {
     public function __construct(
         public LancamentoRepository $lancamentoRepository
-    ) { }
+    ) {
+    }
 
     public function listar(array $filtros, ?int $perPage = 20, int $userId): array
     {
@@ -30,11 +32,15 @@ class LancamentoService
     // TODO: a entidade deve se validar
     private function validarTipoCategoria(array $dados): void
     {
+
+        if(!TipoValor::tryFrom($dados['tipo'])){
+            throw ValidationException::withMessages([
+                'tipo' => 'Tipo de lançamento inválido.'
+            ]);
+        }
+
         if ($dados['tipo'] === "ENTRADA") {
-            try {
-                CategoriaEntrada::from($dados['categoria_entrada']);
-                return;
-            } catch (ValidationException $th) {
+            if (!CategoriaEntrada::tryFrom($dados['categoria_entrada'])) {
                 throw ValidationException::withMessages([
                     'categoria_entrada' => 'Categoria de entrada inválida para o tipo selecionado.'
                 ]);
@@ -42,55 +48,55 @@ class LancamentoService
         }
 
         if ($dados['tipo'] === "SAIDA") {
-            try {
-                CategoriaSaida::from($dados['categoria_saida']);
-                return;
-            } catch (ValidationException $th) {
+            if (!CategoriaSaida::tryFrom($dados['categoria_saida'])) {
                 throw ValidationException::withMessages([
                     'categoria_saida' => 'Categoria de saída inválida para o tipo selecionado.'
                 ]);
-                ;
             }
         }
     }
 
-    public function criar(array $dados): Collection
+    public function criar(int $userId, array $dados): Collection
     {
         $this->validarTipoCategoria($dados);
+
         $quantidadeMeses = (int) ($dados['meses_recorrentes'] ?? 1);
-        $dataBase = Carbon::parse($dados['mes_referencia']);
         unset($dados['meses_recorrentes']);
 
-        $lancamentos = collect();
-        DB::transaction(function () use ($quantidadeMeses, $dataBase, $dados, &$lancamentos) {
-            for ($i = 0; $i < $quantidadeMeses; $i++) {
-                $dados['meta_id'] = $dados['meta'];
-                $dados['mes_referencia'] = $dataBase
-                    ->copy()
-                    ->addMonths($i);
-                $dados['user_id'] = auth()->id();
+        if ($quantidadeMeses < 1) {
+            throw new \InvalidArgumentException("A quantidade de meses deve ser pelo menos 1.");
+        }
 
-                $lancamentos->push(
-                    Lancamento::create($dados)
-                );
-            }
+        $dataBase = Carbon::parse($dados['mes_referencia']);
+        $valorAbsoluto = abs($dados['valor']);
+
+        $payloads = [];
+        for ($i = 0; $i < $quantidadeMeses; $i++) {
+            $payloads[] = array_merge($dados, [
+                'user_id' => $userId,
+                'valor' => $valorAbsoluto,
+                'mes_referencia' => $dataBase->copy()->addMonths($i)->format('Y-m-d'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return DB::transaction(function () use ($payloads) {
+            return $this->lancamentoRepository->criarVarios($payloads);
         });
-
-        return $lancamentos;
     }
 
-    public function atualizar(string $id, array $dados): Lancamento
+    public function atualizar(string $id, int $userId, array $dados): Lancamento
     {
-        $lancamento = Lancamento::findOrFail($id);
+        $lancamento = $this->lancamentoRepository->obterPorIdAndUserId($id, $userId);
         $this->validarTipoCategoria($dados);
-        $dados['meta_id'] = $dados['meta'];
         $lancamento->update($dados);
         return $lancamento;
     }
 
-    public function deletar(string $id): void
+    public function deletar(string $id, int $userId): void
     {
-        $lancamento = Lancamento::findOrFail($id);
+        $lancamento = $this->lancamentoRepository->obterPorIdAndUserId($id, $userId);
         $lancamento->delete();
     }
 }

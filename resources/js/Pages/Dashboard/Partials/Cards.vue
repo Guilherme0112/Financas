@@ -1,104 +1,77 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import FinanceCard from '@/Components/FinanceCard.vue';
-import { formatarDinheiro } from '@/utils/helpers';
+import { computed } from "vue";
+import FinanceCard from "@/Components/FinanceCard.vue";
+import Tendencia from "../Components/Tendencia.vue";
 
 const props = defineProps<{
     dashboard: any;
 }>();
 
-const entradas = computed(() => props.dashboard.porcentual.entradas)
-const saidas = computed(() => props.dashboard.porcentual.saidas)
+// Cálculo da performance do Saldo (Total)
+const porcentualTotal = computed(() => {
+    const entradas = props.dashboard.porcentual.entradas;
+    const saidas = props.dashboard.porcentual.saidas;
 
-const entradasIsUp = computed(() => entradas.value.tendencia === 'up')
-const saidasIsUp = computed(() => saidas.value.tendencia === 'up')
-
-const entradasClass = computed(() =>
-    entradasIsUp.value ? 'text-emerald-700' : 'text-red-700'
-)
-
-const saidasClass = computed(() =>
-    saidasIsUp.value ? 'text-red-700' : 'text-emerald-700'
-)
-
-const entradasIcon = computed(() =>
-    entradasIsUp.value ? '▲' : '▼'
-)
-
-const saidasIcon = computed(() =>
-    saidasIsUp.value ? '▲' : '▼'
-)
-
-const total = computed(() => {
-    const atual = entradas.value.atual - saidas.value.atual
-    const anterior = entradas.value.anterior - saidas.value.anterior
-    const diferenca = atual - anterior
+    // Total Mês Anterior = Entradas Antigas - Saídas Antigas
+    const anterior = entradas.anterior - saidas.anterior;
+    // Total Atual (Saldo)
+    const atual = props.dashboard.cards.total;
+    const diferenca = atual - anterior;
+    
+    // Cálculo da tendência
+    let tendencia: 'up' | 'down' | 'stable' = 'stable';
+    if (diferenca > 0) tendencia = 'up';
+    if (diferenca < 0) tendencia = 'down';
 
     return {
-        atual,
         anterior,
+        atual,
         diferenca,
-        tendencia:
-            diferenca > 0
-                ? 'up'
-                : diferenca < 0
-                    ? 'down'
-                    : 'stable'
-    }
+        tendencia
+    };
 });
-
-const totalClass = computed(() =>
-    total.value.tendencia === 'up'
-        ? 'text-emerald-700'
-        : total.value.tendencia === 'down'
-            ? 'text-red-700'
-            : 'text-gray-500'
-)
-
-const totalIcon = computed(() =>
-    total.value.tendencia === 'up'
-        ? '▲'
-        : total.value.tendencia === 'down'
-            ? '▼'
-            : '–'
-)
 </script>
+
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-            <div class="flex items-center justify-end gap-1 px-3 py-1 rounded-full text-xs font-semibold mb-[-30px]"
-                :class="entradasClass">
-                <span>{{ entradasIcon }}</span>
-                {{ formatarDinheiro(Math.abs(entradas.diferenca)) }}
-                <span class="opacity-70 ml-1">vs mês anterior</span>
-            </div>
+    <section class="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <FinanceCard
+            title="Entradas"
+            :value="dashboard.cards.entradas"
+            type="positive"
+        >
+            <template #trend>
+                <Tendencia
+                    :value="dashboard.porcentual.entradas.diferenca"
+                    :trend="dashboard.porcentual.entradas.tendencia"
+                />
+            </template>
+        </FinanceCard>
 
-            <FinanceCard title="Receitas do Mês" :value="dashboard.cards.entradas" type="positive" />
-        </div>
+        <FinanceCard
+            title="Saídas"
+            :value="dashboard.cards.saidas"
+            type="negative"
+        >
+            <template #trend>
+                <Tendencia
+                    :value="dashboard.porcentual.saidas.diferenca"
+                    :trend="dashboard.porcentual.saidas.tendencia"
+                    invert
+                />
+            </template>
+        </FinanceCard>
 
-
-        <div>
-            <div class="flex items-center justify-end gap-1 px-3 py-1 rounded-full text-xs font-semibold mb-[-30px]"
-                :class="saidasClass">
-                <span>{{ saidasIcon }}</span>
-                {{ formatarDinheiro(Math.abs(saidas.diferenca)) }}
-                <span class="opacity-70 ml-1">vs mês anterior</span>
-            </div>
-
-            <FinanceCard title="Gastos do Mês" :value="dashboard.cards.saidas" type="negative" />
-        </div>
-
-
-        <div>
-            <div class="flex items-center justify-end gap-1 px-3 py-1 rounded-full text-xs font-semibold mb-[-30px]"
-                :class="totalClass">
-                <span>{{ totalIcon }}</span>
-                {{ formatarDinheiro(Math.abs(total.diferenca)) }}
-                <span class="opacity-70 ml-1">vs mês anterior</span>
-            </div>
-
-            <FinanceCard title="Economia do Mês" :value="dashboard.cards.total" type="positive" />
-        </div>
-
-    </div>
+        <FinanceCard
+            title="Saldo Disponível"
+            :value="dashboard.cards.total"
+            :type="dashboard.cards.total >= 0 ? 'positive' : 'negative'"
+        >
+            <template #trend>
+                <Tendencia
+                    :value="porcentualTotal.diferenca"
+                    :trend="porcentualTotal.tendencia"
+                />
+            </template>
+        </FinanceCard>
+    </section>
 </template>

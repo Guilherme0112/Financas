@@ -47,7 +47,7 @@ class UpdateLancamentosRequest extends FormRequest
             ],
             'mes_referencia' => 'required|date_format:Y/m/d',
             'foi_pago' => 'nullable|boolean',
-            "meta" => [
+            "meta_id" => [
                 "nullable",
                 Rule::requiredIf($this->tipo === "RESERVA_META"),
                 "exists:metas,id"

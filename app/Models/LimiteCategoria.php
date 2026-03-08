@@ -4,10 +4,13 @@ namespace App\Models;
 
 use App\Enums\CategoriaSaida;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class LimiteCategoria extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'categoria_saida',
         'limite',

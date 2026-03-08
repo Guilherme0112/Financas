@@ -7,7 +7,7 @@ use App\Models\Lancamento;
 use Arr;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection as EloquentCollection;
 
 class LancamentoRepository
 {
@@ -67,6 +67,11 @@ class LancamentoRepository
         ];
     }
 
+    public function obterPorIdAndUserId(int $id, int $userId): Lancamento
+    {
+        return Lancamento::where('user_id', $userId)->findOrFail($id);
+    }
+
     public function obterTotalPorPeriodo($data_inicial, $data_final, int $userId): Lancamento
     {
         return Lancamento::select([])
@@ -117,7 +122,7 @@ class LancamentoRepository
             ->get();
     }
 
-    public function obterTotaisDeCategoriasPorPeriodo(Carbon $data_inicial, Carbon $data_final, int $userId)
+    public function obterTotaisDeCategoriasPorPeriodo(Carbon $data_inicial, Carbon $data_final, int $userId): array
     {
         $baseMesAtual = Lancamento::where('user_id', $userId)
             ->whereBetween(
@@ -142,5 +147,9 @@ class LancamentoRepository
             "receitas" => $receitasPorCategoria
         ];
     }
-
+    public function criarVarios(array $dados): EloquentCollection
+    {
+        Lancamento::insert($dados);
+        return collect($dados);
+    }
 }

@@ -35,8 +35,8 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
 
   <Head title="Dashboard" />
   <AuthenticatedLayout>
-    <div class="py-12 bg-gray-100 min-h-screen">
-      <div class="sm:px-6 lg:px-8 space-y-8">
+    <div class="py-4 bg-gray-100 min-h-screen">
+      <div class="space-y-5">
 
         <!-- ENTRADAS, SAIDAS E TOTAL -->
         <Cards :dashboard="dashboard" />

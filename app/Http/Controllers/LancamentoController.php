@@ -23,24 +23,15 @@ class LancamentoController extends Controller
     public function index(IndexLancamentosRequest $request): Response
     {
         $dados = $request->validated();
-        $lancamentosResultado = $this->lancamentoService->listar((array) $dados, null, auth()->id());
+        $lancamentosResultado = $this->lancamentoService->listar((array) $dados, 25, auth()->id());
         $metas = $this->metasService->listar($dados, auth()->id());
         return Inertia::render('Lancamentos/Index', [
             'lancamentos' => $lancamentosResultado['paginacao'],
             'resumo' => $lancamentosResultado['resumo'],
             "metas" => $metas,
-            'categoriasEntrada' => array_map(fn($c) => [
-                'value' => $c->value,
-                'label' => $c->label(),
-                ], CategoriaEntrada::cases()),
-                'categoriasSaida' => array_map(fn($c) => [
-                    'value' => $c->value,
-                'label' => $c->label(),
-                ], CategoriaSaida::cases()),
-            'tipo' => array_map(fn($c) => [
-                'value' => $c->value,
-                'label' => $c->label(),
-                ], TipoValor::cases())
+            'categoriasEntrada' => CategoriaEntrada::options(),
+            'categoriasSaida' => CategoriaSaida::options(),
+            'tipo' => TipoValor::options(),
         ]);
     }
 
@@ -49,7 +40,7 @@ class LancamentoController extends Controller
     {
         try {
             $dados = $request->validated();
-            $lancamentoService->criar($dados);
+            $lancamentoService->criar(auth()->id(), $dados);
             return redirect()->back()->with('success', 'Lançamento salvo com sucesso.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors('erro', $e->getMessage());
@@ -60,7 +51,7 @@ class LancamentoController extends Controller
     {
         try {
             $dados = $request->validated();
-            $lancamentoService->atualizar($id, $dados);
+            $lancamentoService->atualizar($id, auth()->id(), $dados);
             return redirect()->back()->with('success', 'Lançamento atualizado com sucesso.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors('erro', $e->getMessage());
@@ -69,6 +60,6 @@ class LancamentoController extends Controller
 
     public function destroy($id, LancamentoService $lancamentoService): void
     {
-        $lancamentoService->deletar($id);
+        $lancamentoService->deletar($id, auth()->id());
     }
 }

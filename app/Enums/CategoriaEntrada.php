@@ -26,4 +26,12 @@ enum CategoriaEntrada: string
             self::OUTROS => 'Outros',
         };
     }
+
+    public static function options()
+    {
+        return array_map(fn($c) => [
+            'value' => $c->value,
+            'label' => $c->label(),
+        ], self::cases());
+    }
 }

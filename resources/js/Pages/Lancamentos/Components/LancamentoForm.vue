@@ -117,8 +117,8 @@ watch(
     () => props.show,
     (abriu) => {
         if (abriu && props.editando) {
-            if (props.form.meta && typeof props.form.meta === "object") {
-                props.form.meta = props.form.meta.id;
+            if (props.form.meta_id && typeof props.form.meta_id === "object") {
+                props.form.meta_id = props.form.meta.id;
             }
 
             if (props.form.mes_referencia) {
@@ -382,7 +382,7 @@ const mostrarCampoEmergencia = (tipo: string) => {
                 />
                 <AutoSelect
                     @update:query="buscarMetasComDebounce"
-                    v-model="form.meta"
+                    v-model="form.meta_id"
                     :options="metasOptions"
                     placeholder="Selecione a meta"
                 />

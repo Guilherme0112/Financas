@@ -32,21 +32,26 @@ class MetasRepository
         return Meta::where('id', $id)->where('user_id', $userId)->firstOrFail();
     }
 
-    public function criar(array $dados, int $userId): Meta
+    public function obterPorUserIdAndId(int $id, int $userId): Meta
+    {
+        return Meta::where('id', $id)->where('user_id', $userId)->firstOrFail();
+    }
+
+    public function criar(array $dados): Meta
     {
         return Meta::create($dados);
     }
 
-    public function atualizar(int $id, array $dados, int $userId): Meta
+    public function atualizar(int $id, array $dados): Meta
     {
-        $meta = Meta::where('id', $id)->where('user_id', $userId)->firstOrFail();
+        $meta = $this->obterPorUserIdAndId($id, Arr::get($dados, 'user_id'));
         $meta->update($dados);
         return $meta;
     }
 
     public function excluir(int $id, int $userId): void
     {
-        $meta = Meta::where('id', $id)->where('user_id', $userId)->firstOrFail();
+        $meta = $this->obterPorUserIdAndId($id, $userId);
         $meta->delete();
     }
 }
