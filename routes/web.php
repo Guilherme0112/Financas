@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\AssinaturaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FaturasController;
 use App\Http\Controllers\LancamentoController;
+use Illuminate\Http\Request;
 use App\Http\Controllers\LimiteCategoriaController;
 use App\Http\Controllers\MetasController;
 use App\Http\Controllers\ProfileController;
@@ -18,18 +21,18 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('welcome');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'check.subscription'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'check.subscription'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 Route::prefix('lancamentos')
-    ->middleware('auth')
+    ->middleware(['auth', 'check.subscription'])
     ->name('lancamentos.')
     ->group(function () {
         Route::get('/', action: [LancamentoController::class, 'index'])->name('index');
@@ -41,7 +44,7 @@ Route::prefix('lancamentos')
     });
 
 Route::prefix('limites')
-    ->middleware('auth')
+    ->middleware(['auth', 'check.subscription'])
     ->name('limites.')
     ->group(function () {
         Route::get('/', action: [LimiteCategoriaController::class, 'index'])->name('index');
@@ -51,7 +54,7 @@ Route::prefix('limites')
     });
 
 Route::prefix('metas')
-    ->middleware('auth')
+    ->middleware(['auth', 'check.subscription'])
     ->name('metas.')
     ->group(function () {
         Route::get('/', action: [MetasController::class, 'index'])->name('index');
@@ -61,7 +64,7 @@ Route::prefix('metas')
     });
 
 Route::prefix('importar')
-    ->middleware('auth')
+    ->middleware(['auth', 'check.subscription'])
     ->name('importar.')
     ->group(function () {
         Route::post('/xlsx', [TrocaDeDadosController::class, 'importarXLSX'])->name('xlsx');
@@ -70,7 +73,7 @@ Route::prefix('importar')
 
 
 Route::prefix(prefix: 'exportar')
-    ->middleware('auth')
+    ->middleware(['auth', 'check.subscription'])
     ->name('exportar.')
     ->group(function () {
         Route::get("/download/{id}", [TrocaDeDadosController::class, 'download'])->name('download');
@@ -78,11 +81,45 @@ Route::prefix(prefix: 'exportar')
         Route::post('/pdf', [TrocaDeDadosController::class, 'exportarPDF'])->name('pdf');
     });
 
+Route::prefix('faturas')
+    ->middleware(['auth'])
+    ->name('faturas.')
+    ->group(function () {
+        Route::get('/', [FaturasController::class, 'index'])->name('index');
+    });
+
 Route::prefix('prospeccao-futuro')
-    ->middleware('auth')
+    ->middleware(['auth', 'check.subscription'])
     ->name('prospeccao-futuro.')
     ->group(function () {
         Route::get('/', [ProspeccaoFuturoController::class, 'index'])->name('index');
     });
+
+Route::prefix("/assinatura")
+    ->name('assinatura.')
+    ->group(function () {
+        Route::get('/expirada', function () {
+            return Inertia::render('Outros/AssinaturaExpirada'); })->name('expirada');
+        Route::get('/pendente', function () {
+            return Inertia::render('Outros/AssinaturaPendente'); })->name('pendente');
+        Route::post("/upgrade", [AssinaturaController::class, "upgrade"])->name("upgrade");
+    });
+
+Route::get('/pagamento/{status?}', function (Request $request) {
+    $statusMP = $request->query('status') ?? $request->query('collection_status');
+    $faturaId = $request->query('external_reference');
+
+    $statusSugerido = match ($statusMP) {
+        'approved' => 'success',
+        'rejected', 'cancelled' => 'failed',
+        'pending', 'in_process' => 'pending',
+        default => 'pending'
+    };
+
+    return Inertia::render('Outros/PagamentoStatus', [
+        'status' => $statusSugerido,
+        'fatura_id' => $faturaId
+    ]);
+})->name('pagamento');
 
 require __DIR__ . '/auth.php';

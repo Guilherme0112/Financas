@@ -3,6 +3,10 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
+    server: {
+        allowedHosts: 'all', 
+        protocol: 'wss'
+    },
     plugins: [
         laravel({
             input: 'resources/js/app.ts',

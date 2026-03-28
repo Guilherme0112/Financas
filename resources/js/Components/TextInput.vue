@@ -3,6 +3,7 @@ import { onMounted, ref, useAttrs, computed, watch } from 'vue';
 
 const props = defineProps<{
   limit?: number
+  maxlength?: number
 }>()
 
 const model = defineModel<string>({ required: true })
@@ -44,7 +45,7 @@ defineExpose({ focus: () => input.value?.focus() })
       ref="input"
       v-model="model"
       v-bind="attrs"
-      :maxlength="limit"
+      :maxlength="maxlength ?? limit"
       :class="inputClass"
     />
     <div

@@ -43,3 +43,23 @@ export const toNumber = (value: any): number => {
   if (!value) return 0
   return Number(value)
 }
+
+export const unformatPhone = (phone: string | number | null | undefined): string => {
+    if (!phone) return '';
+    return phone.toString().replace(/\D/g, '');
+};
+
+export const formatPhone = (phone: string | number | null | undefined): string => {
+    if (!phone) return '';
+
+    const digits = unformatPhone(phone);
+
+    if (digits.length === 11) {
+        return digits.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+
+    if (digits.length === 10) {
+        return digits.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    return digits;
+};

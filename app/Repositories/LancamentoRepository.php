@@ -164,7 +164,7 @@ class LancamentoRepository
     public function marcarComoPaga(int $id, int $userId): Lancamento
     {
         $lancamento = $this->obterPorIdAndUserId($id, $userId);
-        $lancamento->update(['foi_pago' => true]);
+        $lancamento->update(['foi_pago' => true, 'data_quitacao' => now()]);
         return $lancamento;
     }
 

@@ -1,8 +1,11 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\FaturasController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+
+Route::post('/webhook/mercado-pago/pagamento', [FaturasController::class, 'webhookMercadoPagoPagamento'])->name('webhookMercadoPagoPagamento');
+
+Route::get('/ping', function () {
+    return 'pong';
+});

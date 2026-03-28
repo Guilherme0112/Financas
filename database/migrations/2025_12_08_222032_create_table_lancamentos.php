@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->string('categoria_saida')->nullable();
             $table->boolean(column: 'foi_pago')->nullable()->default(false);
             $table->boolean('recorrente')->default(false);
+            $table->date('data_quitacao')->nullable();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('meta_id')->nullable()->constrained('metas')->nullOnDelete();
             $table->date('mes_referencia')->nullable();

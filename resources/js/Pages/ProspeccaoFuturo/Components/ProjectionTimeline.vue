@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import HelpMessage from "@/Components/HelpMessage.vue";
-import Table from "@/Components/Table.vue";
+import Table, { TableHeader } from "@/Components/Table.vue";
 import { formatarDinheiro } from "@/utils/helpers";
 
-defineProps({
-    projection: {
-        type: Array,
-        required: true,
-    },
-});
+defineProps<{
+    projection: any
+}>();
 
-const headers = [
+const headers: TableHeader[] = [
     { 
         label: "Mês", 
         key: "month", 

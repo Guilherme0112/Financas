@@ -19,6 +19,7 @@ class Lancamento extends Model
         'descricao',
         'valor',
         'tipo',
+        'data_quitacao',
         'recorrente',
         'mes_referencia',
         'categoria_entrada',

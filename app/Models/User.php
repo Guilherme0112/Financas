@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Billable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +22,8 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        "assinatura_id",
+        "is_active"
     ];
 
     /**
@@ -51,4 +54,8 @@ class User extends Authenticatable
         return $this->hasMany(Lancamento::class);
     }
 
+    public function assinatura()
+    {
+        return $this->hasOne(Assinatura::class);
+    }
 }

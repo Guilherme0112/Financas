@@ -114,6 +114,15 @@ watch(
 );
 
 watch(
+    () => props.form.meses_recorrentes,
+    (meses) => {
+        if (meses > 1) {
+            props.form.recorrente = true;
+        }
+    },
+);
+
+watch(
     () => props.show,
     (abriu) => {
         if (abriu && props.editando) {

@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Checkbox from './Checkbox.vue'
 
-interface TableHeader {
+export interface TableHeader {
   label: string
   key: string
   align?: 'left' | 'center' | 'right'
@@ -25,6 +25,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'selectionChange', selectedRows: Record<string, any>[]): void
+  (e: 'rowClick', row: Record<string, any>): void
 }>()
 
 const color = props.theme || 'emerald'
@@ -76,6 +77,17 @@ const handleClickOutside = (event: MouseEvent) => {
   if (!alvo.closest('[data-menu]')) fechar()
 }
 
+const resolveActions = (row: any) => {
+    if (!props.actions) return [];
+    
+    if (typeof props.actions === 'function') {
+        const result = props.actions(row);
+        return Array.isArray(result) ? result : [];
+    }
+    
+    return props.actions;
+};
+
 onMounted(() => document.addEventListener('click', handleClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
@@ -114,12 +126,14 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         v-else
         v-for="(row, index) in rows"
         :key="index"
-        class="relative group bg-white border border-zinc-100 py-5 px-6 rounded-lg transition-all duration-200 hover:border-zinc-200 hover:shadow-sm flex items-center"
+        class="relative group bg-white border border-zinc-100 py-5 px-6 rounded-lg transition-all duration-200 hover:border-zinc-200 hover:shadow-sm flex items-center cursor-pointer"
+        @click="emit('rowClick', row)"
       >
         <div v-if="selectable" class="w-8 flex items-center justify-center">
           <Checkbox 
             :checked="selectedRows.has(index)" 
             @change="toggleRowSelection(index)"
+            @click.stop
             class="w-4 h-4 rounded cursor-pointer bg-white border-emerald-300 border-2 checked:bg-emerald-500 checked:border-emerald-500"
           />
         </div>
@@ -140,7 +154,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           </slot>
         </div>
 
-        <div v-if="actions" class="ml-auto relative" data-menu>
+        <div v-if="resolveActions(row).length > 0" class="ml-auto relative" data-menu @click.stop>
           <button
             @click.stop="toggle(index)"
             class="w-6 h-6 flex items-center justify-center rounded-md transition-all"
@@ -161,9 +175,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               class="absolute right-0 mt-1.5 w-[200px] bg-white rounded-xl shadow-xl p-1 z-[100] border border-zinc-100"
             >
               <button
-                v-for="(action, i) in (typeof actions === 'function' ? actions(row) : actions)"
+                v-for="(action, i) in resolveActions(row)"
                 :key="i"
-                @click="() => { action.onClick(row); fechar() }"
+                @click.stop="() => { action.onClick(row); fechar() }"
                 class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-tight rounded-lg transition-all flex items-center justify-between group/item"
                 :class="[`text-zinc-500 hover:bg-${color}-50 hover:text-${color}-700`, action.class]"
               >

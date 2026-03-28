@@ -45,12 +45,11 @@ const submit = () => {
         <form @submit.prevent="submit" class="space-y-5">
 
           <div>
-            <InputLabel for="email" value="Email" class="text-gray-700" />
-
             <TextInput
               id="email"
               type="email"
-              class="mt-1 block w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+              class="w-full"
+              placeholder="E-mail" 
               v-model="form.email"
               required
               autofocus
@@ -61,13 +60,12 @@ const submit = () => {
           </div>
 
           <div>
-            <InputLabel for="password" value="Senha" class="text-gray-700" />
-
             <TextInput
               id="password"
               type="password"
-              class="mt-1 block w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+              class="w-full"
               v-model="form.password"
+              placeholder="Senha" 
               required
               autocomplete="current-password"
             />
@@ -92,7 +90,7 @@ const submit = () => {
 
           <div>
             <PrimaryButton
-              class="w-full justify-center bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-lg font-semibold transition"
+              class="w-full justify-center bg-green-600 hover:bg-green-700 text-white py-3"
               :class="{ 'opacity-25': form.processing }"
               :disabled="form.processing"
               type="submit"

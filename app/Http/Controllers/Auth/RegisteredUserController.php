@@ -2,25 +2,23 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\Planos;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use App\Http\Requests\StoreUserRequest;
+use App\Services\UserService;
 use Inertia\Inertia;
-use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 class RegisteredUserController extends Controller
 {
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register', [
+            "planos" => Planos::options(),
+        ]);
     }
 
     /**
@@ -28,24 +26,21 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreUserRequest $request, UserService $userService): Response
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $dados = $request->validated();
+        logger()->info("Requisição para criar usuário recebida e validada", $dados);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $result = $userService->registrarComAssinatura($dados, $request->plano);
 
-        event(new Registered($user));
+        if (isset($result['external']) && $result['external']) {
+            return Inertia::location($result['redirect']);
+        }
 
-        Auth::login($user);
+        if (isset($result['error'])) {
+            return redirect()->to($result['redirect'])->with('error', $result['error']);
+        }
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->to($result['redirect']);
     }
 }

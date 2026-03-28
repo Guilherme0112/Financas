@@ -5,6 +5,8 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue3-toastify';
+import { computed } from 'vue';
+import { formatPhone, unformatPhone } from '@/utils/helpers';
 
 defineProps<{
     mustVerifyEmail?: Boolean;
@@ -17,6 +19,13 @@ const form = useForm({
     name: user.name,
     email: user.email,
     phone: user.phone
+});
+
+const phoneMasked = computed({
+    get: () => formatPhone(form.phone || ''),
+    set: (value) => {
+        form.phone = unformatPhone(value);
+    }
 });
 </script>
 
@@ -51,6 +60,7 @@ const form = useForm({
                     required
                     autofocus
                     autocomplete="name"
+                    :maxlength="50"
                 />
 
                 <InputError class="mt-2" :message="form.errors.name" />
@@ -66,6 +76,7 @@ const form = useForm({
                     v-model="form.email"
                     required
                     autocomplete="username"
+                    :maxlength="100"
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />
@@ -78,9 +89,11 @@ const form = useForm({
                     id="phone"
                     type="text"
                     class="mt-1 block w-full"
-                    v-model="form.phone"
+                    v-model="phoneMasked"
                     required
                     autocomplete="phone"
+                    placeholder="(11) 99999-9999"
+                    :maxlength="15"
                 />
 
                 <InputError class="mt-2" :message="form.errors.phone" />

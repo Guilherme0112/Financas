@@ -88,7 +88,7 @@ defineProps<{
     </section>
 
     <!-- FEATURES -->
-    <section class="bg-white py-20">
+    <section class="bg-white py-20 ">
       <div class="max-w-7xl mx-auto px-6 text-center">
         <h3 class="text-3xl font-bold text-gray-900">O que você pode fazer</h3>
 
@@ -117,7 +117,7 @@ defineProps<{
       </div>
     </section>
     <!-- PLANOS -->
-    <section class="py-20 bg-green-50">
+    <section class="py-20 bg-green-50" id="planos">
       <div class="max-w-5xl mx-auto px-6 text-center">
         <h3 class="text-3xl font-bold text-gray-900">Escolha seu plano</h3>
         <p class="mt-4 text-gray-600">
@@ -159,7 +159,7 @@ defineProps<{
               MAIS POPULAR
             </span>
 
-            <h4 class="text-2xl font-bold text-gray-900">Plano Premium</h4>
+            <h4 class="text-2xl font-bold text-gray-900">Plano Básico</h4>
 
             <div class="mt-6">
               <span class="text-5xl font-extrabold text-gray-900">R$ 20</span>
@@ -178,7 +178,7 @@ defineProps<{
               <li>✅ Suporte prioritário</li>
             </ul>
 
-            <Link v-if="canRegister" :href="route('register')"
+            <Link v-if="canRegister" :href="route('register', { plano: 'BASICO' })"
               class="mt-10 w-full text-center px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">
               Assinar agora
             </Link>

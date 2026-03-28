@@ -29,11 +29,31 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user()?->load('assinatura.plano');
+        $trialInfo = null;
+
+        if ($user && $user->assinatura && $user->assinatura->plano) {
+            $assinatura = $user->assinatura;
+            $plano = $assinatura->plano;
+
+            if ($plano->plano->value === \App\Enums\Planos::GRATUITO->value) {
+                $hoje = now();
+                $fim = $assinatura->data_fim;
+                $diasRestantes = $hoje->diffInDays($fim, false);
+
+                $trialInfo = [
+                    'is_trial' => true,
+                    'days_remaining' => max(0, (int) $diasRestantes),
+                ];
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
+            'trial_info' => $trialInfo,
         ];
     }
 }

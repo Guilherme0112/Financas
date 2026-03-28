@@ -4,6 +4,8 @@ export interface User {
     email: string;
     phone: string;
     email_verified_at?: string;
+    assinatura_id?: number;
+    assinatura?: any;
 }
 
 export type PageProps<
@@ -11,5 +13,9 @@ export type PageProps<
 > = T & {
     auth: {
         user: User;
+    };
+    trial_info?: {
+        is_trial: boolean;
+        days_remaining: number;
     };
 };

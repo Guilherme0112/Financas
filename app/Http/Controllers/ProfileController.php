@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Planos;
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Plano;
+use App\Services\FaturaService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,14 +16,17 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
+    
+    public function __construct(private FaturaService $faturaService)
+    {}
+
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            "faturas" => $this->faturaService->obterFaturas(auth()->id(), 3),
+            "planos" => Plano::all()
         ]);
     }
 

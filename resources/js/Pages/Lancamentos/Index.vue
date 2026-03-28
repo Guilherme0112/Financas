@@ -22,6 +22,7 @@ import { h } from "vue";
 import Resumo from "./Partials/Resumo.vue";
 import Load from "@/Components/Load.vue";
 import { Metas } from "@/types/Metas";
+import LancamentoDetalhes from "./Components/LancamentoDetalhes.vue";
 
 const props = defineProps<{
     lancamentos: Page<Lancamento>;
@@ -54,6 +55,10 @@ const lancamentoToMark = ref<Lancamento | null>(null);
 const loadingMarkAsPaid = ref(false);
 const selectedLancamentos = ref<any[]>([]);
 const deletarSelecionados = ref(false);
+
+// detail modal state
+const showDetailsModal = ref(false);
+const lancamentoDetalhes = ref<any | null>(null);
 
 const form = useForm({
     id: null,
@@ -138,6 +143,11 @@ const duplicar = (l: any) => {
     form.foi_pago = l.foi_pago;
     form.meta_id = l?.meta?.id || null;
     showModal.value = true;
+};
+
+const abrirDetalhes = (l: any) => {
+    lancamentoDetalhes.value = l;
+    showDetailsModal.value = true;
 };
 
 const confirmarMarcarComoPaga = () => {
@@ -273,6 +283,7 @@ onUnmounted(() => {
                 :actions="actions"
                 :selectable="true"
                 @selectionChange="handleSelectionChange"
+                @rowClick="abrirDetalhes"
                 theme="green"
             />
 
@@ -340,6 +351,13 @@ onUnmounted(() => {
                 @close="showMarkAsPaidModal = false; lancamentoToMark = null"
                 @confirm="confirmarMarcarComoPaga"
                 :isDisabled="loadingMarkAsPaid"
+            />
+
+            <!-- DETALHES DO LANÇAMENTO -->
+            <LancamentoDetalhes
+                :show="showDetailsModal"
+                :lancamento="lancamentoDetalhes"
+                @close="showDetailsModal = false"
             />
 
             <!-- DELETAR SELECIONADOS -->

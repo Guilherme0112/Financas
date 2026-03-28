@@ -57,7 +57,7 @@ watch(query, (value) => {
 
 watch(model, (v) => {
   const found = normOptions.value.find(o => o.value === v)
-  query.value = found ? found.label : (v ?? '')
+  query.value = found ? found.label : (v?.toString() ?? '')
 })
 
 onMounted(() => {

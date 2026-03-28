@@ -75,6 +75,7 @@ class LancamentoService
             $payloads[] = array_merge($dados, [
                 'user_id' => $userId,
                 'valor' => $valorAbsoluto,
+                'recorrente' => $quantidadeMeses > 1,
                 'mes_referencia' => $dataBase->copy()->addMonths($i)->format('Y-m-d'),
                 'created_at' => now(),
                 'updated_at' => now(),
