@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\GatewayPagamentoInterface;
 use App\Enums\Planos;
 use App\Enums\StatusAssinatura;
 use App\Enums\StatusPagamento;
@@ -17,7 +18,7 @@ class AssinaturaService
 {
 
     public function __construct(
-        private MercadoPagoService $mercadoPagoService,
+        private GatewayPagamentoInterface $gatewayPagamento,
         private FaturaService $faturaService,
         private SolicitacaoMudancaPlanoService $solicitacaoMudancaPlanoService,
         private PlanoService $planoService
@@ -52,7 +53,8 @@ class AssinaturaService
         return $this->fazerUpgrade($assinatura, $planoNovo);
     }
 
-    public function fazerUpgrade(Assinatura $assinatura, Plano $novoPlano)
+
+    public function fazerUpgrade(Assinatura $assinatura, Plano $novoPlano): string
     {
         return DB::transaction(function () use ($assinatura, $novoPlano) {
             $fatura = $this->faturaService->criarFatura([
@@ -67,11 +69,10 @@ class AssinaturaService
             ], $assinatura->user_id);
             logger()->info("Fatura de upgrade criada com sucesso");
 
-            $linkPagamento = $this->mercadoPagoService->criarLinkPagamento($fatura);
-
+            $linkPagamento = $this->gatewayPagamento->criarPagamento($fatura);
             $fatura->update([
-                'url_pagamento' => $linkPagamento->sandbox_init_point,
-                'referencia_externa' => $linkPagamento->id,
+                'url_pagamento' => $linkPagamento["sandbox_init_point"],
+                'referencia_externa' => $linkPagamento["id"],
             ]);
 
             $this->solicitacaoMudancaPlanoService->criarSolicitacaoMudancaPlano([
@@ -105,16 +106,11 @@ class AssinaturaService
                 if ($solicitacao) {
                     logger()->info("Solicitação de Upgrade encontrada");
                     $assinatura = $fatura->assinatura;
-                    $hoje = now();
-                    $vencimentoAtual = $assinatura->data_proxima_cobranca ?? $hoje;
-                    $dataBase = $vencimentoAtual->gt($hoje) ? $vencimentoAtual : $hoje;
-                    $novoVencimento = $dataBase->copy()->addMonth();
-
                     $assinatura->update([
                         'plano_id' => $solicitacao->plano_novo_id,
                         'status' => StatusAssinatura::ATIVA,
-                        'data_proxima_cobranca' => $novoVencimento,
-                        'data_fim' => $novoVencimento,
+                        'data_proxima_cobranca' => $assinatura->calcularProximoVencimento(),
+                        'data_fim' => $assinatura->calcularProximoVencimento(),
                     ]);
                     logger()->info("Assinatura atualizada com novo plano");
 

@@ -11,7 +11,6 @@ class UserService
     public function __construct(
         private UserRepository $userRepository,
         private AssinaturaService $assinaturaService,
-        private MercadoPagoService $mercadoPagoService,
         private PlanoService $planoService,
         private FaturaService $faturaService
     ) {

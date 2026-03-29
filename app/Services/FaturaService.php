@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\GatewayPagamentoInterface;
 use App\Enums\MetodoPagamento;
 use App\Enums\Planos;
 use App\Enums\StatusAssinatura;
@@ -13,13 +14,12 @@ use App\Models\Fatura;
 use App\Models\Plano;
 use App\Models\User;
 use Carbon\Carbon;
-use MercadoPago\Resources\Payment;
 
 class FaturaService
 {
 
     public function __construct(
-        private MercadoPagoService $mercadoPagoService
+        private GatewayPagamentoInterface $gatewayPagamento
     ) {
     }
 
@@ -92,26 +92,26 @@ class FaturaService
     public function webhookMercadoPagoPagamento(array $dados)
     {
         logger()->info("Dados recebidos do webhook", $dados);
-        $preferencia = $this->mercadoPagoService->obterPreferenciaPorId($dados["data"]["id"]);
-        $idExternoPagamento = $preferencia->external_reference;
+        $preferencia = $this->gatewayPagamento->obterPagamentoPorId($dados["data"]["id"]);
+        $idExternoPagamento = $preferencia["external_reference"];
 
         logger()->info("Id externo/fatura é: " . $idExternoPagamento);
 
         $fatura = $this->obterFaturaPorId($idExternoPagamento);
         logger()->info("Fatura encontrada com sucesso", $fatura->toArray());
 
-        if ($preferencia->status === 'approved') {
+        if ($preferencia["status"] === 'approved') {
             logger()->info("Pagamento aprovado com sucesso");
             $this->processarPagamentoAprovado($fatura, $preferencia);
         }
     }
 
-    public function processarPagamentoAprovado(Fatura $fatura, Payment $preferencia)
+    public function processarPagamentoAprovado(Fatura $fatura, array $preferencia)
     {
         \DB::transaction(function () use ($fatura, $preferencia) {
             $metodoEnum = MetodoPagamento::deMercadoPago(
-                $preferencia->payment_type_id,
-                $preferencia->payment_method_id
+                $preferencia["payment_type_id"],
+                $preferencia["payment_method_id"]
             );
 
             $fatura->update([
@@ -121,11 +121,6 @@ class FaturaService
             ]);
 
             $assinatura = $fatura->assinatura;
-            $hoje = now();
-
-            $vencimentoAtual = $assinatura->data_proxima_cobranca ?? $hoje;
-            $dataBase = $vencimentoAtual->gt($hoje) ? $vencimentoAtual : $hoje;
-            $novaDataVencimento = $dataBase->copy()->addMonth();
             $novoPlanoId = $assinatura->plano_id;
 
             if ($fatura->tipo_cobranca === TipoCobranca::UPGRADE) {
@@ -144,9 +139,9 @@ class FaturaService
             $assinatura->update([
                 "plano_id" => $novoPlanoId,
                 "status" => StatusAssinatura::ATIVA,
-                "data_proxima_cobranca" => $novaDataVencimento,
-                "data_inicio" => $assinatura->data_inicio ?? $hoje,
-                "data_fim" => $novaDataVencimento,
+                "data_proxima_cobranca" => $assinatura->calcularProximoVencimento(),
+                "data_inicio" => $assinatura->data_inicio ?? now(),
+                "data_fim" => $assinatura->calcularProximoVencimento(),
             ]);
 
             $fatura->user->update(['is_active' => true]);
@@ -176,18 +171,18 @@ class FaturaService
         ], $user->id);
         logger()->info("Fatura inicial criada com sucesso", $fatura->toArray());
 
-        $linkPagamento = $this->mercadoPagoService->criarLinkPagamento($fatura);
+        $linkPagamento = $this->gatewayPagamento->criarPagamento($fatura);
         logger()->info("Link de pagamento gerado com sucesso");
 
         $fatura->update([
-            'url_pagamento' => $linkPagamento->sandbox_init_point,
-            'referencia_externa' => $linkPagamento->id,
+            'url_pagamento' => $linkPagamento["sandbox_init_point"],
+            'referencia_externa' => $linkPagamento["id"],
         ]);
         logger()->info("Fatura atualizada com link de pagamento e referencia externa");
 
         return [
             'user' => $user,
-            'redirect' => $linkPagamento->sandbox_init_point,
+            'redirect' => $linkPagamento["sandbox_init_point"],
             'external' => true
         ];
     }

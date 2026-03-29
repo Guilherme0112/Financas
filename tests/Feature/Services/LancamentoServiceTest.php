@@ -22,7 +22,7 @@ class LancamentoServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->lancamentoService = new LancamentoService(new LancamentoRepository());
+        $this->lancamentoService = app(LancamentoService::class);
         $this->user = User::factory()->create();
     }
 

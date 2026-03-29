@@ -3,10 +3,15 @@
 namespace App\Models;
 
 use App\Enums\StatusAssinatura;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Assinatura extends Model
 {
+
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'plano_id',
@@ -22,6 +27,14 @@ class Assinatura extends Model
         'data_proxima_cobranca' => 'datetime',
         'status' => StatusAssinatura::class
     ];
+
+    public function calcularProximoVencimento(): Carbon
+    {
+        $hoje = now();
+        $vencimentoAtual = $this->data_proxima_cobranca ?? $hoje;
+        $dataBase = $vencimentoAtual->gt($hoje) ? $vencimentoAtual : $hoje;
+        return $dataBase->copy()->addMonth();
+    }
 
     public function user()
     {

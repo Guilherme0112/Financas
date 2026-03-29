@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Services;
+namespace App\Integrations;
 
 use App\Models\Fatura;
 use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\Client\Preference\PreferenceClient;
 use MercadoPago\MercadoPagoConfig;
 use MercadoPago\Exceptions\MPApiException;
-use MercadoPago\Resources\Payment;
+use App\Contracts\GatewayPagamentoInterface;
 
-class MercadoPagoService
+class MercadoPagoService implements GatewayPagamentoInterface
 {
     public function __construct()
     {
@@ -20,7 +20,7 @@ class MercadoPagoService
     /**
      * Cria uma preferência de pagamento para uma Fatura específica
      */
-    public function criarLinkPagamento(Fatura $fatura)
+    public function criarPagamento(Fatura $fatura): array
     {
         $client = new PreferenceClient();
 
@@ -57,7 +57,7 @@ class MercadoPagoService
 
             $preference = $client->create($request);
             logger()->info('Preferência Mercado Pago criada', ['preference' => $preference]);
-            return $preference;
+            return (array) $preference;
 
         } catch (MPApiException $e) {
             $conteudoErro = $e->getApiResponse()->getContent();
@@ -66,11 +66,11 @@ class MercadoPagoService
         }
     }
 
-    public function obterPreferenciaPorId(string $preferenceId): Payment
+    public function obterPagamentoPorId(string $preferenceId): array
     {
         $client = new PaymentClient();
         try {
-            return $client->get($preferenceId);
+            return (array) $client->get($preferenceId);
         } catch (MPApiException $e) {
             \Log::error("Erro ao buscar preferência MP {$preferenceId}: " . json_encode($e->getApiResponse()->getContent()));
             throw $e;

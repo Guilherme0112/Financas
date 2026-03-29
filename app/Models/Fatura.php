@@ -5,10 +5,14 @@ namespace App\Models;
 use App\Enums\MetodoPagamento;
 use App\Enums\StatusPagamento;
 use App\Enums\TipoCobranca;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Fatura extends Model
 {
+
+    use HasFactory;
+
     protected $appends = ["metodo_pagamento_label"];
 
     protected $fillable = [

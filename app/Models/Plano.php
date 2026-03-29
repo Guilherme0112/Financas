@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use App\Enums\Planos;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Plano extends Model
 {
+
+    use HasFactory;
+
     protected $fillable = [
         'nome',
         'plano',
