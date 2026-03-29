@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Planos;
 use App\Enums\StatusAssinatura;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,19 @@ class Assinatura extends Model
         $vencimentoAtual = $this->data_proxima_cobranca ?? $hoje;
         $dataBase = $vencimentoAtual->gt($hoje) ? $vencimentoAtual : $hoje;
         return $dataBase->copy()->addMonth();
+    }
+
+    public static function configurarDatasIniciais(Plano $plano): Assinatura
+    {
+        $isGratuito = $plano->plano === Planos::GRATUITO;
+        $dataFim = $isGratuito ? now()->addDays(7) : null;
+        return new self([
+            'plano_id' => $plano->id,
+            'data_inicio' => $isGratuito ? now() : null,
+            'data_fim' => $dataFim,
+            'data_proxima_cobranca' => $dataFim,
+            'status' => $isGratuito ? StatusAssinatura::ATIVA : StatusAssinatura::PENDENTE,
+        ]);
     }
 
     public function user()

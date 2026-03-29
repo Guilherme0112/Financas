@@ -1,19 +1,25 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from "@inertiajs/vue3";
-import { computed, onMounted } from "vue";
-import { formatPhone, unformatPhone } from "@/utils/helpers";
+import { computed, onMounted, ref, watch } from "vue";
+import { formatarDinheiro, formatPhone, unformatPhone } from "@/utils/helpers";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import InputError from "@/Components/InputError.vue";
 import TextInput from "@/Components/TextInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import SecondaryButton from "@/Components/SecondaryButton.vue";
+import { Check } from "lucide-vue-next";
 
 interface PlanoOption {
-    value: number;
-    label: string;
-    price?: string;
+    id: number;
+    plano: string;
+    nome: string;
+    preco: number;
+    descricao: string;
 }
 
 const props = defineProps<{ planos: PlanoOption[] }>();
+
+const step = ref(1);
 
 const form = useForm({
     name: "",
@@ -24,21 +30,39 @@ const form = useForm({
     plano: "",
 });
 
+const planoSelecionadoId = ref<number | null>(null);
+
+watch(planoSelecionadoId, (newId) => {
+    if (newId) form.plano = newId.toString();
+});
+
 onMounted(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const planoDaURL = urlParams.get("plano");
 
     const encontrado = props.planos.find(
-        (p) => p.label.toLowerCase() === planoDaURL?.toLowerCase(),
+        (p) => p.plano.toLowerCase() === planoDaURL?.toLowerCase(),
     );
-    form.plano = encontrado ? encontrado.value.toString() : props.planos[0]?.value.toString();
+
+    // Seleciona o plano da URL ou o primeiro da lista por padrão
+    const inicial = encontrado || props.planos[0];
+    if (inicial) {
+        planoSelecionadoId.value = inicial.id;
+        form.plano = inicial.id.toString();
+    }
 });
+
 const phoneMasked = computed({
     get: () => formatPhone(form.phone || ""),
     set: (value) => {
         form.phone = unformatPhone(value);
     },
 });
+
+const nextStep = () => {
+    // Aqui você pode adicionar uma validação manual antes de mudar de step
+    step.value = 2;
+};
 
 const submit = () => {
     form.post(route("register"), {
@@ -52,144 +76,181 @@ const submit = () => {
         <Head title="Cadastro" />
 
         <div
-            class="w-full bg-white max-w-[440px] mx-auto px-6 py-12 shadow-lg rounded"
+            class="w-full bg-white max-w-[440px] mx-auto px-6 py-12 mt-6 shadow-lg rounded-2xl border border-slate-100"
         >
+            <div class="flex items-center justify-center gap-2 mb-8">
+                <div
+                    :class="[
+                        'h-1.5 w-10 rounded-full transition-colors',
+                        step >= 1 ? 'bg-emerald-500' : 'bg-slate-200',
+                    ]"
+                ></div>
+                <div
+                    :class="[
+                        'h-1.5 w-10 rounded-full transition-colors',
+                        step >= 2 ? 'bg-emerald-500' : 'bg-slate-200',
+                    ]"
+                ></div>
+            </div>
+
             <div class="mb-10 text-center">
-                <h1
-                    class="text-2xl font-semibold text-slate-900 tracking-tight"
-                >
-                    Criar sua conta
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
+                    {{ step === 1 ? "Crie sua conta" : "Escolha seu plano" }}
                 </h1>
-                <p class="text-slate-500 mt-2">
-                    Comece a gerenciar suas finanças hoje mesmo.
+                <p class="text-slate-500 mt-2 text-sm">
+                    {{
+                        step === 1
+                            ? "Comece a gerenciar suas finanças hoje mesmo."
+                            : "Selecione a melhor opção para você."
+                    }}
                 </p>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-5">
-                <div class="space-y-2">
-                    <label
-                        class="text-xs font-semibold uppercase tracking-wider text-slate-400 ml-1"
-                        >Plano selecionado</label
-                    >
+            <div v-show="step === 1" class="space-y-4">
+                <TextInput
+                    v-model="form.name"
+                    type="text"
+                    placeholder="Nome completo"
+                    class="w-full"
+                />
+                <InputError :message="form.errors.name" />
+
+                <TextInput
+                    v-model="form.email"
+                    type="email"
+                    placeholder="E-mail"
+                    class="w-full"
+                />
+                <InputError :message="form.errors.email" />
+
+                <TextInput
+                    v-model="phoneMasked"
+                    type="text"
+                    placeholder="WhatsApp"
+                    class="w-full"
+                    :maxlength="15"
+                />
+                <InputError :message="form.errors.phone" />
+
+                <div class="grid grid-cols-2 gap-3">
+                    <TextInput
+                        v-model="form.password"
+                        type="password"
+                        placeholder="Senha"
+                    />
+                    <TextInput
+                        v-model="form.password_confirmation"
+                        type="password"
+                        placeholder="Confirmar"
+                    />
+                </div>
+                <InputError :message="form.errors.password" />
+
+                <PrimaryButton
+                    type="button"
+                    class="w-full justify-center py-4 mt-4"
+                    @click="step = 2"
+                >
+                    Próximo passo
+                </PrimaryButton>
+            </div>
+
+            <form
+                v-show="step === 2"
+                @submit.prevent="submit"
+                class="space-y-6"
+            ></form>
+
+            <form
+                v-show="step === 2"
+                @submit.prevent="submit"
+                class="space-y-6"
+            >
+                <div class="space-y-3">
                     <div
-                        class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl"
+                        v-for="plano in planos"
+                        :key="plano.id"
+                        @click="planoSelecionadoId = plano.id"
+                        :class="[
+                            planoSelecionadoId === plano.id
+                                ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500'
+                                : 'border-gray-100 bg-white hover:border-emerald-200',
+                            'relative p-4 border-2 rounded-2xl transition-all cursor-pointer',
+                        ]"
                     >
-                        <button
-                            v-for="option in planos"
-                            :key="option.value"
-                            type="button"
-                            @click="form.plano = option.value.toString()"
-                            :class="[
-                                'py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200',
-                                form.plano === option.value.toString()
-                                    ? 'bg-white text-emerald-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700',
-                            ]"
-                        >
-                            {{ option.label }}
-                            <span
-                                v-if="option.price"
-                                class="block text-[10px] opacity-70"
-                                >{{ option.price }}</span
-                            >
-                        </button>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    :class="[
+                                        planoSelecionadoId === plano.id
+                                            ? 'bg-emerald-500 border-emerald-500'
+                                            : 'border-gray-300',
+                                        'w-5 h-5 border rounded-full flex items-center justify-center transition-colors',
+                                    ]"
+                                >
+                                    <Check
+                                        v-if="planoSelecionadoId === plano.id"
+                                        :size="12"
+                                        class="text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 text-sm">
+                                        {{ plano.nome }}
+                                    </h3>
+                                    <p class="text-[11px] text-gray-500">
+                                        {{ plano.descricao }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span
+                                    class="block text-sm font-black text-emerald-600"
+                                >
+                                    {{
+                                        plano.preco > 0
+                                            ? formatarDinheiro(plano.preco)
+                                            : "Grátis"
+                                    }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
+                    <input type="hidden" v-model="form.plano" />
                     <InputError :message="form.errors.plano" />
                 </div>
 
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
-                        <TextInput
-                            v-model="form.name"
-                            type="text"
-                            placeholder="Nome completo"
-                            required
-                        />
-                        <InputError :message="form.errors.name" class="mt-1" />
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4">
-                        <TextInput
-                            v-model="form.email"
-                            type="email"
-                            placeholder="E-mail"
-                            required
-                        />
-                        <InputError :message="form.errors.email" />
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4">
-                        <TextInput
-                            v-model="phoneMasked"
-                            type="text"
-                            placeholder="WhatsApp"
-                            :maxlength="15"
-                            required
-                        />
-                        <InputError :message="form.errors.phone" />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <TextInput
-                            v-model="form.password"
-                            type="password"
-                            placeholder="Senha"
-                            required
-                        />
-                        <TextInput
-                            v-model="form.password_confirmation"
-                            type="password"
-                            placeholder="Confirmar"
-                            required
-                        />
-                    </div>
-                    <InputError :message="form.errors.password" />
-                </div>
-
-                <div class="pt-2">
+                <div class="flex flex-col gap-3">
                     <PrimaryButton
-                        class="w-full justify-center py-4"
+                        class="w-full justify-center py-4 shadow-lg shadow-emerald-100"
                         :disabled="form.processing"
                         type="submit"
                     >
-                        <span v-if="!form.processing"
-                            >Criar conta gratuita</span
-                        >
-                        <span v-else class="flex items-center gap-2">
-                            <svg
-                                class="animate-spin h-4 w-4"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle
-                                    class="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    stroke-width="4"
-                                    fill="none"
-                                ></circle>
-                                <path
-                                    class="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                            </svg>
-                            Criando conta...
-                        </span>
+                        {{
+                            form.processing
+                                ? "Processando..."
+                                : "Concluir cadastro"
+                        }}
                     </PrimaryButton>
+
+                    <SecondaryButton
+                        type="button"
+                        @click="step = 1"
+                        class="py-2"
+                    >
+                        Voltar para os meus dados
+                    </SecondaryButton>
                 </div>
             </form>
 
-            <footer class="mt-10 text-center">
+            <footer class="mt-10 text-center border-t border-slate-50 pt-3">
                 <p class="text-sm text-slate-500">
                     Já tem uma conta?
                     <Link
                         :href="route('login')"
                         class="text-emerald-600 font-semibold hover:text-emerald-700 ml-1"
+                        >Entrar</Link
                     >
-                        Entrar
-                    </Link>
                 </p>
             </footer>
         </div>

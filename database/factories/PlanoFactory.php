@@ -26,7 +26,6 @@ class PlanoFactory extends Factory
         return $this->afterMaking(function (Plano $plano) {
             $existing = Plano::where('plano', $plano->plano)->first();
             if ($existing) {
-                // Retorna o existente sem inserir
                 $plano->id = $existing->id;
                 $plano->exists = true;
             }

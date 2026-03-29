@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\Planos;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
+use App\Models\Plano;
 use App\Services\UserService;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,7 @@ class RegisteredUserController extends Controller
     public function create()
     {
         return Inertia::render('Auth/Register', [
-            "planos" => Planos::options(),
+            "planos" => Plano::all(),
         ]);
     }
 

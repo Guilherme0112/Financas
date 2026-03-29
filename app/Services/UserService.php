@@ -16,14 +16,14 @@ class UserService
     ) {
     }
 
-    public function registrarComAssinatura(array $dados, ?string $planoNome): array
+    public function registrarComAssinatura(array $dados, ?string $planoId): array
     {
-        return DB::transaction(function () use ($dados, $planoNome) {
+        return DB::transaction(function () use ($dados, $planoId) {
             $user = $this->userRepository->criarUsuario($dados);
 
             logger()->info("Usuário criado com sucesso", $user->toArray());
 
-            $plano = $this->planoService->obterPlanoPorNome($planoNome);
+            $plano = $this->planoService->obterPlanoPorId($planoId);
             logger()->info("Plano encontrado com sucesso", $plano->toArray());
 
             $assinatura = $this->assinaturaService->prepararAssinaturaInicial($user, $plano);

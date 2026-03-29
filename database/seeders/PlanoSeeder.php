@@ -13,18 +13,22 @@ class PlanoSeeder extends Seeder
      */
     public function run(): void
     {
-        Plano::create([
-            'nome' => 'Plano Básico',
-            "plano" => Planos::BASICO,
-            'descricao' => 'Acesso limitado a recursos básicos.',
-            'preco' => 20.00,
-        ]);
-        
-        Plano::create([
-            'nome' => 'Plano Gratuito',
-            "plano" => Planos::GRATUITO,
-            'descricao' => 'Teste grátis por 7 dias',
-            'preco' => 0.00,
-        ]);
+        Plano::updateOrCreate(
+            ['plano' => Planos::BASICO],
+            [
+                'nome' => 'Plano Básico',
+                'descricao' => 'Acesso limitado a recursos básicos.',
+                'preco' => 20.00,
+            ]
+        );
+
+        Plano::updateOrCreate(
+            ['plano' => Planos::GRATUITO],
+            [
+                'nome' => 'Plano Gratuito',
+                'descricao' => 'Teste grátis por 7 dias',
+                'preco' => 0.00,
+            ]
+        );
     }
 }

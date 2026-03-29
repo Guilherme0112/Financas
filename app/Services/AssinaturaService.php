@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Contracts\GatewayPagamentoInterface;
-use App\Enums\Planos;
 use App\Enums\StatusAssinatura;
 use App\Enums\StatusPagamento;
 use App\Enums\StatusSolicitacaoMudancaPlano;
@@ -36,14 +35,7 @@ class AssinaturaService
 
     public function prepararAssinaturaInicial(User $user, Plano $plano): Assinatura
     {
-        $isGratuito = $plano->plano === Planos::GRATUITO;
-        return $this->criar([
-            'plano_id' => $plano->id,
-            'data_inicio' => $isGratuito ? now() : null,
-            'data_fim' => $isGratuito ? now()->addDays(7) : null,
-            'data_proxima_cobranca' => $isGratuito ? now()->addDays(7) : null,
-            'status' => $isGratuito ? StatusAssinatura::ATIVA : StatusAssinatura::PENDENTE,
-        ], $user->id);
+        return $this->criar(Assinatura::configurarDatasIniciais($plano), $user->id);
     }
 
     public function prepararUpgrade(array $dados, Assinatura $assinatura, int $userId): string
@@ -139,10 +131,10 @@ class AssinaturaService
             ->firstOrFail();
     }
 
-    public function criar(array $dados, int $userId): Assinatura
+    public function criar(Assinatura $assinatura, int $userId): Assinatura
     {
-        $dados['user_id'] = $userId;
-        return Assinatura::query()->create($dados);
+        $assinatura->user_id = $userId;
+        return Assinatura::query()->create($assinatura->toArray());
     }
 
 
