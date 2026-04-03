@@ -10,8 +10,10 @@ use App\Enums\TipoCobranca;
 use App\Models\Assinatura;
 use App\Models\Fatura;
 use App\Models\Plano;
+use App\Models\SolicitacaoMudancaPlano;
 use App\Models\User;
 use DB;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AssinaturaService
 {
@@ -40,6 +42,8 @@ class AssinaturaService
 
     public function prepararUpgrade(array $dados, Assinatura $assinatura, int $userId): string
     {
+        if ($userId != $assinatura->user_id)
+            throw new ModelNotFoundException();
         $planoNovoId = $dados["plano_id"];
         $planoNovo = $this->planoService->obterPlanoPorId($planoNovoId);
         return $this->fazerUpgrade($assinatura, $planoNovo);
@@ -48,6 +52,13 @@ class AssinaturaService
 
     public function fazerUpgrade(Assinatura $assinatura, Plano $novoPlano): string
     {
+
+        $possuiPendencia = SolicitacaoMudancaPlano::where('assinatura_id', $assinatura->id)
+            ->where('status', StatusSolicitacaoMudancaPlano::PENDENTE)
+            ->exists();
+
+        if ($possuiPendencia) throw new \Exception("Já existe uma solicitação de mudança pendente.");
+    
         return DB::transaction(function () use ($assinatura, $novoPlano) {
             $fatura = $this->faturaService->criarFatura([
                 'user_id' => $assinatura->user_id,
@@ -82,6 +93,9 @@ class AssinaturaService
 
     public function confirmarUpgrade(Fatura $fatura)
     {
+        if ($fatura->status === StatusPagamento::APROVADO)
+            return;
+
         return DB::transaction(function () use ($fatura) {
             $fatura->update([
                 'status' => StatusPagamento::APROVADO,
@@ -113,13 +127,13 @@ class AssinaturaService
         });
     }
 
-    public function obterDiasAntesDoVencimento(int $diasParaVencer = 7)
+    public function obterDiasAntesDoVencimento(int $diasParaVencer = 7, StatusAssinatura $status = StatusAssinatura::ATIVA)
     {
         $dataAlvo = now()->addDays($diasParaVencer)->toDateString();
         $query = Assinatura::query()
             ->with(['plano', 'user'])
             ->whereDate('data_proxima_cobranca', $dataAlvo)
-            ->where('status', 'ATIVA');
+            ->where('status', $status);
         return $query->get();
     }
 

@@ -114,6 +114,11 @@ class FaturaService
                 $preferencia["payment_method_id"]
             );
 
+            if($fatura->status === StatusPagamento::APROVADO) {
+                logger()->warning("Fatura {$fatura->id} já está aprovada. Ignorando processamento.");
+                return;
+            }
+
             $fatura->update([
                 "pago_em" => now(),
                 "status" => StatusPagamento::APROVADO,
@@ -122,7 +127,6 @@ class FaturaService
 
             $assinatura = $fatura->assinatura;
             $novoPlanoId = $assinatura->plano_id;
-
             if ($fatura->tipo_cobranca === TipoCobranca::UPGRADE) {
                 $solicitacao = $fatura->solicitacoesMudancaPlanos()
                     ->where('status', StatusSolicitacaoMudancaPlano::PENDENTE)
@@ -131,7 +135,6 @@ class FaturaService
                 if ($solicitacao) {
                     $novoPlanoId = $solicitacao->plano_novo_id;
                     $solicitacao->update(['status' => StatusSolicitacaoMudancaPlano::CONCLUIDO]);
-
                     logger()->info("Upgrade detectado. Trocando plano {$solicitacao->plano_antigo_id} para {$novoPlanoId}");
                 }
             }

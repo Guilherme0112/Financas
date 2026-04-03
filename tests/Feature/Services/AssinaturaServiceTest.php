@@ -14,6 +14,7 @@ use App\Models\Plano;
 use App\Models\User;
 use App\Services\AssinaturaService;
 use App\Services\SolicitacaoMudancaPlanoService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -40,6 +41,18 @@ class AssinaturaServiceTest extends TestCase
         $this->assinatura = $this->user->assinatura;
     }
 
+    public function test_nao_deve_preparar_upgrade_se_assinatura_nao_pertencer_ao_usuario(): void
+    {
+        $outroUsuario = User::factory()->create();
+        $novoPlano = Plano::factory()->create();
+        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+
+        $this->assinaturaService->prepararUpgrade(
+            ['plano_id' => $novoPlano->id],
+            $outroUsuario->assinatura,
+            $this->user->id
+        );
+    }
 
     public function test_deve_preparar_upgrade_de_plano(): void
     {
@@ -67,6 +80,24 @@ class AssinaturaServiceTest extends TestCase
         ]);
     }
 
+    public function test_excluir_deve_falhar_se_assinatura_nao_existir(): void
+    {
+        $idInexistente = 9999;
+        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        $this->assinaturaService->excluir($idInexistente, $this->user->id);
+    }
+
+    public function test_nao_deve_criar_nova_solicitacao_se_ja_houver_uma_pendente(): void
+    {
+        $planoA = Plano::factory()->create();
+        $planoB = Plano::factory()->create();
+
+        $this->assinaturaService->fazerUpgrade($this->assinatura, $planoA);
+
+        $this->expectException(\Exception::class);
+        $this->assinaturaService->fazerUpgrade($this->assinatura, $planoB);
+    }
+
     public function test_deve_confirmar_upgrade_e_atualizar_plano_da_assinatura(): void
     {
         $novoPlano = Plano::factory()->create(['plano' => Planos::BASICO, 'preco' => 20.00]);
@@ -85,7 +116,6 @@ class AssinaturaServiceTest extends TestCase
             'status' => StatusSolicitacaoMudancaPlano::PENDENTE,
         ], $this->user->id);
 
-
         $this->assinaturaService->confirmarUpgrade($fatura);
         $this->assinatura->refresh();
         $this->assertEquals($novoPlano->id, $this->assinatura->plano_id);
@@ -100,13 +130,41 @@ class AssinaturaServiceTest extends TestCase
 
     public function test_deve_preparar_assinatura_inicial_gratuita_com_datas_corretas(): void
     {
+        $hoje = Carbon::create(2026, 04, 01, 10, 00, 00);
+        Carbon::setTestNow($hoje);
         $planoGratuito = Plano::factory()->create(['plano' => Planos::GRATUITO]);
-
         $assinatura = $this->assinaturaService->prepararAssinaturaInicial($this->user, $planoGratuito);
-
         $this->assertEquals(StatusAssinatura::ATIVA, $assinatura->status);
         $this->assertEquals($planoGratuito->id, $assinatura->plano_id);
-        $this->assertEquals(now()->addDays(7)->toDateString(), $assinatura->data_fim->toDateString());
+        $this->assertEquals('2026-04-08', $assinatura->data_fim->toDateString());
+        Carbon::setTestNow();
     }
 
+    public function test_nao_deve_confirmar_upgrade_se_fatura_ja_estiver_paga(): void
+    {
+        $fatura = Fatura::factory()->create([
+            'user_id' => $this->user->id,
+            'assinatura_id' => $this->assinatura->id,
+            'tipo_cobranca' => TipoCobranca::UPGRADE,
+            'status' => StatusPagamento::APROVADO,
+            'pago_em' => now()->subDay()
+        ]);
+        $dataPagamentoOriginal = $fatura->pago_em->toDateTimeString();
+        $this->assinaturaService->confirmarUpgrade($fatura);
+        $this->assertEquals($dataPagamentoOriginal, $fatura->refresh()->pago_em->toDateTimeString());
+    }
+
+    public function test_nao_deve_atualizar_assinatura_se_solicitacao_nao_for_encontrada(): void
+    {
+        $fatura = Fatura::factory()->create([
+            'user_id' => $this->user->id,
+            'assinatura_id' => $this->assinatura->id,
+            'tipo_cobranca' => TipoCobranca::UPGRADE,
+            'status' => StatusPagamento::PENDENTE
+        ]);
+        $planoAntigoId = $this->assinatura->plano_id;
+        $this->assinaturaService->confirmarUpgrade($fatura);
+        $this->assinatura->refresh();
+        $this->assertEquals($planoAntigoId, $this->assinatura->plano_id);
+    }
 }

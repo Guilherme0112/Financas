@@ -28,7 +28,7 @@ class StoreUserRequest extends FormRequest
             'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'password' => ['required', 'confirmed', Password::defaults()],
             'phone' => 'nullable|string|max:20',
-            'plano' => 'required|string',
+            'plano' => 'required|exists:planos,id',
         ];
     }
 }

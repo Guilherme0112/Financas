@@ -31,7 +31,7 @@ class RegistrationTest extends TestCase
             'phone' => '11111111111',
             'password' => 'password',
             'password_confirmation' => 'password',
-            'plano' => $plano->plano->value 
+            'plano' => $plano->id
         ]);
 
         $this->assertAuthenticated();

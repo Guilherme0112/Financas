@@ -32,7 +32,7 @@ class RegisteredUserController extends Controller
         $dados = $request->validated();
         logger()->info("Requisição para criar usuário recebida e validada", $dados);
 
-        $result = $userService->registrarComAssinatura($dados, $request->plano);
+        $result = $userService->registrarComAssinatura($dados, $dados['plano']);
 
         if (isset($result['external']) && $result['external']) {
             return Inertia::location($result['redirect']);

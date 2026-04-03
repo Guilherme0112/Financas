@@ -27,6 +27,13 @@ class FaturaServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->mock(GatewayPagamentoInterface::class, function ($mock) {
+            $mock->shouldReceive('criarPagamento')
+                ->andReturn([
+                    'id' => 'pref_test_123',
+                    'sandbox_init_point' => 'https://sandbox.mercadopago.com/test'
+                ]);
+        });
         $this->gatewayMock = Mockery::mock(GatewayPagamentoInterface::class);
         $this->faturaService = new FaturaService($this->gatewayMock);
     }
@@ -36,7 +43,7 @@ class FaturaServiceTest extends TestCase
         $user = User::factory()->create();
         
         $dadosFatura = [
-            'valor' => 49.90,
+            'valor' => 20.00,
             'status' => StatusPagamento::PENDENTE,
             'tipo_cobranca' => TipoCobranca::CICLO_NORMAL,
             'vencimento_em' => now()->addDays(3),
@@ -45,13 +52,13 @@ class FaturaServiceTest extends TestCase
         $fatura = $this->faturaService->criarFatura($dadosFatura, $user->id);
 
         $this->assertInstanceOf(Fatura::class, $fatura);
-        $this->assertEquals('49.90', $fatura->valor);
+        $this->assertEquals('20.00', $fatura->valor);
         $this->assertEquals(StatusPagamento::PENDENTE, $fatura->status);
         
         $this->assertDatabaseHas('faturas', [
             'user_id' => $user->id,
-            'valor' => 49.90,
-            'status' => StatusPagamento::PENDENTE->value // No banco checamos o value do Enum
+            'valor' => 20.00,
+            'status' => StatusPagamento::PENDENTE->value
         ]);
     }
     public function deve_gerar_link_de_pagamento_e_atualizar_referencia_externa()
@@ -60,18 +67,9 @@ class FaturaServiceTest extends TestCase
         $plano = Plano::factory()->create(['plano' => Planos::BASICO, 'preco' => 20.00]);
         $assinatura = Assinatura::factory()->create(['user_id' => $user->id]);
 
-        $this->gatewayMock->shouldReceive('criarPagamento')
-            ->once()
-            ->andReturn([
-                'sandbox_init_point' => 'https://link-sandbox.com',
-                'id' => 'REF-12345'
-            ]);
-
         $resultado = $this->faturaService->processarFluxoFinanceiro($user, $assinatura, $plano);
-
         $this->assertEquals('https://link-sandbox.com', $resultado['redirect']);
         
-        // Verifica se os campos fillable foram atualizados via service
         $this->assertDatabaseHas('faturas', [
             'user_id' => $user->id,
             'url_pagamento' => 'https://link-sandbox.com',
@@ -80,9 +78,27 @@ class FaturaServiceTest extends TestCase
         ]);
     }
 
+    public function test_nao_deve_estender_assinatura_duas_vezes_se_receber_pagamento_duplicado(): void
+    {
+        $assinatura = Assinatura::factory()->create([
+            'status' => StatusAssinatura::ATIVA,
+            'data_proxima_cobranca' => now()->addDays(7)
+        ]);
+        $fatura = Fatura::factory()->create([
+            'assinatura_id' => $assinatura->id,
+            'status' => StatusPagamento::PENDENTE
+        ]);
+        $dados = ['status' => 'approved', 'payment_method_id' => 'visa', "payment_type_id" => ""];
+
+        $this->faturaService->processarPagamentoAprovado($fatura, $dados);
+        $dataPrimeiraExtensao = $assinatura->refresh()->data_proxima_cobranca;
+
+        $this->faturaService->processarPagamentoAprovado($fatura, $dados);
+        $this->assertEquals($dataPrimeiraExtensao->toDateTimeString(), $assinatura->refresh()->data_proxima_cobranca->toDateTimeString());
+    }
+
     public function deve_processar_pagamento_aprovado_com_conversao_de_metodo_do_mercado_pago()
     {
-        // Setup: Usuário inativo com assinatura pendente
         $user = User::factory()->create(['is_active' => false]);
         $assinatura = Assinatura::factory()->create([
             'user_id' => $user->id,
@@ -96,9 +112,8 @@ class FaturaServiceTest extends TestCase
             'tipo_cobranca' => TipoCobranca::CICLO_NORMAL
         ]);
 
-        // Mock dos dados que o Mercado Pago enviaria
         $dadosGateway = [
-            'payment_type_id' => 'credit_card', // Isso será mapeado pelo seu MetodoPagamento::deMercadoPago
+            'payment_type_id' => 'credit_card',
             'payment_method_id' => 'master',
             'status' => 'approved',
             'external_reference' => $fatura->id
@@ -106,7 +121,6 @@ class FaturaServiceTest extends TestCase
 
         $this->faturaService->processarPagamentoAprovado($fatura, $dadosGateway);
 
-        // Refresh nos modelos para pegar as alterações da Transaction
         $fatura->refresh();
         $user->refresh();
         $assinatura->refresh();
@@ -116,19 +130,16 @@ class FaturaServiceTest extends TestCase
         $this->assertTrue($user->is_active);
         $this->assertEquals(StatusAssinatura::ATIVA, $assinatura->status);
         
-        // Verifica se a data de próxima cobrança foi estendida (addMonth)
         $this->assertTrue($assinatura->data_proxima_cobranca->isFuture());
     }
 
     public function deve_retornar_label_correta_do_metodo_de_pagamento()
     {
-        // Este teste valida o accessor getMetodoPagamentoLabelAttribute da sua Model
         $faturaPendente = new Fatura(['metodo_pagamento' => null]);
         $this->assertEquals('Aguardando Pagamento', $faturaPendente->metodo_pagamento_label);
 
-        // Simulando uma fatura com Cartão via Enum
         $faturaPaga = new Fatura(['metodo_pagamento' => MetodoPagamento::CARTAO_CREDITO]);
-        // Aqui assume-se que seu Enum MetodoPagamento tem o método label()
+
         $this->assertNotEmpty($faturaPaga->metodo_pagamento_label);
     }
 }
