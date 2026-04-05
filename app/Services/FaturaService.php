@@ -18,6 +18,8 @@ use Carbon\Carbon;
 class FaturaService
 {
 
+    const URL_INIT_POINT = "sandbox_init_point";
+
     public function __construct(
         private GatewayPagamentoInterface $gatewayPagamento
     ) {
@@ -178,14 +180,14 @@ class FaturaService
         logger()->info("Link de pagamento gerado com sucesso");
 
         $fatura->update([
-            'url_pagamento' => $linkPagamento["sandbox_init_point"],
+            'url_pagamento' => $linkPagamento[self::URL_INIT_POINT],
             'referencia_externa' => $linkPagamento["id"],
         ]);
         logger()->info("Fatura atualizada com link de pagamento e referencia externa");
 
         return [
             'user' => $user,
-            'redirect' => $linkPagamento["sandbox_init_point"],
+            'redirect' => $linkPagamento[self::URL_INIT_POINT],
             'external' => true
         ];
     }

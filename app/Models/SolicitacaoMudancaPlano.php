@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SolicitacaoMudancaPlano extends Model
 {
+    use HasFactory;
+
     protected $table = 'solicitacoes_mudanca_plano';
 
     protected $fillable = [

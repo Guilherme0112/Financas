@@ -5,7 +5,6 @@ import HeaderSecao from "@/Pages/Dashboard/Components/HeaderSecao.vue";
 import Table from "@/Components/Table.vue";
 import { ArrowRight, File } from "lucide-vue-next";
 import { formatarDinheiro } from "@/utils/helpers";
-import { useForm } from "@inertiajs/vue3";
 import { ref } from "vue";
 import UpgradePlano from "../Components/UpgradePlano.vue";
 
@@ -37,32 +36,16 @@ const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR");
 };
 
-// Estado para controlar a visibilidade do modal
 const confirmingUpgrade = ref(false);
-
-// Configuração do formulário de upgrade
-const form = useForm({
-    plano_id: 2,
-});
 
 const openModal = () => {
     confirmingUpgrade.value = true;
 };
 
-const closeModal = () => {
-    confirmingUpgrade.value = false;
-};
-
-const submitUpgrade = () => {
-    form.post(route("assinatura.upgrade"), {
-        preserveScroll: true,
-        onSuccess: () => closeModal(),
-    });
-};
-
 const tableHeaders: TableHeader[] = [
-    { label: "Data", key: "vencimento_em", format: formatDate },
+    { label: "Vencimento", key: "vencimento_em", format: formatDate },
     { label: "Valor", key: "valor", format: formatarDinheiro },
+    { label: "Tipo", key: "tipo_cobranca_label", align: "center" },
     { label: "Status", key: "status", align: "center" },
 ];
 </script>
@@ -147,7 +130,7 @@ const tableHeaders: TableHeader[] = [
             </div>
 
             <div
-                class="lg:col-span-2 border border-gray-100 rounded-2xl overflow-hidden bg-gray-50/50"
+                class="lg:col-span-2 overflow-hidden"
             >
                 <Table
                     v-if="props.faturas?.data?.length > 0"

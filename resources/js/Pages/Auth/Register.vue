@@ -243,7 +243,7 @@ const submit = () => {
                 </div>
             </form>
 
-            <footer class="mt-10 text-center border-t border-slate-50 pt-3">
+            <footer class="mt-5 text-center border-t border-slate-50">
                 <p class="text-sm text-slate-500">
                     Já tem uma conta?
                     <Link

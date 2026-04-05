@@ -7,6 +7,7 @@ use App\Enums\StatusAssinatura;
 use App\Enums\StatusPagamento;
 use App\Enums\TipoCobranca;
 use App\Models\Fatura;
+use App\Models\ProcessamentoFaturaErro;
 use App\Services\AssinaturaService;
 use App\Services\FaturaService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,7 +25,7 @@ class ProcessarFaturasDoMesJob implements ShouldQueue
         $assinaturasPertoDoVencimento = $assinaturaService->obterDiasAntesDoVencimento(7, StatusAssinatura::ATIVA);
 
         if ($assinaturasPertoDoVencimento->isEmpty()) {
-            logger()->info("Nenhuma assinatura para processar hoje.");
+            logger()->info('Nenhuma assinatura para processar hoje.');
             return;
         }
 
@@ -47,31 +48,40 @@ class ProcessarFaturasDoMesJob implements ShouldQueue
                         'assinatura_id' => $assinatura->id,
                         'valor' => $assinatura->plano->preco,
                         'status' => StatusPagamento::PENDENTE,
-                        'vencimento_em' => $assinatura->data_proxima_cobranca,
+                        'vencimento_em' => null,
                         'periodo_inicio' => $assinatura->data_proxima_cobranca,
-                        'periodo_fim' => $assinatura->data_proxima_cobranca->copy()->addMonthNoOverflow(), // Ajuste aqui
+                        'periodo_fim' => $assinatura->data_proxima_cobranca->copy()->addMonthNoOverflow(),
                         'url_pagamento' => null,
                         'referencia_externa' => null,
                         'metodo_pagamento' => null,
-                        'tipo_cobranca' => TipoCobranca::CICLO_NORMAL
+                        'tipo_cobranca' => TipoCobranca::CICLO_NORMAL,
                     ], $assinatura->user_id);
 
                     $linkPagamento = $gatewayPagamentoInterface->criarPagamento($fatura);
 
                     $fatura->update([
-                        'url_pagamento' => $linkPagamento["sandbox_init_point"],
-                        'referencia_externa' => $linkPagamento["id"],
+                        'url_pagamento' => $linkPagamento['sandbox_init_point'],
+                        'referencia_externa' => $linkPagamento['id'],
                     ]);
 
                     $assinatura->update([
-                        'data_proxima_cobranca' => $assinatura->data_proxima_cobranca->addMonthNoOverflow()
+                        'data_proxima_cobranca' => $assinatura->data_proxima_cobranca->addMonthNoOverflow(),
                     ]);
                 });
             } catch (\Throwable $th) {
-                logger()->error("Erro ao processar assinatura {$assinatura->id}: " . $th->getMessage());
+                ProcessamentoFaturaErro::create([
+                    'assinatura_id' => $assinatura->id,
+                    'etapa' => 'processamento_automatico_job',
+                    'mensagem_erro' => $th->getMessage(),
+                    'stack_trace' => $th->getTraceAsString(),
+                    'payload' => [
+                        'valor' => $assinatura->plano->preco,
+                        'data_vencimento' => $assinatura->data_proxima_cobranca,
+                    ],
+                ]);
+                logger()->error("Erro registrado para a assinatura {$assinatura->id}");
             }
         }
-
-        logger()->info("Processamento finalizado com sucesso!");
+        logger()->info('Processamento finalizado com sucesso!');
     }
 }

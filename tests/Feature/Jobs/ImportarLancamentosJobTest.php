@@ -2,23 +2,28 @@
 
 namespace Tests\Feature\Jobs;
 
-use Tests\TestCase;
-use App\Jobs\ImportarLancamentosJob;
-use App\Services\XlsxService;
-use App\Services\CsvService;
 use App\Events\ImportacaoFinalizada;
+use App\Jobs\ImportarLancamentosJob;
+use App\Models\User;
+use App\Services\CsvService;
+use App\Services\XlsxService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Event; // Importe o Event
 use Mockery;
+use Tests\TestCase;
 
 class ImportarLancamentosJobTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_deve_chamar_xlsx_service_e_deletar_arquivo()
     {
         Storage::fake('private');
-        Event::fake(); // Use Event em vez de Broadcast
+        Event::fake();
 
-        $userId = 1;
+        $user = User::factory()->create();
+        $userId = $user->id;
         $path = 'imports/teste.xlsx';
         Storage::disk('private')->put($path, 'conteudo_fake');
 

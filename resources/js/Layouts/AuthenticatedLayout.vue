@@ -13,6 +13,7 @@ import {
     ChevronRight,
     LogOut,
 } from "lucide-vue-next";
+import UpgradePlano from "@/Pages/Profile/Components/UpgradePlano.vue";
 
 const open = ref(false);
 const isCollapsed = ref(true);
@@ -44,6 +45,10 @@ const links = [
         icon: File,
     },
 ];
+
+const confirmingUpgrade = ref(false);
+const planos = usePage().props.planos;
+
 </script>
 
 <template>
@@ -202,9 +207,9 @@ const links = [
                             </div>
                         </div>
                         <a
-                            :href="route('welcome') + '#planos'"
+                            v-on:click="confirmingUpgrade = true"
                             target="_blank"
-                            class="text-xs font-bold uppercase bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors shadow-sm"
+                            class="cursor-pointer text-xs font-bold uppercase bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors shadow-sm"
                         >
                             Assinar Agora
                         </a>
@@ -215,6 +220,13 @@ const links = [
             </main>
         </div>
     </div>
+
+
+    <UpgradePlano
+        :show="confirmingUpgrade"
+        :planos="planos"
+        @close="confirmingUpgrade = false"
+    />
 </template>
 
 <style scoped>

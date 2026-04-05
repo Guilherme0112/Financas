@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AssinaturaService
 {
-
     public function __construct(
         private GatewayPagamentoInterface $gatewayPagamento,
         private FaturaService $faturaService,
@@ -55,9 +54,12 @@ class AssinaturaService
 
         $possuiPendencia = SolicitacaoMudancaPlano::where('assinatura_id', $assinatura->id)
             ->where('status', StatusSolicitacaoMudancaPlano::PENDENTE)
-            ->exists();
+            ->first();
 
-        if ($possuiPendencia) throw new \Exception("Já existe uma solicitação de mudança pendente.");
+        if ($possuiPendencia) { 
+            $fatura = $this->faturaService->obterFaturaPorId($possuiPendencia->fatura_id);
+            return $fatura->url_pagamento;
+        }
     
         return DB::transaction(function () use ($assinatura, $novoPlano) {
             $fatura = $this->faturaService->criarFatura([

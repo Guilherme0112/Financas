@@ -16,7 +16,7 @@ import {
 } from "lucide-vue-next";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import { formatarDinheiro } from "@/utils/helpers";
+import { formatarData, formatarDinheiro } from "@/utils/helpers";
 import { toast } from "vue3-toastify";
 import { router } from "@inertiajs/vue3";
 
@@ -28,14 +28,6 @@ const props = defineProps<{
 const emit = defineEmits(["close"]);
 const loadingMarkAsPaid = ref(false);
 
-const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-    });
-};
 
 const isEntrada = computed(() => {
     if (!props.lancamento) return false;
@@ -150,7 +142,7 @@ const confirmarMarcarComoPaga = () => {
                                 </div>
                                 <div v-if="props.lancamento.data_quitacao" class="flex items-center gap-2 text-[11px] text-gray-500">
                                     <CalendarCheck class="w-3.5 h-3.5" />
-                                    Pago em: {{ formatDate(props.lancamento.data_quitacao) }}
+                                    Pago em: {{ formatarData(props.lancamento.data_quitacao) }}
                                 </div>
                             </div>
                             <div v-else class="flex items-center gap-1.5 text-amber-500 text-sm font-bold">
@@ -163,7 +155,7 @@ const confirmarMarcarComoPaga = () => {
                                 <label class="text-[11px] font-bold text-gray-400 uppercase mb-1 block tracking-tighter">Mês de Referência</label>
                                 <div class="flex items-center gap-2 text-sm font-bold text-gray-700 font-mono">
                                     <Calendar class="w-4 h-4 text-indigo-500" />
-                                    {{ formatDate(props.lancamento.mes_referencia) }}
+                                    {{ formatarData(props.lancamento.mes_referencia) }}
                                 </div>
                             </div>
 

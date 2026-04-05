@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Plano;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -54,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'trial_info' => $trialInfo,
+            'planos' => Plano::all(),
         ];
     }
 }

@@ -13,7 +13,7 @@ class Fatura extends Model
 
     use HasFactory;
 
-    protected $appends = ["metodo_pagamento_label"];
+    protected $appends = ["metodo_pagamento_label", "status_label", "tipo_cobranca_label"];
 
     protected $fillable = [
         'user_id',
@@ -43,6 +43,16 @@ class Fatura extends Model
     public function getMetodoPagamentoLabelAttribute()
     {
         return $this->metodo_pagamento?->label() ?? 'Aguardando Pagamento';
+    }
+
+    public function getStatusLabelAttribute()
+    {
+        return $this->status?->label() ?? 'Pendente';
+    }
+
+    public function getTipoCobrancaLabelAttribute()
+    {
+        return $this->tipo_cobranca?->label() ?? 'N/A';
     }
 
     public function user()

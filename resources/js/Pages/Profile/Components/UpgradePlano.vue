@@ -9,7 +9,7 @@ import { formatarDinheiro } from "@/utils/helpers";
 
 const props = defineProps<{
     show: boolean;
-    planos: Array<{ id: number; plano: string; nome: string; preco: number; descricao: string }>;
+    planos: any;
 }>();
 
 const emit = defineEmits(["close"]);
@@ -32,7 +32,6 @@ const closeModal = () => {
 
 const confirmarEPagar = () => {
     if (!planoSelecionado.value) return;
-
     form.plano_id = planoSelecionado.value;
     form.post(route('assinatura.upgrade'), {
         preserveScroll: true,

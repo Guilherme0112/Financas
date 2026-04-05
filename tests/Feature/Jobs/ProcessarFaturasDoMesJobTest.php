@@ -12,8 +12,8 @@ use App\Models\User;
 use App\Services\AssinaturaService;
 use App\Services\FaturaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Mockery\MockInterface;
+use Tests\TestCase;
 
 class ProcessarFaturasDoMesJobTest extends TestCase
 {
@@ -42,10 +42,10 @@ class ProcessarFaturasDoMesJobTest extends TestCase
             ->once()
             ->andReturn([
                 'sandbox_init_point' => 'https://payment.link/test',
-                'id' => 'REF_EXT_123'
+                'id' => 'REF_EXT_123',
             ]);
 
-        $job = new ProcessarFaturasDoMesJob();
+        $job = new ProcessarFaturasDoMesJob;
         $job->handle(
             app(AssinaturaService::class),
             $this->mockGateway,
@@ -54,7 +54,7 @@ class ProcessarFaturasDoMesJobTest extends TestCase
 
         $this->assertDatabaseHas('faturas', [
             'user_id' => $user->id,
-            'referencia_externa' => 'REF_EXT_123'
+            'referencia_externa' => 'REF_EXT_123',
         ]);
 
         $this->assertEquals(
@@ -63,7 +63,6 @@ class ProcessarFaturasDoMesJobTest extends TestCase
         );
     }
 
-
     public function test_deve_continuar_processando_outras_faturas_se_uma_falhar()
     {
         $assinaturas = Assinatura::factory()->count(2)->create([
@@ -71,16 +70,24 @@ class ProcessarFaturasDoMesJobTest extends TestCase
         ]);
 
         $this->mockGateway->shouldReceive('criarPagamento')
-            ->twice()
-            ->andReturn(
-                fn() => throw new \Exception("Erro na primeira"),
-                ['id' => 'SUCESSO_2', 'sandbox_init_point' => 'link']
-            );
+            ->once()
+            ->ordered()
+            ->andThrow(new \Exception('Erro na primeira'));
 
-        $job = new ProcessarFaturasDoMesJob();
-        $job->handle(app(AssinaturaService::class), $this->mockGateway, app(FaturaService::class));
+        $this->mockGateway->shouldReceive('criarPagamento')
+            ->once()
+            ->ordered()
+            ->andReturn(['id' => 'SUCESSO_2', 'sandbox_init_point' => 'link']);
+
+        $job = new ProcessarFaturasDoMesJob;
+        $job->handle(
+            app(AssinaturaService::class),
+            $this->mockGateway,
+            app(FaturaService::class)
+        );
 
         $this->assertDatabaseCount('faturas', 1);
+        $this->assertDatabaseCount('processamento_faturas_erros', 1);
     }
 
     public function test_fatura_deve_ter_o_valor_exato_do_plano_no_momento_da_geracao()
@@ -93,12 +100,12 @@ class ProcessarFaturasDoMesJobTest extends TestCase
 
         $this->mockGateway->shouldReceive('criarPagamento')->andReturn(['id' => '1', 'sandbox_init_point' => 'link']);
 
-        $job = new ProcessarFaturasDoMesJob();
+        $job = new ProcessarFaturasDoMesJob;
         $job->handle(app(AssinaturaService::class), $this->mockGateway, app(FaturaService::class));
 
         $this->assertDatabaseHas('faturas', [
             'assinatura_id' => $assinatura->id,
-            'valor' => 20.00
+            'valor' => 20.00,
         ]);
     }
 
@@ -111,7 +118,7 @@ class ProcessarFaturasDoMesJobTest extends TestCase
 
         $this->mockGateway->shouldNotReceive('criarPagamento');
 
-        $job = new ProcessarFaturasDoMesJob();
+        $job = new ProcessarFaturasDoMesJob;
         $job->handle(app(AssinaturaService::class), $this->mockGateway, app(FaturaService::class));
 
         $this->assertDatabaseCount('faturas', 0);
@@ -129,10 +136,10 @@ class ProcessarFaturasDoMesJobTest extends TestCase
         ]);
 
         $this->mockGateway->shouldReceive('criarPagamento')
-            ->andThrow(new \Exception("Erro na API"));
+            ->andThrow(new \Exception('Erro na API'));
 
         try {
-            $job = new ProcessarFaturasDoMesJob();
+            $job = new ProcessarFaturasDoMesJob;
             $job->handle(app(AssinaturaService::class), $this->mockGateway, app(FaturaService::class));
         } catch (\Exception $e) {
             // Silencia a exception para continuar o assert
@@ -148,16 +155,17 @@ class ProcessarFaturasDoMesJobTest extends TestCase
     public function test_nao_deve_processar_se_nao_houver_assinaturas_vencendo()
     {
         Assinatura::factory()->create([
-            'data_proxima_cobranca' => now()->addDays(15)->startOfDay()
+            'data_proxima_cobranca' => now()->addDays(15)->startOfDay(),
         ]);
 
         $this->mockGateway->shouldNotReceive('criarPagamento');
 
-        $job = new ProcessarFaturasDoMesJob();
+        $job = new ProcessarFaturasDoMesJob;
         $job->handle(app(AssinaturaService::class), $this->mockGateway, app(FaturaService::class));
 
         $this->assertDatabaseCount('faturas', 0);
     }
+
     public function test_nao_deve_gerar_fatura_duplicada_se_ja_existir_uma_para_o_periodo()
     {
         $user = User::factory()->create();
@@ -175,11 +183,12 @@ class ProcessarFaturasDoMesJobTest extends TestCase
 
         $this->mockGateway->shouldNotReceive('criarPagamento');
 
-        $job = new ProcessarFaturasDoMesJob();
+        $job = new ProcessarFaturasDoMesJob;
         $job->handle(app(AssinaturaService::class), $this->mockGateway, app(FaturaService::class));
 
         $this->assertDatabaseCount('faturas', 1);
     }
+
     public function test_deve_atualizar_data_proxima_cobranca_corretamente_no_fim_do_mes()
     {
         $this->travelTo(now()->setYear(2024)->setMonth(1)->setDay(24));
@@ -190,7 +199,7 @@ class ProcessarFaturasDoMesJobTest extends TestCase
 
         $this->mockGateway->shouldReceive('criarPagamento')->andReturn(['id' => '1', 'sandbox_init_point' => 'link']);
 
-        $job = new ProcessarFaturasDoMesJob();
+        $job = new ProcessarFaturasDoMesJob;
         $job->handle(app(AssinaturaService::class), $this->mockGateway, app(FaturaService::class));
 
         $this->assertEquals('2024-02-29', $assinatura->fresh()->data_proxima_cobranca->toDateString());

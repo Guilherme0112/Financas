@@ -1,8 +1,8 @@
 <?php
-
 namespace App\Jobs;
 
 use App\Events\ImportacaoFinalizada;
+use App\Models\LancamentosImportados;
 use App\Services\CsvService;
 use App\Services\XlsxService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,49 +13,87 @@ class ImportarLancamentosJob implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new job instance.
-     */
+    public $tries = 3;
+    public $timeout = 600;
+
     public function __construct(
         private string $path, 
-        private string $tipo = 'xlsx',
-        private string $userId)
-    {
-        //
-    }
+        private string $tipo,
+        private int $userId,
+        private ?int $importacaoId = null
+    ) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(XlsxService $xlsxService, CsvService $csvService): void
     {
+        $disk = Storage::disk('private');
+
+        if (!$disk->exists($this->path)) {
+            $this->falha("Arquivo de importação não encontrado.");
+            return;
+        }
+
+        // Recupera ou cria o registro
+        $importacao = LancamentosImportados::updateOrCreate(
+            ['id' => $this->importacaoId],
+            [
+                'user_id' => $this->userId,
+                'status' => 'processando',
+                'tipo' => $this->tipo,
+                'path' => $this->path,
+                'quando_importou' => now()
+            ]
+        );
+
         try {
-            if (!Storage::disk('private')->exists($this->path)) {
-                logger()->error('Arquivo não encontrado no disk private', [
-                    'path' => $this->path,
-                ]);
-                return;
+            $fullPath = $disk->path($this->path);
+            logger()->info("Iniciando importação #{$importacao->id} - Tipo: {$this->tipo}");
+
+            $totalLinhas = 0;
+
+            if ($this->tipo === 'csv') {
+                $file = new \SplFileObject($fullPath, 'r');
+                $file->seek(PHP_INT_MAX);
+                $totalLinhas = $file->key();
+                
+                $totalLinhas = $totalLinhas > 0 ? $totalLinhas : 0;
+            } 
+            
+            if ($totalLinhas > 0) {
+                $importacao->update(['total_linhas' => $totalLinhas]);
             }
 
-            logger()->info("Inciando processo de importação com o tipo ".$this->tipo);
-            if ($this->tipo === 'xlsx') {
-                $fullPath = Storage::disk('private')->path($this->path);
-                $xlsxService->buscarXlsx($fullPath, $this->userId);
-            } 
-            if ($this->tipo === 'csv') {
-                $fullPath = Storage::disk('private')->path($this->path);
-                $csvService->importar($fullPath, $this->userId);
-            }
+            match ($this->tipo) {
+                'xlsx', 'xls' => $xlsxService->buscarXlsx($fullPath, $this->userId), 
+                'csv'         => $csvService->importar($fullPath, $this->userId),
+                default       => throw new \Exception("Formato de arquivo '{$this->tipo}' não suportado.")
+            };
+
+            $importacao->update(['status' => 'concluido']);
             broadcast(new ImportacaoFinalizada($this->userId));
+
         } catch (\Throwable $e) {
-            logger()->error('Erro na importação: ' . $e->getMessage(), [
+            $mensagemErro = "Erro na importação: " . $e->getMessage();
+            
+            logger()->error($mensagemErro, [
                 'user_id' => $this->userId,
-                'tipo' => $this->tipo,
-                'path' => $this->path
+                'path'    => $this->path
             ]);
-            broadcast(new ImportacaoFinalizada($this->userId, "Ocorreu um erro durante a importação: " . $e->getMessage()));
+
+            $importacao->update([
+                'status' => 'falha',
+                'erro_mensagem' => $e->getMessage()
+            ]);
+
+            broadcast(new ImportacaoFinalizada($this->userId, $mensagemErro));
+            throw $e; 
         } finally {
-            Storage::disk('private')->delete($this->path);
+            $disk->delete($this->path);
         }
+    }
+
+    private function falha(string $mensagem): void
+    {
+        logger()->error($mensagem);
+        broadcast(new ImportacaoFinalizada($this->userId, $mensagem));
     }
 }

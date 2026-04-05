@@ -31,8 +31,8 @@ const submit = () => {
   <GuestLayout>
     <Head title="Entrar - Organizei" />
 
-    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-4">
-      <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <div class="flex justify-center bg-gradient-to-br from-green-50 to-green-100 px-4">
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 mt-20">
 
         <!-- LOGO / TÍTULO -->
         <div class="text-center mb-8">

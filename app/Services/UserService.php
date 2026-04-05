@@ -33,7 +33,6 @@ class UserService
             logger()->info("Assinatura vinculada ao usuário com sucesso");
 
             Auth::login($user);
-
             return $this->faturaService->processarFluxoFinanceiro($user, $assinatura, $plano);
         });
     }

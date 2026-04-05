@@ -8,9 +8,10 @@ import Table from "@/Components/Table.vue"; // Ajuste o caminho conforme seu pro
 import { formatarDinheiro } from "@/utils/helpers";
 import Paginacao from "@/Components/Paginacao.vue";
 import { Page } from "@/types/Page";
+import HelpMessage from "@/Components/HelpMessage.vue";
 
 const props = defineProps<{
-    faturas: Page<any>
+    faturas: Page<any>;
 }>();
 
 const formatDate = (dateString: string) => {
@@ -22,6 +23,7 @@ const formatDate = (dateString: string) => {
 const headers = [
     { label: "Vencimento", key: "vencimento_em", format: formatDate },
     { label: "Valor", key: "valor", format: formatarDinheiro },
+    { label: "Tipo", key: "tipo_cobranca_label" },
     { label: "Método", key: "metodo_pagamento_label" },
     { label: "Status", key: "status", align: "center" as const },
 ];
@@ -46,16 +48,20 @@ const getActions = (invoice: any) => {
 <template>
     <Head title="Faturas" />
     <AuthenticatedLayout>
-        <div class="py-4 space-y-5">
-            <div
-                class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100"
-            >
-                <HeaderSecao
-                    :icon="File"
-                    title="Minhas Faturas"
-                    description="Visualize e baixe o histórico completo das suas faturas"
-                    icon-color="text-emerald-800"
-                />
+        <div class="py-6 space-y-4">
+            <div class="p-6 bg-white rounded-2xl font-sans shadow-lg">
+                <div class="flex">
+                    <HeaderSecao
+                        :icon="File"
+                        title="Minhas Faturas"
+                        description="Visualize e baixe o histórico completo das suas faturas"
+                        icon-color="text-emerald-800"
+                    />
+                    <HelpMessage
+                        message="As faturas são geradas automaticamente 7 dias antes do vencimento da sua assinatura."
+                        class="ml-[190px]"
+                    />
+                </div>
 
                 <div class="mt-6">
                     <Table

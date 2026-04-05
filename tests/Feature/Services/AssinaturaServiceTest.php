@@ -11,6 +11,7 @@ use App\Enums\TipoCobranca;
 use App\Models\Assinatura;
 use App\Models\Fatura;
 use App\Models\Plano;
+use App\Models\SolicitacaoMudancaPlano;
 use App\Models\User;
 use App\Services\AssinaturaService;
 use App\Services\SolicitacaoMudancaPlanoService;
@@ -21,8 +22,11 @@ use Tests\TestCase;
 class AssinaturaServiceTest extends TestCase
 {
     use RefreshDatabase;
+
     private AssinaturaService $assinaturaService;
+
     private Assinatura $assinatura;
+
     private User $user;
 
     protected function setUp(): void
@@ -32,7 +36,7 @@ class AssinaturaServiceTest extends TestCase
             $mock->shouldReceive('criarPagamento')
                 ->andReturn([
                     'id' => 'pref_test_123',
-                    'sandbox_init_point' => 'https://sandbox.mercadopago.com/test'
+                    'sandbox_init_point' => 'https://sandbox.mercadopago.com/test',
                 ]);
         });
 
@@ -69,14 +73,14 @@ class AssinaturaServiceTest extends TestCase
             'assinatura_id' => $this->assinatura->id,
             'valor' => 20.00,
             'user_id' => $this->user->id,
-            'tipo_cobranca' => TipoCobranca::UPGRADE
+            'tipo_cobranca' => TipoCobranca::UPGRADE,
         ]);
 
         $this->assertDatabaseHas('solicitacoes_mudanca_plano', [
             'assinatura_id' => $this->assinatura->id,
             'plano_novo_id' => $novoPlano->id,
             'user_id' => $this->user->id,
-            'status' => StatusSolicitacaoMudancaPlano::PENDENTE
+            'status' => StatusSolicitacaoMudancaPlano::PENDENTE,
         ]);
     }
 
@@ -87,15 +91,16 @@ class AssinaturaServiceTest extends TestCase
         $this->assinaturaService->excluir($idInexistente, $this->user->id);
     }
 
-    public function test_nao_deve_criar_nova_solicitacao_se_ja_houver_uma_pendente(): void
+    public function test_deve_retornar_url_existente_se_ja_houver_upgrade_pendente(): void
     {
         $planoA = Plano::factory()->create();
         $planoB = Plano::factory()->create();
 
-        $this->assinaturaService->fazerUpgrade($this->assinatura, $planoA);
+        $url1 = $this->assinaturaService->fazerUpgrade($this->assinatura, $planoA);
+        $url2 = $this->assinaturaService->fazerUpgrade($this->assinatura, $planoB);
 
-        $this->expectException(\Exception::class);
-        $this->assinaturaService->fazerUpgrade($this->assinatura, $planoB);
+        $this->assertEquals($url1, $url2);
+        $this->assertEquals(1, SolicitacaoMudancaPlano::count());
     }
 
     public function test_deve_confirmar_upgrade_e_atualizar_plano_da_assinatura(): void
@@ -105,7 +110,7 @@ class AssinaturaServiceTest extends TestCase
             'user_id' => $this->user->id,
             'assinatura_id' => $this->assinatura->id,
             'tipo_cobranca' => TipoCobranca::UPGRADE,
-            'status' => StatusPagamento::PENDENTE
+            'status' => StatusPagamento::PENDENTE,
         ]);
         $mudancaService = app(SolicitacaoMudancaPlanoService::class);
         $mudancaService->criarSolicitacaoMudancaPlano([
@@ -124,7 +129,7 @@ class AssinaturaServiceTest extends TestCase
         $this->assertDatabaseHas('solicitacoes_mudanca_plano', [
             'fatura_id' => $fatura->id,
             'user_id' => $this->user->id,
-            'status' => StatusSolicitacaoMudancaPlano::CONCLUIDO
+            'status' => StatusSolicitacaoMudancaPlano::CONCLUIDO,
         ]);
     }
 
@@ -147,7 +152,7 @@ class AssinaturaServiceTest extends TestCase
             'assinatura_id' => $this->assinatura->id,
             'tipo_cobranca' => TipoCobranca::UPGRADE,
             'status' => StatusPagamento::APROVADO,
-            'pago_em' => now()->subDay()
+            'pago_em' => now()->subDay(),
         ]);
         $dataPagamentoOriginal = $fatura->pago_em->toDateTimeString();
         $this->assinaturaService->confirmarUpgrade($fatura);
@@ -160,7 +165,7 @@ class AssinaturaServiceTest extends TestCase
             'user_id' => $this->user->id,
             'assinatura_id' => $this->assinatura->id,
             'tipo_cobranca' => TipoCobranca::UPGRADE,
-            'status' => StatusPagamento::PENDENTE
+            'status' => StatusPagamento::PENDENTE,
         ]);
         $planoAntigoId = $this->assinatura->plano_id;
         $this->assinaturaService->confirmarUpgrade($fatura);
