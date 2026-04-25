@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
@@ -29,69 +28,73 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Reset Password" />
+        <Head title="Redefinir Senha" />
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
+        <div class="flex justify-center bg-gradient-to-br from-green-50 to-green-100 px-4 min-h-screen">
+            <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 mt-20 h-fit">
+                
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-green-700">SaldoUp</h1>
+                    <p class="text-gray-500 mt-2 text-sm">Crie sua nova senha de acesso</p>
+                </div>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
+                <form @submit.prevent="submit" class="space-y-5">
+                    <div>
+                        <label class="block font-medium text-sm text-gray-700 mb-1">E-mail</label>
+                        <TextInput
+                            id="email"
+                            type="email"
+                            class="w-full bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
+                            v-model="form.email"
+                            required
+                            readonly
+                            autocomplete="username"
+                        />
+                        <InputError class="mt-2" :message="form.errors.email" />
+                    </div>
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                    <div>
+                        <label class="block font-medium text-sm text-gray-700 mb-1">Nova Senha</label>
+                        <TextInput
+                            id="password"
+                            type="password"
+                            class="w-full focus:ring-green-500 focus:border-green-500 shadow-sm"
+                            v-model="form.password"
+                            placeholder="Mínimo 8 caracteres"
+                            required
+                            autofocus
+                            autocomplete="new-password"
+                        />
+                        <InputError class="mt-2" :message="form.errors.password" />
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-sm text-gray-700 mb-1">Confirmar Nova Senha</label>
+                        <TextInput
+                            id="password_confirmation"
+                            type="password"
+                            class="w-full focus:ring-green-500 focus:border-green-500 shadow-sm"
+                            v-model="form.password_confirmation"
+                            placeholder="Repita a senha"
+                            required
+                            autocomplete="new-password"
+                        />
+                        <InputError class="mt-2" :message="form.errors.password_confirmation" />
+                    </div>
+
+                    <div class="pt-2">
+                        <PrimaryButton
+                            type="submit"
+                            class="w-full justify-center bg-green-600 hover:bg-green-700 text-white py-3 shadow-md transition-all rounded-lg font-bold"
+                            :class="{ 'opacity-50 cursor-not-allowed': form.processing }"
+                            :disabled="form.processing"
+                        >
+                            <span v-if="form.processing">Atualizando...</span>
+                            <span v-else>Redefinir Senha</span>
+                        </PrimaryButton>
+                    </div>
+                </form>
             </div>
-
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
-
-                <TextInput
-                    id="password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password_confirmation"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Reset Password
-                </PrimaryButton>
-            </div>
-        </form>
+        </div>
     </GuestLayout>
 </template>

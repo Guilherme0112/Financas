@@ -38,7 +38,7 @@ class FaturaServiceTest extends TestCase
         $this->faturaService = new FaturaService($this->gatewayMock);
     }
 
-    public function deve_criar_fatura_com_sucesso()
+    public function test_deve_criar_fatura_com_sucesso()
     {
         $user = User::factory()->create();
         
@@ -61,7 +61,7 @@ class FaturaServiceTest extends TestCase
             'status' => StatusPagamento::PENDENTE->value
         ]);
     }
-    public function deve_gerar_link_de_pagamento_e_atualizar_referencia_externa()
+    public function test_deve_gerar_link_de_pagamento_e_atualizar_referencia_externa()
     {
         $user = User::factory()->create();
         $plano = Plano::factory()->create(['plano' => Planos::BASICO, 'preco' => 20.00]);
@@ -97,7 +97,7 @@ class FaturaServiceTest extends TestCase
         $this->assertEquals($dataPrimeiraExtensao->toDateTimeString(), $assinatura->refresh()->data_proxima_cobranca->toDateTimeString());
     }
 
-    public function deve_processar_pagamento_aprovado_com_conversao_de_metodo_do_mercado_pago()
+    public function test_deve_processar_pagamento_aprovado_com_conversao_de_metodo_do_mercado_pago()
     {
         $user = User::factory()->create(['is_active' => false]);
         $assinatura = Assinatura::factory()->create([
@@ -133,7 +133,7 @@ class FaturaServiceTest extends TestCase
         $this->assertTrue($assinatura->data_proxima_cobranca->isFuture());
     }
 
-    public function deve_retornar_label_correta_do_metodo_de_pagamento()
+    public function test_deve_retornar_label_correta_do_metodo_de_pagamento()
     {
         $faturaPendente = new Fatura(['metodo_pagamento' => null]);
         $this->assertEquals('Aguardando Pagamento', $faturaPendente->metodo_pagamento_label);

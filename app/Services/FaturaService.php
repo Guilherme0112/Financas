@@ -17,18 +17,17 @@ use Carbon\Carbon;
 
 class FaturaService
 {
-
-    const URL_INIT_POINT = "sandbox_init_point";
+    const URL_INIT_POINT = 'sandbox_init_point';
 
     public function __construct(
-        private GatewayPagamentoInterface $gatewayPagamento
-    ) {
-    }
+        private GatewayPagamentoInterface $gatewayPagamento,
+        private EmailService $emailService
+    ) {}
 
     public function obterFaturas(string $userId, int $perPage = 20)
     {
         return Fatura::query()
-            ->where("user_id", $userId)
+            ->where('user_id', $userId)
             ->latest()
             ->paginate($perPage);
     }
@@ -41,8 +40,8 @@ class FaturaService
     public function obterFaturasPorStatus(StatusPagamento $statusPagamento, string $userId, int $perPage = 20)
     {
         return Fatura::query()
-            ->where("user_id", $userId)
-            ->where("status", $statusPagamento)
+            ->where('user_id', $userId)
+            ->where('status', $statusPagamento)
             ->latest()
             ->paginate($perPage);
     }
@@ -51,25 +50,22 @@ class FaturaService
     {
         return Fatura::create([
             'user_id' => $userId ?? null,
-            'assinatura_id' => $fatura["assinatura_id"] ?? null,
-            'valor' => $fatura["valor"] ?? null,
-            'status' => $fatura["status"] ?? null,
-            'metodo_pagamento' => $fatura["metodo_pagamento"] ?? null,
-            'vencimento_em' => $fatura["vencimento_em"] ?? null,
-            'periodo_inicio' => $fatura["periodo_inicio"] ?? null,
-            'periodo_fim' => $fatura["periodo_fim"] ?? null,
-            'referencia_externa' => $fatura["referencia_externa"] ?? null,
-            'url_pagamento' => $fatura["url_pagamento"] ?? null,
-            'pago_em' => $fatura["pago_em"] ?? null,
-            'tipo_cobranca' => $fatura["tipo_cobranca"] ?? null
+            'assinatura_id' => $fatura['assinatura_id'] ?? null,
+            'valor' => $fatura['valor'] ?? null,
+            'status' => $fatura['status'] ?? null,
+            'metodo_pagamento' => $fatura['metodo_pagamento'] ?? null,
+            'vencimento_em' => $fatura['vencimento_em'] ?? null,
+            'periodo_inicio' => $fatura['periodo_inicio'] ?? null,
+            'periodo_fim' => $fatura['periodo_fim'] ?? null,
+            'referencia_externa' => $fatura['referencia_externa'] ?? null,
+            'url_pagamento' => $fatura['url_pagamento'] ?? null,
+            'pago_em' => $fatura['pago_em'] ?? null,
+            'tipo_cobranca' => $fatura['tipo_cobranca'] ?? null,
         ]);
     }
 
     // TODO: criar método para trocar código repetido
-    public function criarFaturaComLinkDePagamento()
-    {
-
-    }
+    public function criarFaturaComLinkDePagamento() {}
 
     public function criarFaturaAssinatura(Assinatura $assinatura)
     {
@@ -93,17 +89,17 @@ class FaturaService
 
     public function webhookMercadoPagoPagamento(array $dados)
     {
-        logger()->info("Dados recebidos do webhook", $dados);
-        $preferencia = $this->gatewayPagamento->obterPagamentoPorId($dados["data"]["id"]);
-        $idExternoPagamento = $preferencia["external_reference"];
+        logger()->info('Dados recebidos do webhook', $dados);
+        $preferencia = $this->gatewayPagamento->obterPagamentoPorId($dados['data']['id']);
+        $idExternoPagamento = $preferencia['external_reference'];
 
-        logger()->info("Id externo/fatura é: " . $idExternoPagamento);
+        logger()->info('Id externo/fatura é: '.$idExternoPagamento);
 
         $fatura = $this->obterFaturaPorId($idExternoPagamento);
-        logger()->info("Fatura encontrada com sucesso", $fatura->toArray());
+        logger()->info('Fatura encontrada com sucesso', $fatura->toArray());
 
-        if ($preferencia["status"] === 'approved') {
-            logger()->info("Pagamento aprovado com sucesso");
+        if ($preferencia['status'] === 'approved') {
+            logger()->info('Pagamento aprovado com sucesso');
             $this->processarPagamentoAprovado($fatura, $preferencia);
         }
     }
@@ -112,19 +108,20 @@ class FaturaService
     {
         \DB::transaction(function () use ($fatura, $preferencia) {
             $metodoEnum = MetodoPagamento::deMercadoPago(
-                $preferencia["payment_type_id"],
-                $preferencia["payment_method_id"]
+                $preferencia['payment_type_id'],
+                $preferencia['payment_method_id']
             );
 
-            if($fatura->status === StatusPagamento::APROVADO) {
+            if ($fatura->status === StatusPagamento::APROVADO) {
                 logger()->warning("Fatura {$fatura->id} já está aprovada. Ignorando processamento.");
+
                 return;
             }
 
             $fatura->update([
-                "pago_em" => now(),
-                "status" => StatusPagamento::APROVADO,
-                "metodo_pagamento" => $metodoEnum
+                'pago_em' => now(),
+                'status' => StatusPagamento::APROVADO,
+                'metodo_pagamento' => $metodoEnum,
             ]);
 
             $assinatura = $fatura->assinatura;
@@ -133,7 +130,7 @@ class FaturaService
                 $solicitacao = $fatura->solicitacoesMudancaPlanos()
                     ->where('status', StatusSolicitacaoMudancaPlano::PENDENTE)
                     ->first();
-
+                    
                 if ($solicitacao) {
                     $novoPlanoId = $solicitacao->plano_novo_id;
                     $solicitacao->update(['status' => StatusSolicitacaoMudancaPlano::CONCLUIDO]);
@@ -142,25 +139,33 @@ class FaturaService
             }
 
             $assinatura->update([
-                "plano_id" => $novoPlanoId,
-                "status" => StatusAssinatura::ATIVA,
-                "data_proxima_cobranca" => $assinatura->calcularProximoVencimento(),
-                "data_inicio" => $assinatura->data_inicio ?? now(),
-                "data_fim" => $assinatura->calcularProximoVencimento(),
+                'plano_id' => $novoPlanoId,
+                'status' => StatusAssinatura::ATIVA,
+                'data_proxima_cobranca' => $assinatura->calcularProximoVencimento(),
+                'data_inicio' => $assinatura->data_inicio ?? now(),
+                'data_fim' => $assinatura->calcularProximoVencimento(),
             ]);
 
             $fatura->user->update(['is_active' => true]);
+            if ($fatura->tipo_cobranca === TipoCobranca::UPGRADE) {
+                $this->emailService->sendUpgradeSuccessEmail($fatura->user, $fatura);
+            } else {
+                $this->emailService->sendEmailBoasVindas($fatura->user);
+            }
             logger()->info("Fluxo de pagamento concluído para usuário {$fatura->user->id}");
         });
     }
+
     public function processarFluxoFinanceiro(User $user, Assinatura $assinatura, Plano $plano): array
     {
         if ($plano->plano === Planos::GRATUITO) {
-            logger()->info("Usuário redirecionado para o dashboard (Plano Gratuito)");
+            logger()->info('Usuário redirecionado para o dashboard (Plano Gratuito)');
+            $this->emailService->sendEmailBoasVindas($user);
+
             return [
                 'user' => $user,
                 'redirect' => route('dashboard'),
-                'external' => false
+                'external' => false,
             ];
         }
 
@@ -172,23 +177,23 @@ class FaturaService
             'vencimento_em' => null,
             'periodo_inicio' => now(),
             'periodo_fim' => now(),
-            "tipo_cobranca" => TipoCobranca::CICLO_NORMAL
+            'tipo_cobranca' => TipoCobranca::CICLO_NORMAL,
         ], $user->id);
-        logger()->info("Fatura inicial criada com sucesso", $fatura->toArray());
+        logger()->info('Fatura inicial criada com sucesso', $fatura->toArray());
 
         $linkPagamento = $this->gatewayPagamento->criarPagamento($fatura);
-        logger()->info("Link de pagamento gerado com sucesso");
+        logger()->info('Link de pagamento gerado com sucesso');
 
         $fatura->update([
             'url_pagamento' => $linkPagamento[self::URL_INIT_POINT],
-            'referencia_externa' => $linkPagamento["id"],
+            'referencia_externa' => $linkPagamento['id'],
         ]);
-        logger()->info("Fatura atualizada com link de pagamento e referencia externa");
+        logger()->info('Fatura atualizada com link de pagamento e referencia externa');
 
         return [
             'user' => $user,
             'redirect' => $linkPagamento[self::URL_INIT_POINT],
-            'external' => true
+            'external' => true,
         ];
     }
 }
