@@ -10,3 +10,15 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:processar-faturas-do-mes')->daily();
 Schedule::command('app:processar-assinaturas-expiradas')->daily();
+
+Schedule::call(function () {
+    $files = Storage::disk('local')->allFiles('exports');
+    $now = time();
+    $expiration = 60 * 60 * 24;
+
+    foreach ($files as $file) {
+        if ($now - Storage::disk('local')->lastModified($file) >= $expiration) {
+            Storage::disk('local')->delete($file);
+        }
+    }
+})->daily();
