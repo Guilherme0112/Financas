@@ -21,7 +21,7 @@ const form = useForm({
 });
 
 const opcoesDeUpgrade = computed(() => {
-    return props.planos.filter(p => p.plano !== 'GRATUITO');
+    return props.planos.filter((p: any) => p.plano !== 'GRATUITO');
 });
 
 const closeModal = () => {
