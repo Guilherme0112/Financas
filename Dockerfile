@@ -55,6 +55,13 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 80
 
+# Define o entrypoint
+ENTRYPOINT ["entrypoint.sh"]
+
+# Mantém o comando do supervisord
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
