@@ -49,6 +49,18 @@ COPY . .
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
+# Puxa as variáveis do Railway para o processo de build
+ARG VITE_REVERB_APP_KEY
+ARG VITE_REVERB_HOST
+ARG VITE_REVERB_PORT
+ARG VITE_REVERB_SCHEME
+
+# Transforma os ARGs em variáveis de ambiente para o Vite ler
+ENV VITE_REVERB_APP_KEY=$VITE_REVERB_APP_KEY
+ENV VITE_REVERB_HOST=$VITE_REVERB_HOST
+ENV VITE_REVERB_PORT=$VITE_REVERB_PORT
+ENV VITE_REVERB_SCHEME=$VITE_REVERB_SCHEME
+
 RUN npm ci && npm run build && rm -rf node_modules
 
 RUN chown -R www-data:www-data /var/www/html \
