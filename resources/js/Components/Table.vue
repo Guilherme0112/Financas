@@ -94,7 +94,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 <template>
   <div class="w-full select-none">
-    <div class="flex px-6 mb-1">
+    
+    <!-- HEADER (Oculto no Mobile, visível a partir do md) -->
+    <div class="hidden md:flex px-6 mb-1">
       <div v-if="selectable" class="w-8 flex items-center justify-center">
         <Checkbox
           :checked="selectAll" 
@@ -105,8 +107,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       <div 
         v-for="header in headers" 
         :key="header.key"
-        class="text-xs font-black uppercase tracking-[0.2em] text-zinc-400/70"
-        :style="{ width: 100 / (headers.length + (selectable ? 0.4 : 0) + (actions ? 0.4 : 0)) + '%' }"
+        class="text-xs font-black uppercase tracking-[0.2em] text-zinc-400/70 md:w-[var(--col-width)]"
+        :style="{ '--col-width': 100 / (headers.length + (selectable ? 0.4 : 0) + (actions ? 0.4 : 0)) + '%' }"
         :class="[
           header.align === 'center' ? 'text-center' : 
           header.align === 'right' ? 'text-right' : 'text-left'
@@ -117,19 +119,26 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       <div v-if="actions" class="w-8"></div>
     </div>
 
-    <div class="flex flex-col gap-1">
+    <!-- CORPO DA TABELA -->
+    <div class="flex flex-col gap-2 md:gap-1">
+      
+      <!-- ESTADO VAZIO -->
       <div v-if="rows.length === 0" class="p-6 text-center bg-white rounded-xl border border-dashed border-zinc-200">
         <p class="text-zinc-400 text-[10px] uppercase font-bold tracking-tighter">Vazio</p>
       </div>
 
+      <!-- LINHAS (Cards no Mobile) -->
       <div
         v-else
         v-for="(row, index) in rows"
         :key="index"
-        class="relative group bg-white border border-zinc-100 py-5 px-6 rounded-lg transition-all duration-200 hover:border-zinc-200 hover:shadow-sm flex items-center cursor-pointer"
+        class="relative group bg-white border border-zinc-100 py-4 px-4 md:py-5 md:px-6 rounded-lg transition-all duration-200 hover:border-zinc-200 hover:shadow-sm flex flex-col md:flex-row md:items-center cursor-pointer gap-3 md:gap-0"
         @click="emit('rowClick', row)"
       >
-        <div v-if="selectable" class="w-8 flex items-center justify-center">
+        
+        <!-- Checkbox -->
+        <div v-if="selectable" class="w-full md:w-8 flex justify-between md:justify-center items-center border-b border-zinc-100 pb-2 md:border-none md:pb-0 mb-1 md:mb-0">
+          <span class="text-xs font-bold text-zinc-400 md:hidden uppercase tracking-wider">Selecionar</span>
           <Checkbox 
             :checked="selectedRows.has(index)" 
             @change="toggleRowSelection(index)"
@@ -138,29 +147,41 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           />
         </div>
 
+        <!-- Células de Dados -->
         <div 
           v-for="(header, hIndex) in headers" 
           :key="header.key"
-          :style="{ width: 100 / (headers.length + (selectable ? 0.4 : 0) + (actions ? 0.4 : 0)) + '%' }"
-          class="px-2 truncate"
+          :style="{ '--col-width': 100 / (headers.length + (selectable ? 0.4 : 0) + (actions ? 0.4 : 0)) + '%' }"
+          class="flex md:block items-center justify-between px-0 md:px-2 w-full md:w-[var(--col-width)] truncate"
           :class="[
-            header.align === 'center' ? 'text-center' : 
-            header.align === 'right' ? 'text-right' : 'text-left',
-            hIndex === 0 ? 'font-bold text-zinc-800 text-sm' : 'text-zinc-500 text-sm font-medium'
+            header.align === 'center' ? 'md:text-center' : 
+            header.align === 'right' ? 'md:text-right' : 'md:text-left',
           ]"
         >
-          <slot :name="`cell-${header.key}`" :row="row" :value="row[header.key]">
-            {{ header.format ? header.format(row[header.key], row) : row[header.key] }}
-          </slot>
+          <!-- Título da coluna visível APENAS no mobile -->
+          <span class="md:hidden text-xs font-bold text-zinc-400 uppercase mr-4">
+            {{ header.label }}
+          </span>
+
+          <!-- Valor da célula -->
+          <span 
+            class="text-right md:text-left truncate block w-full"
+            :class="hIndex === 0 ? 'font-bold text-zinc-800 text-sm' : 'text-zinc-500 text-sm font-medium'"
+          >
+            <slot :name="`cell-${header.key}`" :row="row" :value="row[header.key]">
+              {{ header.format ? header.format(row[header.key], row) : row[header.key] }}
+            </slot>
+          </span>
         </div>
 
-        <div v-if="resolveActions(row).length > 0" class="ml-auto relative" data-menu @click.stop>
+        <!-- Ações (Menu 3 Pontinhos) -->
+        <div v-if="resolveActions(row).length > 0" class="w-full md:w-8 md:ml-auto flex justify-end relative mt-2 md:mt-0 pt-3 md:pt-0 border-t border-zinc-100 md:border-none" data-menu @click.stop>
           <button
             @click.stop="toggle(index)"
-            class="w-6 h-6 flex items-center justify-center rounded-md transition-all"
+            class="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-md transition-all"
             :class="aberto === index ? `bg-${color}-100 text-${color}-600` : `text-zinc-700 hover:text-zinc-500 hover:bg-zinc-50`"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M12 5v.01M12 12v.01M12 19v.01" />
             </svg>
           </button>
@@ -172,7 +193,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           >
             <div
               v-if="aberto === index"
-              class="absolute right-0 mt-1.5 w-[200px] bg-white rounded-xl shadow-xl p-1 z-[100] border border-zinc-100"
+              class="absolute right-0 bottom-full mb-2 md:bottom-auto md:mb-0 md:mt-1.5 w-[200px] bg-white rounded-xl shadow-xl p-1 z-[100] border border-zinc-100"
             >
               <button
                 v-for="(action, i) in resolveActions(row)"
@@ -192,6 +213,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </transition>
         </div>
+        
       </div>
     </div>
   </div>

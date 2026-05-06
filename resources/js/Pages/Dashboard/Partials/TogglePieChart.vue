@@ -30,13 +30,13 @@ const activeOption = computed(() =>
 <template>
   <div class="bg-white p-4 py-6 rounded-2xl shadow-lg border border-slate-100">
 
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-4">
+    <!-- Header Responsivo -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
 
       <!-- Toggle -->
-      <div class="flex bg-slate-100 rounded-xl p-1 text-sm font-medium">
+      <div class="flex bg-slate-100 rounded-xl p-1 text-sm font-medium w-full sm:w-auto">
         <button v-for="option in options" :key="option.key" @click="selected = option.key" :class="[
-          'px-4 py-1 rounded-lg transition',
+          'px-4 py-1.5 sm:py-1 rounded-lg transition flex-1 sm:flex-none text-center',
           selected === option.key
             ? option.color === 'red'
               ? 'bg-red-500 text-white'
@@ -51,12 +51,24 @@ const activeOption = computed(() =>
       <PorcentualMesAnterior :valor="activeOption.percentual" :tipo="activeOption.tipo" />
     </div>
 
-    <!-- Chart -->
-    <div class="w-full flex justify-around flex-wrap gap-6">
-      <PieChart chart-id="pieChartToggle" :title="activeOption.title" :rows="activeOption.rows"
-        :colors="activeOption.colors" :color="activeOption.colors[0]" />
+    <!-- Charts -->
+    <!-- Mudamos de flex para grid. 1 coluna no mobile, 2 colunas a partir de telas lg (1024px) -->
+    <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <PieChart 
+        :key="'pie-' + activeOption.key"
+        chart-id="pieChartToggle" 
+        :title="activeOption.title" 
+        :rows="activeOption.rows"
+        :colors="activeOption.colors" 
+        :color="activeOption.colors[0]" 
+      />
 
-      <BarChart :gastos="activeOption.rows" :color="activeOption.colors[0]" />
+      <BarChart 
+        :key="'bar-' + activeOption.key"
+        :gastos="activeOption.rows" 
+        :color="activeOption.colors[0]" 
+      />
     </div>
+    
   </div>
 </template>

@@ -15,7 +15,7 @@ import monthSelectPlugin from "flatpickr/dist/plugins/monthSelect";
 import { Goal } from 'lucide-vue-next'
 import TextInput from '@/Components/TextInput.vue'
 import HelpMessage from '@/Components/HelpMessage.vue'
-import { ref, watch } from 'vue'
+import { shallowRef, watch } from 'vue'
 import Icon from '@/Components/Icon.vue'
 import { configInertia } from '@/inertia'
 
@@ -59,7 +59,7 @@ const salvar = () => {
 }
 
 
-const fpInstance = ref<any>(null)
+const fpInstance = shallowRef<any>(null)
 const aplicarClasse = () => {
     if (!fpInstance.value) return;
 
@@ -103,6 +103,7 @@ watch(
 
 const configFlatpickr = {
     locale: Portuguese,
+    disableMobile: true,
     plugins: [
         new MonthSelectPlugin({
             shorthand: false,

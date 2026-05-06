@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { router, useForm } from "@inertiajs/vue3";
+import { useForm } from "@inertiajs/vue3";
 import { ref } from "vue";
 import CardLimite from "../Components/CardLimite.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import LimitesForm from "../Components/LimitesForm.vue";
-import HelpMessage from "@/Components/HelpMessage.vue";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal.vue";
 import { Receipt, Plus } from "lucide-vue-next";
-import Icon from "@/Components/Icon.vue";
 import { toast } from "vue3-toastify";
 import Paginacao from "@/Components/Paginacao.vue";
 import { Page } from "@/types/Page";

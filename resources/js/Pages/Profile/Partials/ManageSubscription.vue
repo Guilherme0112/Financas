@@ -63,11 +63,15 @@ const tableHeaders: TableHeader[] = [
                     :href="route('faturas.index')"
                     :active="route().current('faturas.index')"
                 >
-                    <PrimaryButton class="flex items-center gap-2">
-                        Ver Mais
-                        <ArrowRight :size="14" />
-                    </PrimaryButton> </NavLink
-            ></HeaderSecao>
+                    <PrimaryButton
+                        class="!flex items-center gap-1 sm:gap-2 !px-3 sm:!px-4 !py-1.5 sm:!py-2 !text-xs sm:!text-sm transition-all"
+                    >
+                        <span class="hidden sm:inline">Ver Mais</span>
+                        <span class="sm:hidden tracking-wider uppercase">Ver</span>
+                        <ArrowRight :size="14" class="w-3 h-3 sm:w-4 sm:h-4" />
+                    </PrimaryButton>
+                </NavLink>
+            </HeaderSecao>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -129,9 +133,7 @@ const tableHeaders: TableHeader[] = [
                 </div>
             </div>
 
-            <div
-                class="lg:col-span-2 overflow-hidden"
-            >
+            <div class="lg:col-span-2 overflow-hidden">
                 <Table
                     v-if="props.faturas?.data?.length > 0"
                     :headers="tableHeaders"

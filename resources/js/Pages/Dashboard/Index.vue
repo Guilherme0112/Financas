@@ -73,10 +73,12 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
         <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
           <HeaderSecao :icon="Target" title="Metas Financeiras" description="Defina objetivos e acompanhe seu progresso"
             icon-color="text-emerald-800">
-            <NavLink :href="route('limites.index')" :active="route().current('limites.index')">
-              <PrimaryButton class="flex items-center gap-2">
-                Ver Mais
-                <ArrowRight :size="14" />
+            <!-- BOTÃO RESPONSIVO AQUI -->
+            <NavLink :href="route('limites.index')" :active="route().current('limites.index')" class="shrink-0">
+              <PrimaryButton class="!flex items-center gap-1 sm:gap-2 !px-3 sm:!px-4 !py-1.5 sm:!py-2 !text-xs sm:!text-sm transition-all">
+                <span class="hidden sm:inline">Ver Mais</span>
+                <span class="sm:hidden tracking-wider uppercase">Ver</span>
+                <ArrowRight :size="14" class="w-3 h-3 sm:w-4 sm:h-4" />
               </PrimaryButton>
             </NavLink>
           </HeaderSecao>
@@ -120,11 +122,13 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
               <div class="flex-1">
                 <HeaderSecao :icon="CalendarClock" title="Contas a Pagar"
                   description="Visualize seus compromissos próximos e atrasados" icon-color="text-emerald-800">
+                  <!-- BOTÃO RESPONSIVO AQUI -->
                   <NavLink :href="route('lancamentos.index', { tipo: 'SAIDA', foi_pago: false })"
-                    :active="route().current('lancamentos.index')">
-                    <DangerButton>
-                      Ver Mais
-                      <ArrowRight :size="12" class="ml-2" />
+                    :active="route().current('lancamentos.index')" class="shrink-0">
+                    <DangerButton class="!flex items-center gap-1 sm:gap-2 !px-3 sm:!px-4 !py-1.5 sm:!py-2 !text-xs sm:!text-sm transition-all">
+                      <span class="hidden sm:inline">Ver Mais</span>
+                      <span class="sm:hidden tracking-wider uppercase">Ver</span>
+                      <ArrowRight :size="14" class="w-3 h-3 sm:w-4 sm:h-4" />
                     </DangerButton>
                   </NavLink>
                 </HeaderSecao>
@@ -150,10 +154,12 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
               <div class="flex-1">
                 <HeaderSecao :icon="Goal" title="Limite de Gastos"
                   description="Acompanhe seus limites de gastos por categoria" icon-color="text-emerald-800">
-                  <NavLink :href="route('limites.index')" :active="route().current('limites.index')">
-                    <PrimaryButton class="flex items-center gap-2">
-                      Ver Mais
-                      <ArrowRight :size="14" />
+                  <!-- BOTÃO RESPONSIVO AQUI -->
+                  <NavLink :href="route('limites.index')" :active="route().current('limites.index')" class="shrink-0">
+                    <PrimaryButton class="!flex items-center gap-1 sm:gap-2 !px-3 sm:!px-4 !py-1.5 sm:!py-2 !text-xs sm:!text-sm transition-all">
+                      <span class="hidden sm:inline">Ver Mais</span>
+                      <span class="sm:hidden tracking-wider uppercase">Ver</span>
+                      <ArrowRight :size="14" class="w-3 h-3 sm:w-4 sm:h-4" />
                     </PrimaryButton>
                   </NavLink>
                 </HeaderSecao>

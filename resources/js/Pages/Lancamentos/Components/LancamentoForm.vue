@@ -7,7 +7,7 @@ import SecondaryButton from "@/Components/SecondaryButton.vue";
 import InputDinheiro from "@/Components/InputDinheiro.vue";
 import Flatpickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, shallowRef, watch } from "vue";
 import { toast } from "vue3-toastify";
 import InputError from "@/Components/InputError.vue";
 import Checkbox from "@/Components/Checkbox.vue";
@@ -68,10 +68,12 @@ const salvar = () => {
     });
 };
 
-const fpInstance = ref<any>(null);
+const fpInstance = shallowRef<any>(null);
 const aplicarClasse = () => {
     if (!fpInstance.value) return;
     const input = fpInstance.value.altInput as HTMLInputElement;
+    if (!input) return;
+
     input.classList.remove(
         "border-red-300",
         "border-green-300",
@@ -80,7 +82,7 @@ const aplicarClasse = () => {
         "focus:ring-red-500",
         "focus:ring-green-500",
     );
-    input.classList.add("rounded-md", "shadow-sm");
+    input.classList.add("rounded-md", "shadow-sm", "w-full");
     if (props.form.errors.mes_referencia) {
         input.classList.add(
             "border-red-300",
@@ -95,6 +97,23 @@ const aplicarClasse = () => {
         );
     }
 };
+
+const configFlatpickr = {
+    dateFormat: 'Y/m/d',
+    altInput: true,
+    altFormat: 'd/m/Y',
+    disableMobile: true,
+    static: true,
+    enableTime: false,
+    allowInput: false,
+    onReady: (_: any, __: any, instance: any) => {
+        fpInstance.value = instance;
+        nextTick(() => {
+            aplicarClasse();
+        });
+    },
+};
+
 watch(
     () => props.form.errors.mes_referencia,
     () => aplicarClasse(),
@@ -171,6 +190,7 @@ const mostrarCampoEmergencia = (tipo: string) => {
     return tipo === "RESERVA_EMERGENCIA";
 };
 </script>
+
 <template>
     <Modal :show="show" @close="emit('close')">
         <div class="p-6 space-y-4">
@@ -207,14 +227,16 @@ const mostrarCampoEmergencia = (tipo: string) => {
                             : null
                     "
                 />
-                <InputError :message="form.errors.nome" class="mt-[-20px]" />
+                <InputError :message="form.errors.nome" class="mt-1" />
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <!-- Alterado para grid-cols-1 no mobile e sm:grid-cols-2 no desktop -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <InputLabel value="Valor (R$) *" />
                     <InputDinheiro
                         v-model="form.valor"
+                        class="w-full"
                         :class="
                             form.errors.valor
                                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
@@ -249,14 +271,15 @@ const mostrarCampoEmergencia = (tipo: string) => {
             </div>
 
             <div class="mt-3 space-y-4">
-                <div class="flex justify-between">
-                    <div class="w-[50%] grid">
+                <!-- Flex responsivo para empilhar checkbox no mobile -->
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div class="w-full sm:w-1/2">
                         <div
                             v-if="
                                 !form.id && mostrarCampoEntradaOuSaida(form.tipo)
                             "
                         >
-                            <div>
+                            <div class="flex items-center">
                                 <Checkbox
                                     :checked="form.recorrente"
                                     v-model="form.recorrente"
@@ -272,7 +295,7 @@ const mostrarCampoEmergencia = (tipo: string) => {
                                 <InputLabel value="Meses Recorrentes" />
                                 <TextInput
                                     v-model="form.meses_recorrentes"
-                                    class="w-[150px]"
+                                    class="w-full sm:w-[150px]"
                                     type="number"
                                     min="1"
                                     :class="
@@ -287,8 +310,9 @@ const mostrarCampoEmergencia = (tipo: string) => {
                             </div>
                         </div>
                     </div>
-                    <div class="w-[50%] flex justify-start">
-                        <div v-if="form.tipo === 'SAIDA'" class="ml-2">
+                    
+                    <div class="w-full sm:w-1/2 flex sm:justify-start">
+                        <div v-if="form.tipo === 'SAIDA'" class="flex items-center">
                             <Checkbox
                                 :checked="form.foi_pago"
                                 v-model="form.foi_pago"
@@ -300,28 +324,20 @@ const mostrarCampoEmergencia = (tipo: string) => {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
+                <!-- Alterado para grid-cols-1 no mobile e sm:grid-cols-2 no desktop -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="w-full relative">
                         <InputLabel
                             :value="labelParaDataReferencia(form.tipo)"
                         />
                         <Flatpickr
                             v-model="form.mes_referencia"
-                            :config="{
-                                dateFormat: 'Y/m/d',
-                                altInput: true,
-                                altFormat: 'd/m/Y',
-                                static: true,
-                                enableTime: false,
-                                allowInput: false,
-                                onReady: (_, __, instance) => {
-                                    fpInstance = instance;
-                                    aplicarClasse();
-                                },
-                            }"
+                            class="w-full"
+                            :config="configFlatpickr"
                         />
                         <InputError :message="form.errors.mes_referencia" />
                     </div>
+                    
                     <div v-if="mostrarCampoEntradaOuSaida(form.tipo)">
                         <InputLabel value="Categoria *" />
                         <div>
@@ -377,13 +393,14 @@ const mostrarCampoEmergencia = (tipo: string) => {
 
                 <div v-if="mostrarCampoEntradaOuSaida(form.tipo)">
                     <InputLabel value="Descrição" />
-                    <TextArea v-model="form.descricao" :limit="500" />
+                    <TextArea v-model="form.descricao" :limit="500" class="w-full" />
                     <InputError
                         :message="form.errors.descricao"
-                        class="mt-[-20px]"
+                        class="mt-1"
                     />
                 </div>
             </div>
+            
             <div v-if="mostrarCampoMetas(form.tipo)">
                 <InputLabel
                     value="Escolha a meta que deseja alocar o dinheiro"
@@ -393,23 +410,35 @@ const mostrarCampoEmergencia = (tipo: string) => {
                     v-model="form.meta_id"
                     :options="metasOptions"
                     placeholder="Selecione a meta"
+                    class="w-full"
                 />
             </div>
+            
             <div v-if="mostrarCampoEmergencia(form.tipo)">
                 <InputLabel value="Escolha sua reserva de emergência" />
-                <!-- <AutoSelect /> -->
+                <!-- <AutoSelect class="w-full" /> -->
             </div>
-            <div class="flex justify-end gap-3">
-                <SecondaryButton @click="emit('close')"
-                    >Cancelar</SecondaryButton
+            
+            <!-- Botões empilhados no celular e alinhados à direita no PC -->
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+                <SecondaryButton 
+                    class="w-full sm:w-auto justify-center" 
+                    @click="emit('close')"
                 >
-                <PrimaryButton @click="salvar" :disabled="form.processing"
-                    >Salvar</PrimaryButton
+                    Cancelar
+                </SecondaryButton>
+                <PrimaryButton 
+                    class="w-full sm:w-auto justify-center" 
+                    @click="salvar" 
+                    :disabled="form.processing"
                 >
+                    Salvar
+                </PrimaryButton>
             </div>
         </div>
     </Modal>
 </template>
+
 <style>
 .flatpickr-calendar {
     z-index: 9999 !important;

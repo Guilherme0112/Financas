@@ -20,7 +20,7 @@ const props = defineProps<{
 
     <AuthenticatedLayout>
         <div class="space-y-6 py-5 max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row gap-8 bg-white shadow-lg sm:rounded-lg sm:p-8 w-full items-start">
+            <div class="flex flex-col md:flex-row gap-8 bg-white shadow-lg rounded-lg p-8 w-full items-start">
                 <div class="flex-1 w-full">
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
@@ -36,11 +36,11 @@ const props = defineProps<{
                 </div>
             </div>
 
-            <div class="bg-white p-4 shadow-lg sm:rounded-lg sm:p-8">
+            <div class="bg-white p-4 shadow-lg rounded-lg p-8">
                 <ManageSubscription :subscription="$page.props.auth.user.assinatura" :faturas="faturas ?? []" :planos="props.planos" />
             </div>
 
-            <div class="bg-white p-4 shadow-lg sm:rounded-lg sm:p-8">
+            <div class="bg-white p-4 shadow-lg rounded-lg p-8">
                 <DeleteUserForm />
             </div>
         </div>

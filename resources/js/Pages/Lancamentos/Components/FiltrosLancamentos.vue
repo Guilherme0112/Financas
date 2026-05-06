@@ -6,7 +6,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import Flatpickr from 'vue-flatpickr-component'
 import { useForm, router } from '@inertiajs/vue3'
 import InputError from '@/Components/InputError.vue';
-import { ref, watch } from 'vue';
+import { shallowRef, watch } from 'vue'; // <-- Trocado ref por shallowRef
 import Checkbox from '@/Components/Checkbox.vue';
 import { Filter } from 'lucide-vue-next';
 import Icon from '@/Components/Icon.vue';
@@ -66,13 +66,14 @@ const limparFiltros = () => {
     emit('close');
 }
 
-const fpInstanceInicio = ref<any>(null)
-const fpInstanceFim = ref<any>(null)
+const fpInstanceInicio = shallowRef<any>(null) // <-- Proteção do Vue 3
+const fpInstanceFim = shallowRef<any>(null) // <-- Proteção do Vue 3
 
 const aplicarClasse = (instance: any, errorKey: 'data_inicio' | 'data_fim') => {
     if (!instance) return
 
     const input = instance.altInput as HTMLInputElement
+    if (!input) return;
 
     input.classList.remove(
         'border-red-300',
@@ -83,7 +84,7 @@ const aplicarClasse = (instance: any, errorKey: 'data_inicio' | 'data_fim') => {
         'focus:ring-green-500'
     )
 
-    input.classList.add('rounded-md', 'shadow-sm')
+    input.classList.add('rounded-md', 'shadow-sm', 'w-full')
 
     if (form.errors[errorKey]) {
         input.classList.add(
@@ -104,6 +105,7 @@ const aplicarClasse = (instance: any, errorKey: 'data_inicio' | 'data_fim') => {
 const configDataInicio = {
     dateFormat: 'Y/m/d',
     altInput: true,
+    disableMobile: true,
     altFormat: 'd/m/Y',
     enableTime: false,
     static: true,
@@ -120,6 +122,7 @@ const configDataFim = {
     dateFormat: 'Y/m/d',
     altInput: true,
     altFormat: 'd/m/Y',
+    disableMobile: true,
     enableTime: false,
     static: true,
     allowInput: false,
@@ -157,7 +160,8 @@ watch(() => props.show, (isShown) => {
 
 <template>
     <Modal :show="show" @close="emit('close')">
-        <div class="px-12 py-6 space-y-2">
+        <!-- Alterado o padding para ser menor no mobile (px-6) e normal no desktop (md:px-12) -->
+        <div class="px-6 md:px-12 py-6 space-y-4">
             <header class="mb-6">
                 <h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2">
                     <Icon>
@@ -171,33 +175,29 @@ watch(() => props.show, (isShown) => {
                 </p>
             </header>
 
-
-            <!-- Período -->
-            <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
-                <div class="flex flex-col">
+            <!-- Período: Flex em vez de Grid para poder empilhar suavemente no mobile -->
+            <div class="flex flex-col sm:flex-row gap-4 sm:gap-2 items-start">
+                <div class="flex flex-col w-full">
                     <InputLabel value="Data inicial" class="mb-1" />
                     <Flatpickr v-model="form.data_inicio" :config="configDataInicio" class="w-full" />
-
-                    <div class="min-h-[24px] mt-1">
-                        <InputError :message="form.errors.data_inicio" />
-                    </div>
+                    <InputError :message="form.errors.data_inicio" class="mt-1" />
                 </div>
 
-                <div class="flex items-center pt-8 px-3 text-sm text-gray-500">
+                <!-- A palavra "até" some no mobile e aparece alinhada no desktop -->
+                <div class="hidden sm:flex items-center pt-8 px-2 text-sm text-gray-500">
                     até
                 </div>
 
-                <div class="flex flex-col">
+                <div class="flex flex-col w-full">
                     <InputLabel value="Data final" class="mb-1" />
                     <Flatpickr v-model="form.data_fim" :config="configDataFim" class="w-full" />
-                    <div class="min-h-[24px] mt-1">
-                        <InputError :message="form.errors.data_fim" />
-                    </div>
+                    <InputError :message="form.errors.data_fim" class="mt-1" />
                 </div>
             </div>
 
-            <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
-                <div class="flex flex-col">
+            <!-- Tipo e Status: Removido o Grid complexo e o span vazio -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex flex-col w-full">
                     <InputLabel value="Tipo" class="mb-1" />
                     <select v-model="form.tipo"
                         class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
@@ -205,13 +205,10 @@ watch(() => props.show, (isShown) => {
                         <option value="ENTRADA">Entradas</option>
                         <option value="SAIDA">Saídas</option>
                     </select>
-
-                    <div class="min-h-[24px] mt-1">
-                        <InputError :message="form.errors.tipo" />
-                    </div>
+                    <InputError :message="form.errors.tipo" class="mt-1" />
                 </div>
-                <span class="w-[44px] flex items-center pt-8 px-3 text-sm text-gray-500"></span>
-                <div class="flex flex-col">
+                
+                <div class="flex flex-col w-full">
                     <InputLabel value="Status de Pagamento" class="mb-1" />
                     <select v-model="form.foi_pago"
                         class="w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
@@ -219,14 +216,11 @@ watch(() => props.show, (isShown) => {
                         <option value="true">Pagos</option>
                         <option value="false">Não Pagos</option>
                     </select>
-
-                    <div class="min-h-[24px] mt-1">
-                        <InputError :message="form.errors.foi_pago" />
-                    </div>
+                    <InputError :message="form.errors.foi_pago" class="mt-1" />
                 </div>
             </div>
 
-            <div class="flex flex-col">
+            <div class="flex flex-col w-full">
                 <InputLabel value="Categoria" />
                 <div>
                     <select v-if="form.tipo === 'ENTRADA'" v-model="form.categoria_entrada"
@@ -237,7 +231,7 @@ watch(() => props.show, (isShown) => {
                             {{ cat.label }}
                         </option>
                     </select>
-                    <InputError :message="form.errors.categoria_entrada" />
+                    <InputError :message="form.errors.categoria_entrada" class="mt-1" />
                 </div>
                 <div v-if="form.tipo === 'SAIDA'">
                     <select v-model="form.categoria_saida"
@@ -248,39 +242,35 @@ watch(() => props.show, (isShown) => {
                             {{ cat.label }}
                         </option>
                     </select>
-                    <InputError :message="form.errors.categoria_saida" />
+                    <InputError :message="form.errors.categoria_saida" class="mt-1" />
                 </div>
                 <div v-if="form.tipo === 'TODOS'">
-                    <p class="text-xs text-gray-600 mt-3">Selecione um <b>Tipo</b> para conseguir escolher uma
-                        <b>Categoria.</b>
+                    <p class="text-xs text-gray-600 mt-2">
+                        Selecione um <b>Tipo</b> para conseguir escolher uma <b>Categoria.</b>
                     </p>
                 </div>
             </div>
 
-            <div>
-                <div class="flex flex-col">
-                    <div>
-                        <div class="h-[24px]">
-                            <Checkbox :checked="form.recorrentes ?? false" v-model="form.recorrentes" />
-                            <span class="text-sm text-gray-700 ml-2">Marcadas como Recorrentes</span>
-                        </div>
-                    </div>
+            <div class="pt-2">
+                <div class="flex items-center h-[24px]">
+                    <Checkbox :checked="form.recorrentes ?? false" v-model="form.recorrentes" />
+                    <span class="text-sm text-gray-700 ml-2">Apenas transações recorrentes</span>
                 </div>
             </div>
         </div>
 
-        <!-- Ações -->
-        <div class="flex justify-between gap-3 pt-4 p-6 px-12">
-            <SecondaryButton @click="limparFiltros" type="button">
+        <!-- Ações: Botões empilham no mobile e ficam distribuídos no desktop -->
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 p-6 md:px-12 border-t border-gray-100">
+            <SecondaryButton class="w-full sm:w-auto justify-center" @click="limparFiltros" type="button">
                 Limpar Filtros
             </SecondaryButton>
 
-            <div class="flex gap-3">
-                <SecondaryButton @click="emit('close')" type="button">
+            <div class="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto">
+                <SecondaryButton class="w-full sm:w-auto justify-center" @click="emit('close')" type="button">
                     Cancelar
                 </SecondaryButton>
 
-                <PrimaryButton :disabled="form.processing" @click="filtrar" type="button">
+                <PrimaryButton class="w-full sm:w-auto justify-center" :disabled="form.processing" @click="filtrar" type="button">
                     Aplicar filtro
                 </PrimaryButton>
             </div>

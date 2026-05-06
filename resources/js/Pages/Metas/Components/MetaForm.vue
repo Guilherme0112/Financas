@@ -5,7 +5,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 import Flatpickr from "vue-flatpickr-component";
 import { Portuguese } from "flatpickr/dist/l10n/pt";
-import { ref, watch, nextTick } from "vue";
+import { ref, watch, nextTick, shallowRef } from "vue";
 import { Target } from "lucide-vue-next";
 import { toast } from "vue3-toastify";
 import InputError from "@/Components/InputError.vue";
@@ -18,7 +18,7 @@ const props = defineProps<{
     editando?: boolean;
 }>();
 const emit = defineEmits(["close"]);
-const fpInstance = ref<any>(null);
+const fpInstance = shallowRef<any>(null); 
 const flatpickrKey = ref(0);
 
 const aplicarClasse = () => {
@@ -62,6 +62,7 @@ const configFlatpickr = {
     locale: Portuguese,
     dateFormat: "Y/m/d",
     altInput: true,
+    disableMobile: true,
     altFormat: "d/m/Y",
     allowInput: false,
     defaultDate: props.form.ate_quando || null,
@@ -128,57 +129,57 @@ const salvarMeta = () => {
     <section
         class="bg-white p-8 pt-14 rounded-3xl border border-gray-100 shadow-lg space-y-6"
     >
-        <div class="space-y-6">
-            <div>
-                <InputLabel value="O que você quer conquistar?" />
-                <TextInput
-                    v-model="props.form.nome"
-                    class="w-full"
-                    placeholder="Ex: Viagem, Carro, Reserva..."
-                    :class="
-                        props.form.errors.nome
-                            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                            : null
-                    "
-                />
-                <InputError :message="props.form.errors.nome" />
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-4">
-                <div class="flex flex-col sm:flex-grow">
-                    <InputLabel value="Quanto custa?" />
-                    <div class="relative w-full">
-                        <InputDinheiro
-                            v-model="props.form.valor_objetivo"
-                            class="w-full"
-                            :class="
-                                props.form.errors.valor_objetivo
-                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                                    : null
-                            "
-                        />
-                        <InputError
-                            :message="props.form.errors.valor_objetivo"
-                        />
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-none sm:w-40">
-                    <InputLabel value="Até quando?" />
-                    <div class="relative w-full">
-                        <Flatpickr
-                            :key="flatpickrKey"
-                            :value="props.form.ate_quando"
-                            :config="configFlatpickr"
-                            v-model="props.form.ate_quando"
-                        />
-                        <InputError :message="props.form.errors.ate_quando" />
-                    </div>
-                </div>
-            </div>
+        <div class="w-full">
+            <InputLabel value="O que você quer conquistar?" />
+            <TextInput
+                v-model="props.form.nome"
+                class="w-full mt-1"
+                placeholder="Ex: Viagem, Carro, Reserva..."
+                :class="
+                    props.form.errors.nome
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                        : null
+                "
+            />
+            <InputError :message="props.form.errors.nome" />
         </div>
 
-        <div class="w-full flex justify-end">
+        <div class="flex flex-col sm:flex-row gap-6">   
+            <div class="w-full sm:flex-1">
+                <InputLabel value="Quanto custa?" />
+                <div class="relative w-full mt-1">
+                    <InputDinheiro
+                        v-model="props.form.valor_objetivo"
+                        class="w-full"
+                        :class="
+                            props.form.errors.valor_objetivo
+                                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                                : null
+                        "
+                    />
+                    <InputError
+                        :message="props.form.errors.valor_objetivo"
+                    />
+                </div>
+            </div>
+
+            <div class="w-full sm:w-48">
+                <InputLabel value="Até quando?" />
+                <div class="relative w-full mt-1">
+                    <Flatpickr
+                        :key="flatpickrKey"
+                        :value="props.form.ate_quando"
+                        :config="configFlatpickr"
+                        v-model="props.form.ate_quando"
+                        class="w-full" 
+                    />
+                    <InputError :message="props.form.errors.ate_quando" />
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="w-full flex justify-end pt-2">
             <PrimaryButton
                 @click="salvarMeta"
                 :disabled="props.form.processing"
