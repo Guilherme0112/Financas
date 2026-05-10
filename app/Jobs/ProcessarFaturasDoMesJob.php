@@ -40,6 +40,11 @@ class ProcessarFaturasDoMesJob implements ShouldQueue
                     continue;
                 }
 
+                if($assinatura->plano->preco <= 0) {
+                    logger()->warning("Plano com valor inválido para assinatura {$assinatura->id}");
+                    continue;
+                }
+
                 logger()->info("Gerando fatura para: {$assinatura->user->name}");
 
                 \DB::transaction(function () use ($faturaService, $assinatura, $gatewayPagamentoInterface) {
