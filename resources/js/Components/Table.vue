@@ -111,7 +111,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         :style="{ '--col-width': 100 / (headers.length + (selectable ? 0.4 : 0) + (actions ? 0.4 : 0)) + '%' }"
         :class="[
           header.align === 'center' ? 'text-center' : 
-          header.align === 'right' ? 'text-right' : 'text-left'
+          header.align === 'right' ? 'text-center' : 'text-center'
         ]"
       >
         {{ header.label }}
@@ -155,7 +155,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           class="flex md:block items-center justify-between px-0 md:px-2 w-full md:w-[var(--col-width)] truncate"
           :class="[
             header.align === 'center' ? 'md:text-center' : 
-            header.align === 'right' ? 'md:text-right' : 'md:text-left',
+            header.align === 'right' ? 'md:text-right' : 'md:text-center',
           ]"
         >
           <!-- Título da coluna visível APENAS no mobile -->
@@ -165,7 +165,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
           <!-- Valor da célula -->
           <span 
-            class="text-right md:text-left truncate block w-full"
+            class="text-right md:text-center truncate block w-full"
             :class="hIndex === 0 ? 'font-bold text-zinc-800 text-sm' : 'text-zinc-500 text-sm font-medium'"
           >
             <slot :name="`cell-${header.key}`" :row="row" :value="row[header.key]">
@@ -199,7 +199,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 v-for="(action, i) in resolveActions(row)"
                 :key="i"
                 @click.stop="() => { action.onClick(row); fechar() }"
-                class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-tight rounded-lg transition-all flex items-center justify-between group/item"
+                class="w-full text-center px-4 py-2 text-xs font-bold uppercase tracking-tight rounded-lg transition-all flex items-center justify-between group/item"
                 :class="[`text-zinc-500 hover:bg-${color}-50 hover:text-${color}-700`, action.class]"
               >
                 {{ action.label }}
