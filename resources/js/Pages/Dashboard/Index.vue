@@ -123,7 +123,7 @@ const receitasRows = dashboard.graficos.pizza.receitas.map(
                 <HeaderSecao :icon="CalendarClock" title="Contas a Pagar"
                   description="Visualize seus compromissos próximos e atrasados" icon-color="text-emerald-800">
                   <!-- BOTÃO RESPONSIVO AQUI -->
-                  <NavLink :href="route('lancamentos.index', { tipo: 'SAIDA', foi_pago: false })"
+                  <NavLink :href="route('lancamentos.index', { tipo: 'SAIDA', foi_pago: 'false' })"
                     :active="route().current('lancamentos.index')" class="shrink-0">
                     <DangerButton class="!flex items-center gap-1 sm:gap-2 !px-3 sm:!px-4 !py-1.5 sm:!py-2 !text-xs sm:!text-sm transition-all">
                       <span class="hidden sm:inline">Ver Mais</span>
