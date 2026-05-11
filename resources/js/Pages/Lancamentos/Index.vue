@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { Head, useForm, usePage, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import LancamentoForm from "./Components/LancamentoForm.vue";
@@ -10,7 +10,6 @@ import Paginacao from "@/Components/Paginacao.vue";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal.vue";
 import ConfirmModal from "@/Components/ConfirmModal.vue";
 import DangerButton from "@/Components/DangerButton.vue";
-import SecondaryButton from "@/Components/SecondaryButton.vue";
 import { useLancamentos } from "./Composables/useLancamentos";
 import ImportarDados from "./Components/ImportarDados.vue";
 import ExportarDados from "./Components/ExportarDados.vue";
@@ -21,13 +20,16 @@ import Acoes from "./Partials/Acoes.vue";
 import { h } from "vue";
 import Resumo from "./Partials/Resumo.vue";
 import Load from "@/Components/Load.vue";
-import { Metas } from "@/types/Metas";
 import LancamentoDetalhes from "./Components/LancamentoDetalhes.vue";
 
 const props = defineProps<{
+    kanban?: any[];
     lancamentos: Page<Lancamento>;
     resumo: any;
-    metas: Page<Metas>;
+    metas?: any;
+    entradas?: any[];
+    saidas?: any[];
+    metasGoals?: any;
     categoriasEntrada: any[];
     categoriasSaida: any[];
     tipo: any[];
@@ -38,11 +40,16 @@ const {
     pedirExclusao,
     confirmarExclusao,
     mudarPagina,
+    mudarPaginaKanban,
+    alterarVisualizacao,
     deleteForm,
     headers,
 } = useLancamentos();
 
 const page = usePage();
+const currentView = computed(() =>
+    page.url.includes("/kanban") ? "agrupado" : "normal",
+);
 const showModal = ref(false);
 const editando = ref<Lancamento | null>(null);
 const importarDados = ref(false);
@@ -94,7 +101,7 @@ const actions = (row: any) => {
         },
     ];
 
-    if (row.tipo === 'SAIDA' && !row.foi_pago) {
+    if (row.tipo === "SAIDA" && !row.foi_pago) {
         baseActions.unshift({
             label: "Marcar como paga",
             class: "hover:bg-green-50 text-green-700",
@@ -154,19 +161,23 @@ const confirmarMarcarComoPaga = () => {
     if (!lancamentoToMark.value) return;
 
     loadingMarkAsPaid.value = true;
-    router.put(route('lancamentos.marcar-como-paga', lancamentoToMark.value.id), {}, {
-        onSuccess: () => {
-            toast.success('Lançamento marcado como pago!');
-            showMarkAsPaidModal.value = false;
-            lancamentoToMark.value = null;
-            loadingMarkAsPaid.value = false;
-            router.reload();
+    router.put(
+        route("lancamentos.marcar-como-paga", lancamentoToMark.value.id),
+        {},
+        {
+            onSuccess: () => {
+                toast.success("Lançamento marcado como pago!");
+                showMarkAsPaidModal.value = false;
+                lancamentoToMark.value = null;
+                loadingMarkAsPaid.value = false;
+                router.reload();
+            },
+            onError: () => {
+                toast.error("Erro ao marcar como pago.");
+                loadingMarkAsPaid.value = false;
+            },
         },
-        onError: () => {
-            toast.error('Erro ao marcar como pago.');
-            loadingMarkAsPaid.value = false;
-        }
-    });
+    );
 };
 
 const handleSelectionChange = (selected: any[]) => {
@@ -176,16 +187,20 @@ const handleSelectionChange = (selected: any[]) => {
 const deletarLancamentosSelecionados = () => {
     deletarSelecionados.value = false;
     const ids = selectedLancamentos.value.map((l: any) => l.id);
-    
-    router.post(route('lancamentos.destroy-bulk'), { ids }, {
-        onSuccess: () => {
-            selectedLancamentos.value = [];
-            toast.success('Lançamentos deletados com sucesso!');
+
+    router.post(
+        route("lancamentos.destroy-bulk"),
+        { ids },
+        {
+            onSuccess: () => {
+                selectedLancamentos.value = [];
+                toast.success("Lançamentos deletados com sucesso!");
+            },
+            onError: () => {
+                toast.error("Erro ao deletar lançamentos selecionados.");
+            },
         },
-        onError: () => {
-            toast.error('Erro ao deletar lançamentos selecionados.');
-        }
-    });
+    );
 };
 
 onMounted(() => {
@@ -263,34 +278,48 @@ onUnmounted(() => {
             />
 
             <!-- TABELA -->
-            <div 
+            <div
                 v-if="selectedLancamentos.length > 0"
                 class="mb-4 p-4 bg-white border border-zinc-200 rounded-lg flex justify-between items-center"
             >
                 <p class="text-sm font-semibold text-zinc-700">
-                    {{ selectedLancamentos.length }} {{ selectedLancamentos.length === 1 ? 'lançamento selecionado' : 'lançamentos selecionados' }}
+                    {{ selectedLancamentos.length }}
+                    {{
+                        selectedLancamentos.length === 1
+                            ? "lançamento selecionado"
+                            : "lançamentos selecionados"
+                    }}
                 </p>
                 <div class="flex items-center gap-2">
-                    <DangerButton @click="deletarSelecionados = true" type="button">
+                    <DangerButton
+                        @click="deletarSelecionados = true"
+                        type="button"
+                    >
                         Excluir
                     </DangerButton>
                 </div>
             </div>
 
             <TableLancamentos
+                :kanban="props.kanban" 
                 :headers="headers"
                 :rows="lancamentosFiltrados"
+                :metas="props.metas"
+                :entradas="props.entradas"
+                :saidas="props.saidas"
+                :currentView="currentView"
                 :actions="actions"
                 :selectable="true"
                 @selectionChange="handleSelectionChange"
                 @rowClick="abrirDetalhes"
+                @changeView="alterarVisualizacao"
+                @mudarPaginaKanban="mudarPaginaKanban"
                 theme="green"
             />
 
-            <!-- PAGINAÇÃO  -->
-            <div class="w-full flex justify-end">
+            <div v-if="currentView === 'normal' && props.lancamentos" class="w-full flex justify-end mt-4">
                 <Paginacao
-                    :pagination="lancamentos"
+                    :pagination="props.lancamentos"
                     route-name="lancamentos.index"
                 />
             </div>
@@ -308,7 +337,11 @@ onUnmounted(() => {
                 "
                 :id="editando?.id"
                 :tipo="props.tipo"
-                :metas="props.metas.data"
+                :metas="
+                    (props.metasGoals as any)?.data ??
+                    (props.metasGoals as any) ??
+                    []
+                "
             />
 
             <!-- IMPORTAR DADOS -->
@@ -348,7 +381,10 @@ onUnmounted(() => {
                 message="Tem certeza que deseja marcar este lançamento como pago?"
                 title="Marcar como pago"
                 confirm-text="Marcar como pago"
-                @close="showMarkAsPaidModal = false; lancamentoToMark = null"
+                @close="
+                    showMarkAsPaidModal = false;
+                    lancamentoToMark = null;
+                "
                 @confirm="confirmarMarcarComoPaga"
                 :isDisabled="loadingMarkAsPaid"
             />

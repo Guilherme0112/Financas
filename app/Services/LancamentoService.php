@@ -24,6 +24,11 @@ class LancamentoService
         return $this->lancamentoRepository->obterLancamentos($filtros, $perPage, $userId);
     }
 
+    public function listarPorKanbam(array $filtros, ?int $perPage = 20, int $userId): array
+    {
+        return $this->lancamentoRepository->obterLancamentosKanban($filtros, $perPage, $userId);
+    }
+
     public function obterTotaisMensaisPorPeriodo($data_inicial, $data_final, int $userId): Collection
     {
         return $this->lancamentoRepository->obterTotaisMensaisPorPeriodo($data_inicial, $data_final, $userId);
@@ -56,36 +61,49 @@ class LancamentoService
         }
     }
 
-    public function criar(int $userId, array $dados): Collection
-    {
-        $this->validarTipoCategoria($dados);
+public function criar(int $userId, array $dados): Collection
+{
+    $this->validarTipoCategoria($dados);
 
-        $quantidadeMeses = (int) ($dados['meses_recorrentes'] ?? 1);
-        unset($dados['meses_recorrentes']);
+    $quantidadeMeses = (int) ($dados['meses_recorrentes'] ?? 1);
+    unset($dados['meses_recorrentes']);
 
-        if ($quantidadeMeses < 1) {
-            throw new \InvalidArgumentException("A quantidade de meses deve ser pelo menos 1.");
-        }
-
-        $dataBase = Carbon::parse($dados['mes_referencia']);
-        $valorAbsoluto = abs($dados['valor']);
-
-        $payloads = [];
-        for ($i = 0; $i < $quantidadeMeses; $i++) {
-            $payloads[] = array_merge($dados, [
-                'user_id' => $userId,
-                'valor' => $valorAbsoluto,
-                'recorrente' => $quantidadeMeses > 1,
-                'mes_referencia' => $dataBase->copy()->addMonths($i)->format('Y-m-d'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        return DB::transaction(function () use ($payloads) {
-            return $this->lancamentoRepository->criarVarios($payloads);
-        });
+    if ($quantidadeMeses < 1) {
+        throw new \InvalidArgumentException("A quantidade de meses deve ser pelo menos 1.");
     }
+
+    $dataBase = Carbon::parse($dados['mes_referencia']);
+    $valorAbsoluto = abs($dados['valor']);
+
+    // Extrai o tipo de forma segura (caso venha como Enum ou String pura)
+    $tipo = $dados['tipo']->value ?? $dados['tipo'];
+
+    $payloads = [];
+    for ($i = 0; $i < $quantidadeMeses; $i++) {
+        // Calcula a data exata da iteração atual
+        $dataReferenciaAtual = $dataBase->copy()->addMonths($i);
+
+        // Monta o payload base
+        $payload = array_merge($dados, [
+            'user_id' => $userId,
+            'valor' => $valorAbsoluto,
+            'recorrente' => $quantidadeMeses > 1,
+            'mes_referencia' => $dataReferenciaAtual->format('Y-m-d'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if ($tipo === 'RESERVA_META' && empty($payload['nome'])) {
+            $payload['nome'] = 'Reserva para meta ' . $dataReferenciaAtual->format('d/m/Y');
+        }
+
+        $payloads[] = $payload;
+    }
+
+    return DB::transaction(function () use ($payloads) {
+        return $this->lancamentoRepository->criarVarios($payloads);
+    });
+}
 
     public function atualizar(int $id, int $userId, array $dados): Lancamento
     {

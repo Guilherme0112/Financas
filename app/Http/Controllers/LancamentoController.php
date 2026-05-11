@@ -17,31 +17,41 @@ use Inertia\Response;
 
 class LancamentoController extends Controller
 {
-    public function __construct(public LancamentoService $lancamentoService, public MetasService $metasService)
-    {
-    }
+    public function __construct(public LancamentoService $lancamentoService, public MetasService $metasService) {}
 
     public function index(IndexLancamentosRequest $request): Response
     {
         $dados = $request->validated();
         $lancamentosResultado = $this->lancamentoService->listar((array) $dados, 25, auth()->id());
         $metas = $this->metasService->listar($dados, auth()->id());
+
         return Inertia::render('Lancamentos/Index', [
             'lancamentos' => $lancamentosResultado['paginacao'],
             'resumo' => $lancamentosResultado['resumo'],
-            "metas" => $metas,
+            'metas' => $metas,
             'categoriasEntrada' => CategoriaEntrada::options(),
             'categoriasSaida' => CategoriaSaida::options(),
             'tipo' => TipoValor::options(),
         ]);
     }
 
+    public function indexByKanbam(IndexLancamentosRequest $request)
+    {
+        $dados = $request->validated();
+        $dadosKanban = $this->lancamentoService->listarPorKanbam($dados, 10, auth()->id());
+        return Inertia::render('Lancamentos/Index', [
+            'kanban' => $dadosKanban['kanban'],
+            'resumo' => $dadosKanban['resumo'],
+            'filtros' => $dados,
+        ]);
+    }
 
     public function store(StoreLancamentosRequest $request, LancamentoService $lancamentoService): RedirectResponse
     {
         try {
             $dados = $request->validated();
             $lancamentoService->criar(auth()->id(), $dados);
+
             return redirect()->back()->with('success', 'Lançamento salvo com sucesso.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors('erro', $e->getMessage());
@@ -52,6 +62,7 @@ class LancamentoController extends Controller
     {
         try {
             $lancamentoService->marcarComoPaga($id, auth()->id());
+
             return redirect()->back()->with('success', 'Lançamento marcado como pago com sucesso.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors('erro', $e->getMessage());
@@ -63,6 +74,7 @@ class LancamentoController extends Controller
         try {
             $dados = $request->validated();
             $lancamentoService->atualizar($id, auth()->id(), $dados);
+
             return redirect()->back()->with('success', 'Lançamento atualizado com sucesso.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors('erro', $e->getMessage());
@@ -79,7 +91,8 @@ class LancamentoController extends Controller
         $dados = $request->validated();
         try {
             $lancamentoService->deletarVarios($dados['ids'], auth()->id());
-            return redirect()->back()->with('success', count($dados['ids']) . ' lançamento(s) deletado(s) com sucesso.');
+
+            return redirect()->back()->with('success', count($dados['ids']).' lançamento(s) deletado(s) com sucesso.');
         } catch (\Throwable $e) {
             return redirect()->back()->withErrors('erro', $e->getMessage());
         }

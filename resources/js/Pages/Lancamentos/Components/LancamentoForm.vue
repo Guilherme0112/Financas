@@ -174,7 +174,7 @@ const buscarMetasComDebounce = (value: string) => {
 const labelParaDataReferencia = (tipo: string) => {
     if (tipo === "ENTRADA") return "Data de Pagamento";
     if (tipo === "SAIDA") return "Data de Vencimento";
-    if (tipo === "RESERVA_META") return "Data de Quitação";
+    if (tipo === "RESERVA_META") return "Data da Transferência";
     if (tipo === "RESERVA_EMERGENCIA") return "Data de Quitação";
 };
 

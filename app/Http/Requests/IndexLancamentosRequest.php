@@ -39,7 +39,6 @@ class IndexLancamentosRequest extends FormRequest
                 "nullable",
                 Rule::enum(CategoriaSaida::class)
             ],
-
             "search_metas" => ["sometimes", "string", "max:50"]
         ];
     }

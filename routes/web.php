@@ -36,6 +36,7 @@ Route::prefix('lancamentos')
     ->name('lancamentos.')
     ->group(function () {
         Route::get('/', action: [LancamentoController::class, 'index'])->name('index');
+        Route::get('/kanban', action: [LancamentoController::class, 'indexByKanbam'])->name('kanban');
         Route::put('/{id}', [LancamentoController::class, 'update'])->name('update');
         Route::put('/{id}/marcar-como-paga', [LancamentoController::class, 'marcarComoPaga'])->name('marcar-como-paga');
         Route::post('/', [LancamentoController::class, 'store'])->name('store');
