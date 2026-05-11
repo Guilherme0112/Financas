@@ -28,7 +28,7 @@ class LancamentoController extends Controller
         return Inertia::render('Lancamentos/Index', [
             'lancamentos' => $lancamentosResultado['paginacao'],
             'resumo' => $lancamentosResultado['resumo'],
-            'metas' => $metas,
+            'metas' => $metas->items(),
             'categoriasEntrada' => CategoriaEntrada::options(),
             'categoriasSaida' => CategoriaSaida::options(),
             'tipo' => TipoValor::options(),
@@ -39,10 +39,15 @@ class LancamentoController extends Controller
     {
         $dados = $request->validated();
         $dadosKanban = $this->lancamentoService->listarPorKanbam($dados, 10, auth()->id());
+        $metas = $this->metasService->listar($dados, auth()->id());
         return Inertia::render('Lancamentos/Index', [
             'kanban' => $dadosKanban['kanban'],
             'resumo' => $dadosKanban['resumo'],
+            'metas' => $metas->items(),
             'filtros' => $dados,
+            'categoriasEntrada' => CategoriaEntrada::options(),
+            'categoriasSaida' => CategoriaSaida::options(),
+            'tipo' => TipoValor::options(),
         ]);
     }
 

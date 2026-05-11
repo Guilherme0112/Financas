@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import { toast } from 'vue3-toastify'
 import { formatarData } from '@/utils/helpers';
@@ -16,8 +16,26 @@ export function useLancamentos() {
   const mostrarFiltro = ref(false);
   const showDeleteModal = ref(false);
   const lancamentoParaExcluir = ref<number | null>(null);
+  const loadingData = ref(true);
   
   const lancamentosFiltrados = computed(() => lancamentos.value?.data || []);
+
+  // Watchers para definir loading como false quando os dados são carregados
+  watch(() => page.props.lancamentos, () => {
+    if (loadingData.value) loadingData.value = false;
+  }, { immediate: true });
+  watch(() => page.props.kanban, () => {
+    if (loadingData.value) loadingData.value = false;
+  }, { immediate: true });
+  watch(() => page.props.entradas, () => {
+    if (loadingData.value) loadingData.value = false;
+  }, { immediate: true });
+  watch(() => page.props.saidas, () => {
+    if (loadingData.value) loadingData.value = false;
+  }, { immediate: true });
+  watch(() => page.props.metas, () => {
+    if (loadingData.value) loadingData.value = false;
+  }, { immediate: true });
 
   const pedirExclusao = (id: number) => {
     lancamentoParaExcluir.value = id
@@ -26,6 +44,7 @@ export function useLancamentos() {
 
   const confirmarExclusao = () => {
     if (!lancamentoParaExcluir.value) return
+    loadingData.value = true;
 
     deleteForm.delete(route('lancamentos.destroy', lancamentoParaExcluir.value), {
       ...configInertia,
@@ -33,6 +52,10 @@ export function useLancamentos() {
         toast.success('Lançamento excluído com sucesso!')
         showDeleteModal.value = false
         lancamentoParaExcluir.value = null
+        loadingData.value = false;
+      },
+      onError: () => {
+        loadingData.value = false;
       }
     })
   }
@@ -44,6 +67,7 @@ export function useLancamentos() {
 
   // GERENCIA A TROCA DE TELAS (Normal = index | Agrupado = kanban)
 const alterarVisualizacao = (mode: 'normal' | 'agrupado') => {
+    loadingData.value = true;
     if (mode === 'agrupado') {
         router.visit(route('lancamentos.kanban'), { preserveScroll: true });
     } else {
@@ -54,6 +78,7 @@ const alterarVisualizacao = (mode: 'normal' | 'agrupado') => {
   // NOVO: Paginação específica para as colunas do Kanban
   const mudarPaginaKanban = (urlPaginacao: string | null) => {
     if (!urlPaginacao) return;
+    loadingData.value = true;
 
     router.get(urlPaginacao, {}, {
       preserveState: true,  // Mantém o estado atual da tela (modais, abas, etc)
@@ -82,6 +107,7 @@ const alterarVisualizacao = (mode: 'normal' | 'agrupado') => {
     alterarVisualizacao,
     mudarPaginaKanban,
     deleteForm,
-    headers
+    headers,
+    loadingData
   }
 }

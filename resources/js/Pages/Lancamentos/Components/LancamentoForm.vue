@@ -34,7 +34,7 @@ const props = defineProps<{
 const emit = defineEmits(["close", "saved"]);
 
 const metasOptions = computed(() =>
-    props.metas.map((meta) => ({
+    (props.metas || []).map((meta) => ({
         label: meta.nome,
         value: meta.id,
     })),

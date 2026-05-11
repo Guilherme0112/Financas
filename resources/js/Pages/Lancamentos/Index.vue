@@ -39,11 +39,11 @@ const {
     showDeleteModal,
     pedirExclusao,
     confirmarExclusao,
-    mudarPagina,
     mudarPaginaKanban,
     alterarVisualizacao,
     deleteForm,
     headers,
+    loadingData
 } = useLancamentos();
 
 const page = usePage();
@@ -161,6 +161,7 @@ const confirmarMarcarComoPaga = () => {
     if (!lancamentoToMark.value) return;
 
     loadingMarkAsPaid.value = true;
+    loadingData.value = true;
     router.put(
         route("lancamentos.marcar-como-paga", lancamentoToMark.value.id),
         {},
@@ -175,6 +176,7 @@ const confirmarMarcarComoPaga = () => {
             onError: () => {
                 toast.error("Erro ao marcar como pago.");
                 loadingMarkAsPaid.value = false;
+                loadingData.value = false;
             },
         },
     );
@@ -186,6 +188,7 @@ const handleSelectionChange = (selected: any[]) => {
 
 const deletarLancamentosSelecionados = () => {
     deletarSelecionados.value = false;
+    loadingData.value = true;
     const ids = selectedLancamentos.value.map((l: any) => l.id);
 
     router.post(
@@ -195,9 +198,11 @@ const deletarLancamentosSelecionados = () => {
             onSuccess: () => {
                 selectedLancamentos.value = [];
                 toast.success("Lançamentos deletados com sucesso!");
+                loadingData.value = false;
             },
             onError: () => {
                 toast.error("Erro ao deletar lançamentos selecionados.");
+                loadingData.value = false;
             },
         },
     );
@@ -310,6 +315,7 @@ onUnmounted(() => {
                 :currentView="currentView"
                 :actions="actions"
                 :selectable="true"
+                :loading="loadingData"
                 @selectionChange="handleSelectionChange"
                 @rowClick="abrirDetalhes"
                 @changeView="alterarVisualizacao"
@@ -337,11 +343,7 @@ onUnmounted(() => {
                 "
                 :id="editando?.id"
                 :tipo="props.tipo"
-                :metas="
-                    (props.metasGoals as any)?.data ??
-                    (props.metasGoals as any) ??
-                    []
-                "
+                :metas="props.metas || []"
             />
 
             <!-- IMPORTAR DADOS -->

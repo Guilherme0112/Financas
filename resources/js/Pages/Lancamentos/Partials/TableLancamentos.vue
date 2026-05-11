@@ -15,6 +15,7 @@ const props = defineProps<{
     saidas?: any[];
     currentView?: "normal" | "agrupado";
     actions: any[] | ((row: any) => any[]);
+    loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -82,7 +83,14 @@ const setViewMode = (mode: "normal" | "agrupado") => {
 
         <!-- TABELA NORMAL -->
         <div v-if="viewMode === 'normal' && rows">
+            <div v-if="props.loading" class="flex justify-center items-center py-8">
+                <div class="flex items-center gap-2 text-gray-500">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
+                    Carregando...
+                </div>
+            </div>
             <Table
+                v-else
                 :headers="headers"
                 :rows="rows"
                 :actions="actions"
@@ -142,7 +150,14 @@ const setViewMode = (mode: "normal" | "agrupado") => {
 
         <!-- NOVO: TABELA AGRUPADA (KANBAN) -->
         <div v-else-if="viewMode === 'agrupado'">
+            <div v-if="props.loading" class="flex justify-center items-center py-8">
+                <div class="flex items-center gap-2 text-gray-500">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
+                    Carregando...
+                </div>
+            </div>
             <TableDivida
+                v-else
                 :kanban="props.kanban"
                 :headers="dividaHeaders"
                 :metas="props.metas"
