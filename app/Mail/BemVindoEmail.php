@@ -25,7 +25,7 @@ class BemVindoEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🚀 Bem-vindo ao SaldoUp – Sua gestão financeira começa aqui!',
+            subject: '🚀 Bem-vindo ao SaldUp – Sua gestão financeira começa aqui!',
         );
     }
 

@@ -26,7 +26,7 @@ const submit = () => {
             <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 mt-20 h-fit">
                 
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-green-700">SaldoUp</h1>
+                    <h1 class="text-3xl font-bold text-green-700">SaldUp</h1>
                     <p class="text-gray-500 mt-2 text-sm">Recuperação de acesso</p>
                 </div>
 

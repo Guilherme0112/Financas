@@ -28,7 +28,7 @@ class MercadoPagoService implements GatewayPagamentoInterface
             $items = [
                 [
                     "id" => "FAT_" . ($fatura->id ?? 'NEW_' . $fatura->user_id . '_' . time()),
-                    "title" => "Assinatura SaldoUp - " . ($fatura->assinatura->plano->nome ?? 'Plano Profissional'),
+                    "title" => "Assinatura SaldUp - " . ($fatura->assinatura->plano->nome ?? 'Plano Profissional'),
                     "description" => "Pagamento referente à fatura #" . ($fatura->id ?? 'Nova'),
                     "currency_id" => "BRL",
                     "quantity" => 1,

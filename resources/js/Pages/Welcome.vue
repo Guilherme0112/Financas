@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
     <GuestLayout :can-login="canLogin" :can-register="canRegister">
-        <Head title="Faturaí - Controle Financeiro Inteligente" />
+        <Head title="SaldUp - Controle Financeiro Inteligente" />
 
         <div
             class="min-h-screen bg-gradient-to-br from-green-50 to-green-100 text-gray-800"
@@ -238,7 +238,7 @@ defineProps<{
                     Pare de perder dinheiro hoje mesmo
                 </h3>
                 <p class="mt-4 text-lg opacity-90">
-                    Comece agora a usar o Faturaí e tenha controle total sobre
+                    Comece agora a usar o SaldUp e tenha controle total sobre
                     sua vida financeira.
                 </p>
 
@@ -253,7 +253,7 @@ defineProps<{
 
             <!-- FOOTER -->
             <footer class="py-10 text-center text-gray-500 text-sm">
-                © {{ new Date().getFullYear() }} Faturaí — Todos os direitos
+                © {{ new Date().getFullYear() }} SaldUp — Todos os direitos
                 reservados.
             </footer>
         </div>

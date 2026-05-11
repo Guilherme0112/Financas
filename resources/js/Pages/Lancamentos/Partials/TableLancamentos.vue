@@ -153,7 +153,6 @@ const setViewMode = (mode: "normal" | "agrupado") => {
                 theme="green"
                 @rowClick="emit('rowClick', $event)"
                 @selectionChange="emit('selectionChange', $event)"
-                @mudarPaginaKanban="emit('mudarPaginaKanban', $event)"
             >
                 <template #cell-valor="{ row }">
                     <span

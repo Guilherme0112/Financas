@@ -12,7 +12,7 @@ defineProps<{
         <header class="w-full bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-green-100">
             <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
                 <Link :href="route('welcome')" class="text-2xl font-extrabold text-green-700 tracking-tight">
-                    SaldoUp
+                    SaldUp
                 </Link>
 
                 <nav class="flex items-center gap-4" v-if="canLogin">
@@ -49,7 +49,7 @@ defineProps<{
 
         <footer class="py-6 border-t border-green-100">
             <div class="max-w-7xl mx-auto px-6 text-center">
-                <p class="text-gray-900 font-bold text-lg mb-2 text-green-700">SaldoUp</p>
+                <p class="text-gray-900 font-bold text-lg mb-2 text-green-700">SaldUp</p>
                 <p class="text-gray-500 text-sm">
                     © {{ new Date().getFullYear() }} — Controle Financeiro Inteligente.
                 </p>

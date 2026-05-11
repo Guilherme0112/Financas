@@ -19,7 +19,7 @@
                     <p class="text-slate-600 mb-8 leading-relaxed">
                         Sua licença do
                         <span class="font-bold text-emerald-600 text-lg"
-                            >Faturaí</span
+                            >SaldUp</span
                         >
                         chegou ao fim. Para continuar registrando seus ganhos e
                         controlando seus gastos, renove seu acesso.

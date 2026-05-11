@@ -17,7 +17,7 @@ const props = defineProps<Props>();
 const config = {
     success: {
         title: "Pagamento Confirmado!",
-        description: "Tudo pronto! Sua assinatura foi ativada e você já tem acesso total a todos os recursos do Faturaí.",
+        description: "Tudo pronto! Sua assinatura foi ativada e você já tem acesso total a todos os recursos do SaldUp.",
         icon: CheckCircle,
         iconClass: "bg-emerald-50 text-emerald-600",
         buttonText: "Ir para o Dashboard",

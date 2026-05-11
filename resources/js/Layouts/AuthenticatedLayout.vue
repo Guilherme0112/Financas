@@ -66,7 +66,7 @@ const planos = usePage().props.planos;
                         v-show="!isCollapsed"
                         class="text-xl font-bold tracking-tight text-emerald-900 whitespace-nowrap transition-opacity duration-300"
                     >
-                        Faturaí
+                        SaldUp
                     </span>
                 </Link>
 
@@ -149,7 +149,7 @@ const planos = usePage().props.planos;
             <header class="md:hidden flex h-16 items-center justify-between bg-white px-4 shadow-sm z-50 sticky top-0">
                 <Link :href="route('dashboard')" class="flex items-center gap-2">
                     <ApplicationLogo class="h-8 text-emerald-600" />
-                    <span class="text-lg font-bold text-emerald-900">Faturaí</span>
+                    <span class="text-lg font-bold text-emerald-900">SaldUp</span>
                 </Link>
 
                 <button @click="open = !open" class="rounded-lg p-2 text-emerald-700 hover:bg-emerald-100">

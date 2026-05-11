@@ -33,13 +33,14 @@ const emit = defineEmits<{
 }>();
 
 const color = props.theme || "emerald";
+const lastHeader = computed(() => props.headers[props.headers.length - 1]);
 
 const groups = computed(() => {
     if (!props.kanban) return [];
 
     // Mapeamos o array que vem do Controller (0 => entradas, 1 => saidas, etc)
     return props.kanban.map(coluna => ({
-        id: coluna.id,
+        id: String(coluna.id),
         title: coluna.nome_coluna,
         rows: coluna.paginacao.data, // Os dados reais estão dentro de paginacao.data
         paginacao: coluna.paginacao, // O objeto completo para os botões de página
@@ -80,7 +81,7 @@ const updateSelectAll = () => {
 const emitSelection = () => {
     const selected: Record<string, any>[] = [];
     groups.value.forEach((group) => {
-        group.rows.forEach((row, index) => {
+        group.rows.forEach((row: any, index: any) => {
             if (selectedRows.value.has(`${group.id}-${index}`)) {
                 selected.push(row);
             }
@@ -157,7 +158,7 @@ onBeforeUnmount(() =>
                     >
                         <Checkbox
                             :checked="selectedRows.has(`${group.id}-${index}`)"
-                            @change="toggleRowSelection(group.id, index)"
+                            @change="toggleRowSelection(group.id, Number(index))"
                             @click.stop
                             class="w-4 h-4 rounded cursor-pointer bg-white border-emerald-300 border-2 checked:bg-emerald-500 checked:border-emerald-500"
                         />
@@ -216,28 +217,17 @@ onBeforeUnmount(() =>
                                 class="shrink-0 text-right pl-2 text-gray-600"
                             >
                                 <slot
-                                    :name="`cell-${headers[headers.length - 1].key}`"
+                                    :name="`cell-${lastHeader?.key}`"
                                     :row="row"
-                                    :value="
-                                        row[headers[headers.length - 1].key]
-                                    "
+                                    :value="row[lastHeader?.key]"
                                 >
                                     {{
-                                        headers[headers.length - 1].format
-                                            ? headers[
-                                                  headers.length - 1
-                                              ].format(
-                                                  row[
-                                                      headers[
-                                                          headers.length - 1
-                                                      ].key
-                                                  ],
+                                        lastHeader?.format
+                                            ? lastHeader.format(
+                                                  row[lastHeader.key],
                                                   row,
                                               )
-                                            : row[
-                                                  headers[headers.length - 1]
-                                                      .key
-                                              ]
+                                            : row[lastHeader?.key]
                                     }}
                                 </slot>
                             </div>

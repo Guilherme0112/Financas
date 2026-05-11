@@ -100,7 +100,7 @@ const getActions = (invoice: any) => {
                         class="flex flex-col items-center justify-center min-h-[250px] p-6 bg-white border border-dashed border-zinc-200 rounded-2xl"
                     >
                         <SemRegistro
-                            message="Você ainda não possui faturas geradas no SaldoUp."
+                            message="Você ainda não possui faturas geradas no SaldUp."
                         />
                     </div>
                 </div>

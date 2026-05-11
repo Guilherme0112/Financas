@@ -43,7 +43,7 @@
 
                     <p class="mt-8 text-xs text-slate-400">
                         Se o problema persistir, entre em contato com o suporte
-                        do Faturaí.
+                        do SaldUp.
                     </p>
                 </div>
             </div>
